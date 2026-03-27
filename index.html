@@ -1109,22 +1109,36 @@ html[data-theme='dark'] .btn-danger-ghost:active {
 .ranking-tbl { table-layout: auto; }
 .ranking-tbl thead th,
 .ranking-tbl tbody td { white-space: nowrap; }
+.ranking-tbl .subject-col {
+  min-width: 78px;
+}
+.ranking-tbl .mean-col {
+  min-width: 86px;
+}
+.ranking-tbl .quartile-col {
+  min-width: 132px;
+}
 .ranking-tbl thead th:nth-child(1),
 .ranking-tbl tbody td:nth-child(1) {
-  min-width: 68px;
+  min-width: 56px;
 }
 .ranking-tbl thead th:nth-child(2),
 .ranking-tbl tbody td:nth-child(2) {
-  min-width: 96px;
-  left: 68px;
+  min-width: 84px;
+  left: 56px;
 }
 .ranking-tbl thead th:nth-child(3),
 .ranking-tbl tbody td:nth-child(3) {
-  min-width: 180px;
-  left: 164px;
+  min-width: 150px;
+  left: 140px;
 }
 
 @media (max-width: 1366px) {
+  .ranking-tbl thead th,
+  .ranking-tbl tbody td {
+    padding: 8px 9px;
+    font-size: 12px;
+  }
   .ranking-tbl thead th:nth-child(3),
   .ranking-tbl tbody td:nth-child(3),
   .ranking-tbl thead th:nth-child(2),
@@ -3796,7 +3810,7 @@ function renderAnalysisTab() {
   const A = state.analysis;
   if(!A) return;
   let tipCounter = 0;
-  const rankingTableMinWidth = Math.max(980, 420 + state.subjects.length * 92);
+  const rankingTableMinWidth = Math.max(860, 350 + state.subjects.length * 84);
   const nextTipId = () => `detail-tip-${++tipCounter}`;
   const n = A.studentStats.length;
   const top = A.sorted[0], bot = A.sorted[A.sorted.length-1];
@@ -3919,8 +3933,8 @@ function renderAnalysisTab() {
     <th>Rank</th>
     <th style="text-align:left">ID</th>
     <th style="text-align:left">Name</th>`;
-  state.subjects.forEach(s=>{ html+=`<th>${esc(s)}</th>`; });
-  html+=`<th>Mean</th><th>Quartile</th></tr></thead><tbody>`;
+  state.subjects.forEach(s=>{ html+=`<th class="subject-col">${esc(s)}</th>`; });
+  html+=`<th class="mean-col">Mean</th><th class="quartile-col">Quartile</th></tr></thead><tbody>`;
 
   A.sorted.forEach((s,i)=>{
     const qLabel = A.classBox ? (
@@ -3943,10 +3957,10 @@ function renderAnalysisTab() {
         else if(normalized>b.q3) cls+=' high';
         else if(normalized<b.q1) cls+=' low';
       }
-      html+=`<td class="${cls}">${(!isNaN(num))?fmtOne(num):'—'}</td>`;
+      html+=`<td class="${cls} subject-col">${(!isNaN(num))?fmtOne(num):'—'}</td>`;
     });
-    html+=`<td style="font-weight:700;color:var(--primary);font-family:'DM Mono',monospace">${fmtOne(s.mean)}</td>
-           <td>${qLabel}</td></tr>`;
+    html+=`<td class="mean-col" style="font-weight:700;color:var(--primary);font-family:'DM Mono',monospace">${fmtOne(s.mean)}</td>
+           <td class="quartile-col">${qLabel}</td></tr>`;
   });
   html+=`</tbody></table></div>
   <div class="divider"></div>
