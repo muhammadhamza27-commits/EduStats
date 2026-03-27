@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EduStats — Student Performance Tracker</title>
+<script>
+(() => {
+  const KEY = 'eduStats_theme';
+  try {
+    const saved = localStorage.getItem(KEY);
+    const isValid = saved === 'light' || saved === 'dark';
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = isValid ? saved : (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (err) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Montserrat:wght@600;700&family=Lexend:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -59,6 +73,52 @@
   --shadow:    0 2px 8px rgba(0,0,0,.09), 0 1px 3px rgba(0,0,0,.07);
   --shadow-lg: 0 8px 24px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.08);
   --transition: 0.18s ease;
+  --app-bar-start: #2d1e5c;
+  --app-bar-mid:   #3d348b;
+  --app-bar-end:   #7678ed;
+  --surface-overlay: rgba(255, 255, 255, 0.85);
+  --surface-soft: rgba(255,255,255,.6);
+}
+
+html { color-scheme: light; }
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+html[data-theme='dark'] :root,
+html[data-theme='dark'] {
+  --ink:       #e5ecf6;
+  --ink-light: #c4d1e3;
+  --ink-faint: #90a2be;
+  --page:      #0f1724;
+  --white:     #162132;
+  --rule:      #2a3b52;
+
+  --primary:        #9cadff;
+  --primary-light:  #b9c6ff;
+  --primary-pale:   #253852;
+  --primary-tint:   #1e2d44;
+
+  --green:      #4ade80;
+  --green-pale: #153428;
+  --amber:      #fbbf24;
+  --amber-pale: #3f320f;
+  --red:        #f87171;
+  --red-pale:   #3d1e25;
+  --purple:     #c4b5fd;
+  --purple-pale: #302649;
+  --teal:       #67e8f9;
+  --teal-pale:  #173640;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.3);
+  --shadow:    0 3px 10px rgba(0,0,0,.38), 0 1px 4px rgba(0,0,0,.3);
+  --shadow-lg: 0 12px 28px rgba(0,0,0,.45), 0 3px 8px rgba(0,0,0,.32);
+  --app-bar-start: #0f1421;
+  --app-bar-mid:   #1a2236;
+  --app-bar-end:   #283a5b;
+  --surface-overlay: rgba(22, 33, 50, 0.9);
+  --surface-soft: rgba(255,255,255,.12);
 }
 
 /* Tablet breakpoint (481px+) */
@@ -96,11 +156,12 @@ body {
   font-size: var(--fs-base);
   line-height: 1.6;
   min-height: 100vh;
+  transition: background-color .25s ease, color .25s ease;
 }
 
 /* ── HEADER ── */
 .app-bar {
-  background: linear-gradient(135deg, #2d1e5c 0%, #3d348b 60%, #7678ed 100%);
+  background: linear-gradient(135deg, var(--app-bar-start) 0%, var(--app-bar-mid) 60%, var(--app-bar-end) 100%);
   color: #fff;
   padding: 0 14px;
   height: 60px;
@@ -144,6 +205,45 @@ body {
   opacity: .7;
   text-align: right;
   line-height: 1.4;
+}
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle:hover {
+  background: rgba(255,255,255,.2);
+  border-color: rgba(255,255,255,.4);
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+
+.theme-toggle:active { transform: scale(.96); }
+
+.theme-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.theme-toggle-icon {
+  font-size: 16px;
+  line-height: 1;
+  transition: transform .25s ease;
+}
+
+html[data-theme='dark'] .theme-toggle-icon {
+  transform: rotate(16deg);
 }
 
 /* ── TABS ── */
@@ -460,7 +560,7 @@ body {
 .btn-success:hover { background: #166534; box-shadow: 0 4px 12px rgba(21,128,61,.3); }
 .btn-success:active { background: #166534; }
 .btn-outline {
-  background: white;
+  background: var(--white);
   color: var(--ink);
   border: 1.5px solid var(--rule);
 }
@@ -552,7 +652,7 @@ body {
   right: 8px;
   font-size: 10px;
   color: var(--ink-faint);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--surface-overlay);
   padding: 4px 8px;
   border-radius: 4px;
   pointer-events: none;
@@ -621,7 +721,7 @@ body {
   transition: background var(--transition), box-shadow var(--transition);
 }
 .data-tbl input[type="text"]:focus {
-  background: white;
+  background: var(--white);
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 .data-tbl input[type="number"] {
@@ -644,7 +744,7 @@ body {
 .data-tbl input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .data-tbl input[type="number"]:focus {
   border-color: var(--primary-light);
-  background: white;
+  background: var(--white);
   box-shadow: 0 0 0 2px rgba(61, 52, 139, .15);
 }
 .mean-cell {
@@ -758,7 +858,7 @@ body {
 .flag-box.bottom-flag .flag-list li::before { color: var(--red); }
 .flag-box.lower-q-flag .flag-list li::before { color: var(--amber); }
 .flag-box.outlier-flag .flag-list li::before { color: var(--purple); }
-.flag-score { font-family: 'DM Mono', monospace; font-size: 12px; margin-left: auto; padding: 1px 7px; border-radius: 10px; background: rgba(255,255,255,.6); font-weight: 600; }
+.flag-score { font-family: 'DM Mono', monospace; font-size: 12px; margin-left: auto; padding: 1px 7px; border-radius: 10px; background: var(--surface-soft); font-weight: 600; }
 
 /* ── EXPANDABLE FLAGS ── */
 .flag-box .flag-list li:nth-child(n+9) {
@@ -967,11 +1067,20 @@ body {
   justify-content: center;
 }
 .loader-box {
-  background: white;
+  background: var(--white);
   border-radius: 14px;
   padding: 36px 48px;
   text-align: center;
   box-shadow: var(--shadow-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 .spinner {
   width: 42px; height: 42px;
@@ -1118,6 +1227,9 @@ body {
   <div class="app-bar-sub">Student Performance Tracker</div>
   <div class="app-bar-spacer"></div>
   <div class="app-bar-info" id="bar-class-info"></div>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch theme">
+    <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
+  </button>
 </header>
 
 <!-- TABS -->
@@ -1673,6 +1785,74 @@ const CACHE_KEY = 'eduStats_history';
 const MAX_CACHE_ENTRIES = 5;
 const REVIEW_RECIPIENT = 'm.hamza.2007.2022+EduStats-Comments@gmail.com';
 const REVIEW_SUBJECT_PREFIX = 'EduStats Website Review';
+const THEME_KEY = 'eduStats_theme';
+
+function getStoredTheme() {
+  const stored = localStorage.getItem(THEME_KEY);
+  return (stored === 'light' || stored === 'dark') ? stored : null;
+}
+
+function getSystemTheme() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function updateThemeToggle(theme) {
+  const toggle = $('theme-toggle');
+  if (!toggle) return;
+  const isDark = theme === 'dark';
+  toggle.setAttribute('aria-pressed', String(isDark));
+  toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+  toggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+  const icon = toggle.querySelector('.theme-toggle-icon');
+  if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+
+function applyTheme(theme, persist = true) {
+  const next = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  if (persist) {
+    localStorage.setItem(THEME_KEY, next);
+  }
+  updateThemeToggle(next);
+}
+
+function initThemeToggle() {
+  const toggle = $('theme-toggle');
+  if (!toggle) return;
+
+  const initial = document.documentElement.getAttribute('data-theme') || getStoredTheme() || getSystemTheme();
+  applyTheme(initial, false);
+
+  toggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+    reBuildAllCharts();
+  });
+
+  if (window.matchMedia) {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handlePreferenceChange = (event) => {
+      if (!getStoredTheme()) {
+        applyTheme(event.matches ? 'dark' : 'light', false);
+      }
+    };
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', handlePreferenceChange);
+    } else if (typeof media.addListener === 'function') {
+      media.addListener(handlePreferenceChange);
+    }
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+        reBuildAllCharts();
+      }
+    });
+  });
+  observer.observe(document.documentElement, { attributes: true });
+  }
+}
 
 const Cache = {
   // Get all cache entries
@@ -1782,7 +1962,7 @@ function updateHistoryDisplay() {
         `<div style="font-size: 13px; color: var(--ink-faint); font-style: italic;">No saved entries yet. Complete an analysis to save.</div>` :
         `<div style="display: flex; flex-direction: column; gap: 8px;">
           ${entries.map(entry => `
-            <div style="background: white; padding: 12px 14px; border-radius: 6px; border: 1px solid var(--rule); cursor: pointer; transition: all var(--transition); ${state.currentCacheId === entry.id ? 'border-color: var(--primary); background: var(--primary-tint); font-weight: 600;' : ''}"
+              <div style="background: var(--white); padding: 12px 14px; border-radius: 6px; border: 1px solid var(--rule); cursor: pointer; transition: all var(--transition); ${state.currentCacheId === entry.id ? 'border-color: var(--primary); background: var(--primary-tint); font-weight: 600;' : ''}"
                  onclick="Cache.restoreEntry(${entry.id}); updateHistoryDisplay(); switchTab('entry'); toast('Restored: ${esc(entry.label)}', 'ok')">
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div>
@@ -2802,6 +2982,46 @@ function renderGraphsTab() {
 const COLORS = ['#1e4b8f','#15803d','#b45309','#6d28d9','#0e7490','#b91c1c','#064e3b','#4338ca'];
 const PALETTE = ['rgba(30,75,143,.8)','rgba(21,128,61,.8)','rgba(180,83,9,.8)','rgba(109,40,217,.8)','rgba(14,116,144,.8)','rgba(185,28,28,.8)'];
 
+function isDarkTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
+function getChartColors() {
+  const dark = isDarkTheme();
+  return {
+    primary: dark ? '#9cadff' : '#1e4b8f',
+    green: dark ? '#4ade80' : '#15803d',
+    amber: dark ? '#fbbf24' : '#b45309',
+    purple: dark ? '#c4b5fd' : '#6d28d9',
+    teal: dark ? '#67e8f9' : '#0e7490',
+    red: dark ? '#f87171' : '#b91c1c',
+    text: dark ? '#e5ecf6' : '#1a2332',
+    textFaint: dark ? '#90a2be' : '#8a9ab0',
+    background: dark ? '#162132' : '#ffffff',
+    gridColor: dark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.05)'
+  };
+}
+
+function getChartPaletteColors() {
+  const dark = isDarkTheme();
+  if (dark) {
+    return ['#9cadff','#4ade80','#fbbf24','#c4b5fd','#67e8f9','#f87171'];
+  }
+  return COLORS;
+}
+
+function reBuildAllCharts() {
+  const A = state.analysis;
+  if (!A) return;
+  buildDistChart(A);
+  buildCumFreqChart(A);
+  buildSubjectsChart(A);
+  buildBestFitChart(A);
+  buildBoxChart(A);
+  buildRadarChart(A);
+  if ($('interp-chart-dist')) renderInterpretationTab();
+}
+
 function renderInterpretationTab() {
   const A = state.analysis;
   if(!A) return;
@@ -3096,6 +3316,8 @@ function buildDistChart(A, canvasId='chart-dist') {
   destroyChart(chartKey);
   const bins = Stat.histogram(A.classMeans, Math.min(10, Math.max(5, Math.ceil(A.classMeans.length/3))));
   const ctx = $(canvasId).getContext('2d');
+  const colors = getChartColors();
+  const palette = getChartPaletteColors();
   state.chartInstances[chartKey] = new Chart(ctx, {
     type:'bar',
     data:{
@@ -3103,8 +3325,8 @@ function buildDistChart(A, canvasId='chart-dist') {
       datasets:[{
         label:'Students',
         data: bins.map(b=>b.count),
-        backgroundColor: COLORS[0]+'cc',
-        borderColor: COLORS[0],
+        backgroundColor: palette[0]+'cc',
+        borderColor: palette[0],
         borderWidth:1,
         borderRadius:4
       }]
@@ -3113,8 +3335,8 @@ function buildDistChart(A, canvasId='chart-dist') {
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{ legend:{display:false}, tooltip:{callbacks:{title:i=>'Score: '+i[0].label}} },
       scales:{
-        x:{ title:{display:true,text:'Score Range',font:{size:11}} },
-        y:{ title:{display:true,text:'No. of Students',font:{size:11}}, ticks:{stepSize:1}, beginAtZero:true }
+        x:{ title:{display:true,text:'Score Range',font:{size:11}}, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'No. of Students',font:{size:11}}, ticks:{stepSize:1, color:colors.textFaint}, beginAtZero:true, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -3126,6 +3348,8 @@ function buildCumFreqChart(A, canvasId='chart-cumfreq') {
   destroyChart(chartKey);
   const pts = Stat.cumFreq(A.classMeans);
   const ctx = $(canvasId).getContext('2d');
+  const colors = getChartColors();
+  const palette = getChartPaletteColors();
   state.chartInstances[chartKey] = new Chart(ctx, {
     type:'line',
     data:{
@@ -3133,8 +3357,8 @@ function buildCumFreqChart(A, canvasId='chart-cumfreq') {
         label:'Cumulative Students',
         data: pts.map(p=>({x:parseFloat(p.x.toFixed(1)),y:p.y})),
         fill:true,
-        backgroundColor:'rgba(30,75,143,.1)',
-        borderColor: COLORS[0],
+        backgroundColor:isDarkTheme()?'rgba(156,173,255,.15)':'rgba(30,75,143,.1)',
+        borderColor: palette[0],
         borderWidth:2,
         pointRadius:3,
         tension:.35
@@ -3144,8 +3368,8 @@ function buildCumFreqChart(A, canvasId='chart-cumfreq') {
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{ legend:{display:false} },
       scales:{
-        x:{ type:'linear', title:{display:true,text:'Score (Mean)',font:{size:11}}, min:0, max:100 },
-        y:{ title:{display:true,text:'Cumulative Students',font:{size:11}}, beginAtZero:true, ticks:{stepSize:1} }
+        x:{ type:'linear', title:{display:true,text:'Score (Mean)',font:{size:11}}, min:0, max:100, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'Cumulative Students',font:{size:11}}, beginAtZero:true, ticks:{stepSize:1, color:colors.textFaint}, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -3156,6 +3380,8 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
   destroyChart(chartKey);
   const subjs = state.subjects;
   const ctx = $(canvasId).getContext('2d');
+  const colors = getChartColors();
+  const palette = getChartPaletteColors();
   state.chartInstances[chartKey] = new Chart(ctx, {
     type:'bar',
     data:{
@@ -3164,15 +3390,15 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
         {
           label:'Q3 (75th %ile)',
           data: subjs.map(s=>A.subjectStats[s].box?.q3??null),
-          backgroundColor:'rgba(21,128,61,.25)',
+          backgroundColor:isDarkTheme()?'rgba(74,222,128,.25)':'rgba(21,128,61,.25)',
           borderColor:'transparent',
           borderRadius:3,
         },
         {
           label:'Mean',
           data: subjs.map(s=>A.subjectStats[s].mean),
-          backgroundColor: subjs.map((_,i)=>COLORS[i%COLORS.length]+'cc'),
-          borderColor: subjs.map((_,i)=>COLORS[i%COLORS.length]),
+          backgroundColor: subjs.map((_,i)=>palette[i%palette.length]+'cc'),
+          borderColor: subjs.map((_,i)=>palette[i%palette.length]),
           borderWidth:1.5,
           borderRadius:3,
           type:'bar'
@@ -3180,7 +3406,7 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
         {
           label:'Q1 (25th %ile)',
           data: subjs.map(s=>A.subjectStats[s].box?.q1??null),
-          backgroundColor:'rgba(185,28,28,.15)',
+          backgroundColor:isDarkTheme()?'rgba(248,113,113,.15)':'rgba(185,28,28,.15)',
           borderColor:'transparent',
           borderRadius:3,
         }
@@ -3188,10 +3414,10 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
     },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
-      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}} },
+      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,color:colors.text}} },
       scales:{
-        x:{ ticks:{maxRotation:30} },
-        y:{ title:{display:true,text:'Score',font:{size:11}}, min:0, max:100 }
+        x:{ ticks:{maxRotation:30,color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'Score',font:{size:11}}, min:0, max:100, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -3204,13 +3430,15 @@ function buildBestFitChart(A, canvasId='chart-bestfit') {
   const pts = sorted.map((s,i)=>({x:i+1,y:s.mean,name:s.name}));
   const reg = Stat.linReg(pts);
   const ctx = $(canvasId).getContext('2d');
+  const colors = getChartColors();
+  const palette = getChartPaletteColors();
 
   const datasets = [{
     label:'Student Means',
     data: pts.map(p=>({x:p.x,y:p.y,name:p.name})),
     type:'scatter',
-    backgroundColor: COLORS[0]+'aa',
-    borderColor: COLORS[0],
+    backgroundColor: palette[0]+'aa',
+    borderColor: palette[0],
     pointRadius:5, pointHoverRadius:7,
     showLine:false
   }];
@@ -3220,7 +3448,7 @@ function buildBestFitChart(A, canvasId='chart-bestfit') {
       label:`Trend (R²=${reg.r2.toFixed(2)})`,
       data:[{x:1,y:reg.predict(1)},{x:pts.length,y:reg.predict(pts.length)}],
       type:'line',
-      borderColor:'#dc2626',
+      borderColor:isDarkTheme()?'#f87171':'#dc2626',
       borderWidth:2,
       borderDash:[5,4],
       pointRadius:0,
@@ -3234,12 +3462,12 @@ function buildBestFitChart(A, canvasId='chart-bestfit') {
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{
-        legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
+        legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,color:colors.text}},
         tooltip:{callbacks:{label:ctx=>ctx.raw.name ? `${ctx.raw.name}: ${fmtNum(ctx.raw.y)}` : fmtNum(ctx.raw.y)}}
       },
       scales:{
-        x:{ title:{display:true,text:'Rank (1 = highest)',font:{size:11}}, ticks:{stepSize:1} },
-        y:{ title:{display:true,text:'Mean Score',font:{size:11}}, min:0, max:100 }
+        x:{ title:{display:true,text:'Rank (1 = highest)',font:{size:11}}, ticks:{stepSize:1,color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'Mean Score',font:{size:11}}, min:0, max:100, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -3248,12 +3476,11 @@ function buildBestFitChart(A, canvasId='chart-bestfit') {
 function buildBoxChart(A, canvasId='chart-box') {
   const chartKey = canvasId === 'chart-box' ? 'box' : canvasId;
   destroyChart(chartKey);
-  // Simulate box plot using floating bars for whisker + IQR box
   const subjs = state.subjects;
   const ctx = $(canvasId).getContext('2d');
+  const colors = getChartColors();
+  const palette = getChartPaletteColors();
 
-  // We'll use a custom bar showing [Q1, Q3] with median line
-  // whiskers as separate error-bar style points
   const q1s = subjs.map(s=>A.subjectStats[s].box?.q1??0);
   const q3s = subjs.map(s=>A.subjectStats[s].box?.q3??0);
   const medians = subjs.map(s=>A.subjectStats[s].box?.q2??null);
@@ -3268,8 +3495,8 @@ function buildBoxChart(A, canvasId='chart-box') {
         {
           label:'IQR Box (Q1–Q3)',
           data: q1s.map((q1,i)=>[q1,q3s[i]]),
-          backgroundColor: COLORS.map(c=>c+'55'),
-          borderColor: COLORS,
+          backgroundColor: palette.map(c=>c+'55'),
+          borderColor: palette,
           borderWidth:2,
           borderRadius:2,
           borderSkipped:false
@@ -3278,7 +3505,7 @@ function buildBoxChart(A, canvasId='chart-box') {
           label:'Min',
           data: mins,
           type:'scatter',
-          backgroundColor:'#000000',
+          backgroundColor:isDarkTheme()?'#e5ecf6':'#000000',
           pointStyle:'dash',
           pointRadius:8,
           showLine:false
@@ -3287,7 +3514,7 @@ function buildBoxChart(A, canvasId='chart-box') {
           label:'Max',
           data: maxs,
           type:'scatter',
-          backgroundColor:'#111827',
+          backgroundColor:isDarkTheme()?'#c4d1e3':'#111827',
           pointStyle:'dash',
           pointRadius:8,
           showLine:false
@@ -3296,7 +3523,7 @@ function buildBoxChart(A, canvasId='chart-box') {
           label:'Median',
           data: medians,
           type:'scatter',
-          backgroundColor:'#7f1d1d',
+          backgroundColor:isDarkTheme()?'#f87171':'#7f1d1d',
           pointStyle:'crossRot',
           pointRadius:8,
           showLine:false
@@ -3305,10 +3532,10 @@ function buildBoxChart(A, canvasId='chart-box') {
     },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
-      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}} },
+      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,color:colors.text}} },
       scales:{
-        x:{ ticks:{maxRotation:30} },
-        y:{ title:{display:true,text:'Score',font:{size:11}}, min:0, max:100 }
+        x:{ ticks:{maxRotation:30,color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'Score',font:{size:11}}, min:0, max:100, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -3322,28 +3549,30 @@ function buildRadarChart(A, canvasId='chart-radar') {
   const bot = A.sorted[A.sorted.length-1];
   const classMeans = subjs.map(s=>A.subjectStats[s].mean||0);
   const ctx = $(canvasId).getContext('2d');
+  const colors = getChartColors();
+  const palette = getChartPaletteColors();
 
   const datasets = [{
     label:'Class Average',
     data:classMeans,
-    backgroundColor:'rgba(30,75,143,.1)',
-    borderColor:COLORS[0],
+    backgroundColor:isDarkTheme()?'rgba(156,173,255,.15)':'rgba(30,75,143,.1)',
+    borderColor:palette[0],
     borderWidth:2,
     pointRadius:3
   }];
   if(top) datasets.push({
     label:`Top: ${top.name}`,
     data:subjs.map(s=>{const v=top.marks[s];return(!isNaN(parseFloat(v)))?parseFloat(v):0;}),
-    backgroundColor:'rgba(21,128,61,.1)',
-    borderColor:'#15803d',
+    backgroundColor:isDarkTheme()?'rgba(74,222,128,.15)':'rgba(21,128,61,.1)',
+    borderColor:isDarkTheme()?'#4ade80':'#15803d',
     borderWidth:2,
     pointRadius:3
   });
   if(bot&&bot!==top) datasets.push({
     label:`Low: ${bot.name}`,
     data:subjs.map(s=>{const v=bot.marks[s];return(!isNaN(parseFloat(v)))?parseFloat(v):0;}),
-    backgroundColor:'rgba(185,28,28,.1)',
-    borderColor:'#b91c1c',
+    backgroundColor:isDarkTheme()?'rgba(248,113,113,.15)':'rgba(185,28,28,.1)',
+    borderColor:isDarkTheme()?'#f87171':'#b91c1c',
     borderWidth:2,
     pointRadius:3,
     borderDash:[4,3]
@@ -3354,8 +3583,8 @@ function buildRadarChart(A, canvasId='chart-radar') {
     data:{ labels:subjs, datasets },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
-      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}} },
-      scales:{ r:{ min:0, max:100, ticks:{font:{size:10},stepSize:20}, pointLabels:{font:{size:11}} } }
+      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,color:colors.text}} },
+      scales:{ r:{ min:0, max:100, ticks:{font:{size:10},stepSize:20,color:colors.textFaint}, pointLabels:{font:{size:11},color:colors.text}, grid:{color:colors.gridColor} } }
     }
   });
 }
@@ -3863,6 +4092,7 @@ function switchTab(name) {
    ║                  INIT                             ║
    ╚═══════════════════════════════════════════════════╝ */
 document.addEventListener('DOMContentLoaded',()=>{
+  initThemeToggle();
   renderSubjectChips(); // show empty state
   updateBarInfo();
   initTableScrollHints();
