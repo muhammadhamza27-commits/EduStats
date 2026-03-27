@@ -3992,7 +3992,6 @@ function renderAnalysisTab() {
       <ul class="flag-list">${
         students.length
           ? students.map(s=>`<li>${esc(s.name||s.id)} <span class="flag-score">${fmtNum(s[scoreKey])}</span></li>`).join('')
-          + (moreCount > 0 ? `<li class="flag-more-text" style="font-style:italic;color:var(--ink-faint)">…and ${moreCount} more</li>` : '')
           : '<li style="color:var(--ink-faint);font-style:italic">None</li>'
       }</ul>
       ${moreCount > 0 ? `<div class="flag-expand-text" onclick="toggleFlagExpand('${flagId}')">See more</div>` : ''}
