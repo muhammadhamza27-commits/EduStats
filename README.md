@@ -46,6 +46,26 @@ This app can be deployed to any static host:
    - `cdn.jsdelivr.net`
    - `cdnjs.cloudflare.com`
 
+## Release Workflow (Dev -> Live)
+
+Use `EduStats.html` for development and testing. When ready to publish to the live site (`index.html`), run:
+
+```powershell
+./release.ps1 -Message "Release: dark mode improvements"
+```
+
+What it does:
+
+- Copies `EduStats.html` -> `index.html`
+- Stages and commits `index.html`
+- Pushes to `main`
+
+Optional local-only release (no push):
+
+```powershell
+./release.ps1 -Message "Release: test batch" -NoPush
+```
+
 ## Distribution Checklist
 
 1. Verify all tabs load and switch correctly on desktop/tablet/mobile.
