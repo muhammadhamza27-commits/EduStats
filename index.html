@@ -853,6 +853,7 @@ html[data-theme='dark'] .btn-danger-ghost:active {
   border-radius: var(--r);
   border: 1px solid var(--rule);
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   scroll-behavior: smooth;
   position: relative;
   transition: box-shadow var(--transition);
@@ -888,7 +889,7 @@ html[data-theme='dark'] .btn-danger-ghost:active {
   .tbl-wrap.scrollable::after { display: none; }
 }
 
-.data-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-tbl { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px; }
 .data-tbl thead th {
   background: var(--primary);
   color: white;
@@ -1049,6 +1050,7 @@ html[data-theme='dark'] .btn-danger-ghost:active {
 
 /* ── STATS TABLE ── */
 .stats-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.stats-wrap .stats-tbl { min-width: 940px; }
 .stats-tbl thead th {
   background: var(--page);
   padding: 10px 12px;
@@ -1113,6 +1115,16 @@ html[data-theme='dark'] .btn-danger-ghost:active {
   }
 }
 
+@media (max-width: 768px) {
+  .stats-tbl thead th:nth-child(2),
+  .stats-tbl tbody td:nth-child(2) {
+    position: static;
+    left: auto;
+    z-index: auto;
+    background: inherit;
+  }
+}
+
 @media (max-width: 640px) {
   .data-tbl thead th:nth-child(3),
   .data-tbl tbody td:nth-child(3) {
@@ -1121,6 +1133,16 @@ html[data-theme='dark'] .btn-danger-ghost:active {
     z-index: auto;
   }
   .data-tbl tbody td:nth-child(3) {
+    background: inherit;
+  }
+}
+
+@media (max-width: 768px) {
+  .data-tbl thead th:nth-child(2),
+  .data-tbl tbody td:nth-child(2) {
+    position: static;
+    left: auto;
+    z-index: auto;
     background: inherit;
   }
 }
@@ -2311,6 +2333,7 @@ const loaderRuntime = {
 
 const PDF_MAX_BYTES = 2 * 1024 * 1024;
 const taskLocks = new Set();
+let tableHintsResizeObserver = null;
 const TAB_ORDER = ['setup', 'entry', 'analysis', 'graphs', 'reports', 'guide', 'review'];
 const TAB_LABELS = {
   setup: 'Setup',
@@ -3177,25 +3200,23 @@ function initTableScrollHints() {
     }
   }
 
-  // Initial check for all tables
-  tables.forEach(checkTableScroll);
-
-  // Monitor scroll state
+  // Initial check and one-time scroll binding per table.
   tables.forEach(tbl => {
+    checkTableScroll(tbl);
+    if (tbl.dataset.scrollHintBound === '1') return;
+    tbl.dataset.scrollHintBound = '1';
     tbl.addEventListener('scroll', () => {
-      if (tbl.scrollLeft > 0) {
-        tbl.classList.add('scrolled');
-      } else {
-        tbl.classList.remove('scrolled');
-      }
+      if (tbl.scrollLeft > 0) tbl.classList.add('scrolled');
+      else tbl.classList.remove('scrolled');
     }, { passive: true });
   });
 
-  // Single resize listener (not per table)
-  const resizeObserver = new ResizeObserver(() => {
-    tables.forEach(checkTableScroll);
-  });
-  tables.forEach(tbl => resizeObserver.observe(tbl));
+  if (!tableHintsResizeObserver) {
+    tableHintsResizeObserver = new ResizeObserver(() => {
+      document.querySelectorAll('.tbl-wrap').forEach(checkTableScroll);
+    });
+  }
+  tables.forEach(tbl => tableHintsResizeObserver.observe(tbl));
 }
 
 /* ── TAB BAR SCROLL DETECTION ── */
@@ -3812,7 +3833,7 @@ function renderAnalysisTab() {
   <div class="card-head">
     <div class="card-title"><span class="icon">📐</span> Per-Subject Statistics</div>
   </div>
-  <div style="overflow-x:auto">
+  <div class="tbl-wrap stats-wrap">
   <table class="stats-tbl">
   <thead><tr>
     <th>Subject</th>
@@ -3860,7 +3881,7 @@ function renderAnalysisTab() {
   <div class="card-head">
     <div class="card-title"><span class="icon">🏅</span> Student Rankings</div>
   </div>
-  <div style="overflow-x:auto">
+  <div class="tbl-wrap stats-wrap">
   <table class="stats-tbl">
   <thead><tr>
     <th>Rank</th>
@@ -3906,6 +3927,7 @@ function renderAnalysisTab() {
 
   // Initialize tooltip positioning after render
   setTimeout(() => initTooltipPositioning(), 50);
+  setTimeout(() => initTableScrollHints(), 80);
 
   // Flags
   html += `<div class="card"><div class="card-head"><div class="card-title"><span class="icon">🚩</span> Performance Flags</div></div>`;
@@ -4584,10 +4606,18 @@ function buildRadarChart(A, canvasId='chart-radar') {
   const chartKey = canvasId === 'chart-radar' ? 'radar' : canvasId;
   destroyChart(chartKey);
   const subjs = state.subjects;
+  const canvas = $(canvasId);
+  if (!canvas || !subjs.length) return;
   const top = A.sorted[0];
   const bot = A.sorted[A.sorted.length-1];
   const classMeans = subjs.map(s=>A.subjectStats[s].mean||0);
-  const ctx = $(canvasId).getContext('2d');
+  const toPct = (score, subject) => {
+    const maxMark = state.subjectMaxMarks[subject] || 100;
+    const num = parseFloat(score);
+    if (isNaN(num)) return null;
+    return (num / maxMark) * 100;
+  };
+  const ctx = canvas.getContext('2d');
   const colors = getChartColors();
   const palette = getChartPaletteColors();
 
@@ -4601,7 +4631,7 @@ function buildRadarChart(A, canvasId='chart-radar') {
   }];
   if(top) datasets.push({
     label:`Top: ${top.name}`,
-    data:subjs.map(s=>{const v=top.marks[s];return(!isNaN(parseFloat(v)))?parseFloat(v):0;}),
+    data:subjs.map(s=>toPct(top.marks[s], s)),
     backgroundColor:isDarkTheme()?'rgba(74,222,128,.15)':'rgba(21,128,61,.1)',
     borderColor:isDarkTheme()?'#4ade80':'#15803d',
     borderWidth:2,
@@ -4609,7 +4639,7 @@ function buildRadarChart(A, canvasId='chart-radar') {
   });
   if(bot&&bot!==top) datasets.push({
     label:`Low: ${bot.name}`,
-    data:subjs.map(s=>{const v=bot.marks[s];return(!isNaN(parseFloat(v)))?parseFloat(v):0;}),
+    data:subjs.map(s=>toPct(bot.marks[s], s)),
     backgroundColor:isDarkTheme()?'rgba(248,113,113,.15)':'rgba(185,28,28,.1)',
     borderColor:isDarkTheme()?'#f87171':'#b91c1c',
     borderWidth:2,
@@ -4622,8 +4652,23 @@ function buildRadarChart(A, canvasId='chart-radar') {
     data:{ labels:subjs, datasets },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
-      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,color:colors.text}} },
-      scales:{ r:{ min:0, max:100, ticks:{font:{size:10},stepSize:20,color:colors.textFaint}, pointLabels:{font:{size:11},color:colors.text}, grid:{color:colors.gridColor} } }
+      plugins:{ legend:{position:'bottom',labels:{font:{size: window.innerWidth < 640 ? 10 : 11},boxWidth:12,color:colors.text}} },
+      scales:{
+        r:{
+          min:0,
+          max:100,
+          ticks:{font:{size: window.innerWidth < 640 ? 9 : 10},stepSize:20,color:colors.textFaint,backdropColor:'transparent'},
+          pointLabels:{
+            font:{size: window.innerWidth < 640 ? 9 : 11},
+            color:colors.text,
+            callback:(label)=>{
+              const text = String(label || '');
+              return window.innerWidth < 640 && text.length > 10 ? text.slice(0, 9) + '…' : text;
+            }
+          },
+          grid:{color:colors.gridColor}
+        }
+      }
     }
   });
 }
