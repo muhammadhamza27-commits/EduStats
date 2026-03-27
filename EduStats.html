@@ -594,6 +594,79 @@ html[data-theme='dark'] .theme-toggle-icon {
 }
 .btn-block { width: 100%; justify-content: center; padding: 12px; }
 
+html[data-theme='dark'] .btn-primary {
+  background: #7678ed;
+  color: #0f1724;
+}
+
+html[data-theme='dark'] .btn-primary:hover {
+  background: #9cadff;
+  box-shadow: 0 4px 12px rgba(153, 173, 255, .4);
+}
+
+html[data-theme='dark'] .btn-primary:active {
+  background: #8a96f0;
+}
+
+html[data-theme='dark'] .btn-success {
+  background: #4ade80;
+  color: #0f1724;
+}
+
+html[data-theme='dark'] .btn-success:hover {
+  background: #22c55e;
+  box-shadow: 0 4px 12px rgba(74, 222, 128, .3);
+}
+
+html[data-theme='dark'] .btn-success:active {
+  background: #16a34a;
+}
+
+html[data-theme='dark'] .btn-outline {
+  background: #162132;
+  color: #e5ecf6;
+  border-color: #2a3b52;
+}
+
+html[data-theme='dark'] .btn-outline:hover {
+  border-color: #9cadff;
+  color: #b9c6ff;
+  background: #253852;
+}
+
+html[data-theme='dark'] .btn-outline:active {
+  background: #1e2d44;
+}
+
+html[data-theme='dark'] .btn-ghost {
+  background: transparent;
+  color: #c4d1e3;
+}
+
+html[data-theme='dark'] .btn-ghost:hover {
+  background: #1e2d44;
+  color: #e5ecf6;
+}
+
+html[data-theme='dark'] .btn-ghost:active {
+  background: #1e2d44;
+}
+
+html[data-theme='dark'] .btn-danger-ghost {
+  background: transparent;
+  color: #f87171;
+  border-color: transparent;
+}
+
+html[data-theme='dark'] .btn-danger-ghost:hover {
+  background: #3d1e25;
+  border-color: #f87171;
+}
+
+html[data-theme='dark'] .btn-danger-ghost:active {
+  background: #3d1e25;
+}
+
 /* ── SUBJECTS ── */
 .subject-adder { display: flex; gap: 8px; margin-bottom: 14px; }
 .subject-adder input {
@@ -834,10 +907,122 @@ html[data-theme='dark'] .theme-toggle-icon {
   text-align: center;
   font-family: 'DM Mono', monospace;
   font-size: 12.5px;
+  transition: background-color .24s ease, color .24s ease, box-shadow .24s ease;
 }
 .stats-tbl tbody td:first-child { text-align: left; font-family: 'Lato', sans-serif; font-weight: 600; font-size: 13px; }
 .stats-tbl tbody tr:last-child td { border-bottom: none; }
 .stats-tbl tbody tr:hover td { background: var(--page); }
+
+.stats-tbl tbody td.stat-interactive {
+  position: relative;
+  cursor: default;
+}
+
+.stats-tbl tbody td .hover-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px dashed transparent;
+  transition: border-color .22s ease, color .22s ease;
+  cursor: help;
+}
+
+.stats-tbl tbody td.stat-interactive:hover .hover-value,
+.stats-tbl tbody td.stat-interactive:focus-within .hover-value {
+  border-bottom-color: currentColor;
+}
+
+.stats-tbl tbody td .detail-tip {
+  position: fixed;
+  left: 50%;
+  top: auto;
+  bottom: auto;
+  transform: translateX(-50%) translateY(-12px);
+  min-width: 220px;
+  max-width: 320px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: left;
+  box-shadow: var(--shadow-lg);
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .24s ease, transform .24s ease, visibility .24s ease;
+}
+
+html[data-theme='dark'] .stats-tbl tbody td .detail-tip {
+  background: #1a2332;
+  color: #e5ecf6;
+}
+
+.stats-tbl tbody td.stat-interactive:hover .detail-tip,
+.stats-tbl tbody td.stat-interactive:focus-within .detail-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+.detail-tip-title {
+  font-family: 'Lato', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.detail-tip-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  opacity: .9;
+  margin-bottom: 6px;
+}
+
+.detail-tip-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: 'Lato', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.detail-tip-list li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-score-cell {
+  font-weight: 600;
+}
+
+.rank-score-cell.high {
+  background: var(--green-pale);
+}
+
+.rank-score-cell.low {
+  background: var(--red-pale);
+}
+
+.rank-score-cell.outlier {
+  background: var(--amber-pale);
+  font-weight: 700;
+}
+
+.stats-tbl tbody tr:hover td.rank-score-cell.high {
+  background: var(--green-pale);
+}
+
+.stats-tbl tbody tr:hover td.rank-score-cell.low {
+  background: var(--red-pale);
+}
+
+.stats-tbl tbody tr:hover td.rank-score-cell.outlier {
+  background: var(--amber-pale);
+}
 
 /* ── FLAG SECTIONS ── */
 .flags-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
@@ -1066,42 +1251,250 @@ html[data-theme='dark'] .theme-toggle-icon {
 .toast.warn { background: var(--amber); }
 @keyframes toastIn { from { transform: translateY(16px); opacity:0; } to { transform: none; opacity:1; } }
 
-/* ── LOADING ── */
-#loader {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.5);
-  z-index: 9998;
-  display: none;
-  align-items: center;
-  justify-content: center;
+ /* ── LOADING ── */
+ #loader {
+   position: fixed; inset: 0;
+   background: rgba(0,0,0,.65);
+   z-index: 9998;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   opacity: 0;
+   visibility: hidden;
+   pointer-events: none;
+   transition: opacity .24s ease, visibility .24s ease;
+ }
+ #loader.is-visible {
+   opacity: 1;
+   visibility: visible;
+   pointer-events: auto;
+ }
+ .loader-box {
+   background: var(--white);
+   border-radius: 14px;
+   padding: 40px 52px;
+   text-align: center;
+   box-shadow: var(--shadow-lg);
+   transform: scale(0.96) translateY(8px);
+   opacity: 0;
+   transition: transform .28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity .2s ease;
+   min-width: 280px;
+ }
+ #loader.is-visible .loader-box {
+   transform: scale(1) translateY(0);
+   opacity: 1;
+ }
+ 
+ @keyframes fadeInLoader {
+   from { opacity: 0; }
+   to { opacity: 1; }
+ }
+ 
+ @keyframes scaleInLoader {
+   from { transform: scale(0.95); opacity: 0; }
+   to { transform: scale(1); opacity: 1; }
+ }
+ 
+ @keyframes spin {
+   to { transform: rotate(360deg); }
+ }
+ 
+ @keyframes pulse-dot {
+   0%, 100% { opacity: 0.3; }
+   50% { opacity: 1; }
+ }
+ 
+ @keyframes shimmer {
+   0% { background-position: -1000px 0; }
+   100% { background-position: 1000px 0; }
+ }
+ 
+ .spinner {
+   display: inline-flex;
+   gap: 8px;
+   align-items: center;
+   justify-content: center;
+   margin: 0 auto 20px;
+   height: 50px;
+  position: relative;
+  animation: spin 3.4s linear infinite;
+ }
+
+.spinner-orbit {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(61, 52, 139, 0.18);
+  border-top-color: rgba(61, 52, 139, 0.65);
+  animation: spin 1.1s linear infinite;
 }
-.loader-box {
-  background: var(--white);
-  border-radius: 14px;
-  padding: 36px 48px;
-  text-align: center;
-  box-shadow: var(--shadow-lg);
+ 
+ .spinner-dot {
+   width: 10px;
+   height: 10px;
+   border-radius: 50%;
+   background: var(--primary);
+   animation: pulse-dot 1.2s ease-in-out infinite;
+  box-shadow: 0 0 0 2px rgba(61, 52, 139, 0.14);
+ }
+ 
+ .spinner-dot:nth-child(2) {
+   animation-delay: 0.2s;
+ }
+ 
+ .spinner-dot:nth-child(3) {
+   animation-delay: 0.4s;
+ }
+ 
+ .loader-msg {
+   font-weight: 600;
+   color: var(--ink);
+   font-size: 15px;
+   margin-bottom: 8px;
+ }
+ 
+ .loader-progress {
+   font-size: 11px;
+   color: var(--ink-faint);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+ }
+ 
+ .loader-step {
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   font-size: 11px;
+   color: var(--ink-faint);
+ }
+ 
+ .loader-step.active {
+   color: var(--primary);
+   font-weight: 500;
+ }
+ 
+ .loader-step::before {
+   content: '●';
+   font-size: 8px;
+ }
+ 
+ .loader-sub {
+   font-size: 12px;
+   color: var(--ink-faint);
+   margin-top: 8px;
+ }
+
+.loader-track {
+  width: 100%;
+  max-width: 280px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+  overflow: hidden;
+  margin: 6px auto 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+.loader-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3d348b 0%, #7678ed 100%);
+  transition: width 280ms ease;
+  animation: shimmer 2.2s linear infinite;
+  background-size: 200% 100%;
 }
-.spinner {
-  width: 42px; height: 42px;
-  border: 4px solid var(--rule);
-  border-top-color: var(--primary);
+
+.live-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.24);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .22s ease, visibility .22s ease;
+}
+
+.live-loader.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.live-loader-card {
+  min-width: 220px;
+  padding: 18px 22px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--white) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rule) 80%, transparent);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateY(8px) scale(.98);
+  opacity: 0;
+  transition: transform .24s ease, opacity .2s ease;
+}
+
+.live-loader.is-visible .live-loader-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.live-ring {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  animation: spin .8s linear infinite;
-  margin: 0 auto 16px;
+  border: 3px solid rgba(61, 52, 139, .16);
+  border-top-color: rgba(61, 52, 139, .95);
+  border-right-color: rgba(118, 120, 237, .9);
+  animation: spin .85s linear infinite;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 3px rgba(61, 52, 139, 0.08) inset;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loader-msg { font-weight: 600; color: var(--ink); font-size: 14px; }
-.loader-sub { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+
+.live-loader-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+ 
+ @media (prefers-reduced-motion: reduce) {
+   *, *::before, *::after {
+     animation-duration: 0.01ms !important;
+     animation-iteration-count: 1 !important;
+     transition-duration: 0.01ms !important;
+     scroll-behavior: auto !important;
+   }
+
+  /* Keep loader animations active so progress is visible during long tasks. */
+  #loader .spinner,
+  #loader .spinner-orbit,
+  #loader .spinner-dot,
+  #loader .loader-bar,
+  #live-loader .live-ring {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+    transition-duration: .2s !important;
+  }
+
+  #loader .spinner {
+    animation-duration: 3.4s !important;
+  }
+
+  #loader .loader-bar {
+    animation-duration: 2.2s !important;
+  }
+ }
 
 /* ── MISC ── */
 .gap-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -1766,9 +2159,27 @@ html[data-theme='dark'] .theme-toggle-icon {
 <!-- LOADER -->
 <div id="loader">
   <div class="loader-box">
-    <div class="spinner"></div>
+    <div class="spinner">
+      <div class="spinner-orbit"></div>
+      <div class="spinner-dot"></div>
+      <div class="spinner-dot"></div>
+      <div class="spinner-dot"></div>
+    </div>
     <div class="loader-msg" id="loader-msg">Generating Report…</div>
-    <div class="loader-sub">This may take a few seconds.</div>
+    <div class="loader-progress" id="loader-progress">
+      <span class="loader-step active" id="step-1">Organizing data</span>
+      <span class="loader-step" id="step-2">Building charts</span>
+      <span class="loader-step" id="step-3">Rendering PDFs</span>
+    </div>
+    <div class="loader-track"><div class="loader-bar" id="loader-bar"></div></div>
+    <div class="loader-sub" id="loader-sub">This may take a moment.</div>
+  </div>
+</div>
+
+<div id="live-loader" class="live-loader" aria-live="polite" aria-busy="false">
+  <div class="live-loader-card">
+    <div class="live-ring"></div>
+    <div class="live-loader-text" id="live-loader-text">Working...</div>
   </div>
 </div>
 
@@ -1786,6 +2197,34 @@ const state = {
   subjectMaxMarks: {},  // {subject: maxMark}
   currentCacheId: null  // Track if viewing a cached entry
 };
+
+const loaderRuntime = {
+  modalShownAt: 0,
+  modalMinMs: 700,
+  modalHideTimer: null,
+  liveShownAt: 0,
+  liveMinMs: 600,
+  liveHideTimer: null
+};
+
+const PDF_MAX_BYTES = 2 * 1024 * 1024;
+
+function getPdfSizeBytes(doc) {
+  try {
+    const buf = doc.output('arraybuffer');
+    return buf ? buf.byteLength : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function warnIfPdfLarge(doc, label='PDF') {
+  const size = getPdfSizeBytes(doc);
+  if (size > PDF_MAX_BYTES) {
+    const mb = (size / (1024 * 1024)).toFixed(2);
+    toast(`${label} is ${mb} MB (target 2.00 MB). Compression already applied; reduce subjects/charts if needed.`, 'warn');
+  }
+}
 
 /* ╔═══════════════════════════════════════════════════╗
    ║            CACHE MANAGEMENT SYSTEM               ║
@@ -2050,6 +2489,47 @@ function fmtNum(n, d=1) {
 }
 function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
+function initTooltipPositioning() {
+  document.querySelectorAll('.stats-tbl .stat-interactive').forEach(cell => {
+    const tip = cell.querySelector('.detail-tip');
+    if (!tip) return;
+    
+    const updatePosition = () => {
+      const cellRect = cell.getBoundingClientRect();
+      const tipRect = tip.getBoundingClientRect();
+      const tipHeight = tipRect.height;
+      const tipWidth = tipRect.width;
+      const viewport = window.innerHeight;
+      const margin = 8;
+      const safetyTop = 10;
+      
+      let top, bottom;
+      
+      // Check if there's enough space above
+      if (cellRect.top - tipHeight - margin > safetyTop) {
+        // Position above
+        top = cellRect.top - tipHeight - margin;
+        bottom = 'auto';
+      } else {
+        // Position below
+        top = cellRect.bottom + margin;
+        bottom = 'auto';
+      }
+      
+      // Center horizontally relative to cell
+      const left = cellRect.left + cellRect.width / 2 - tipWidth / 2;
+      const constrainedLeft = Math.max(5, Math.min(left, window.innerWidth - tipWidth - 5));
+      
+      tip.style.top = top + 'px';
+      tip.style.left = constrainedLeft + 'px';
+    };
+    
+    // Update on hover
+    cell.addEventListener('mouseenter', updatePosition);
+    cell.addEventListener('focusin', updatePosition);
+  });
+}
+
 function toast(msg, type='') {
   const c = $('toast-container');
   const t = document.createElement('div');
@@ -2059,8 +2539,69 @@ function toast(msg, type='') {
   setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; t.style.transition='all .25s'; setTimeout(()=>t.remove(),300); }, 2800);
 }
 
-function showLoader(msg='Generating…') { $('loader-msg').textContent=msg; $('loader').style.display='flex'; }
-function hideLoader() { $('loader').style.display='none'; }
+function yieldToUI(ms=20) {
+  return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, ms)));
+}
+
+function showLoader(msg='Generating…', minMs=700) {
+  $('loader-msg').textContent=msg;
+  $('loader-progress').style.display = 'flex';
+  if ($('loader-bar')) $('loader-bar').style.width = '22%';
+  if ($('loader-sub')) $('loader-sub').textContent = 'Preparing resources...';
+  loaderRuntime.modalShownAt = Date.now();
+  loaderRuntime.modalMinMs = Math.max(500, minMs);
+  if (loaderRuntime.modalHideTimer) {
+    clearTimeout(loaderRuntime.modalHideTimer);
+    loaderRuntime.modalHideTimer = null;
+  }
+  updateLoaderStep(1);
+  $('loader').classList.add('is-visible');
+}
+function updateLoaderStep(step) {
+  for(let i=1; i<=3; i++) {
+    const el = $("step-" + i);
+    if(el) el.classList.toggle('active', i === step);
+  }
+  const bar = $('loader-bar');
+  if (bar) {
+    const widths = { 1: '34%', 2: '72%', 3: '100%' };
+    bar.style.width = widths[step] || '22%';
+  }
+}
+function hideLoader() {
+  const elapsed = Date.now() - loaderRuntime.modalShownAt;
+  const remaining = Math.max(0, loaderRuntime.modalMinMs - elapsed);
+  loaderRuntime.modalHideTimer = setTimeout(() => {
+    $('loader').classList.remove('is-visible');
+    if ($('loader-bar')) $('loader-bar').style.width = '0%';
+  }, remaining);
+}
+
+function showLiveLoader(msg='Working…', minMs=600) {
+  const live = $('live-loader');
+  const text = $('live-loader-text');
+  if (!live || !text) return;
+  text.textContent = msg;
+  live.setAttribute('aria-busy', 'true');
+  loaderRuntime.liveShownAt = Date.now();
+  loaderRuntime.liveMinMs = Math.max(500, minMs);
+  if (loaderRuntime.liveHideTimer) {
+    clearTimeout(loaderRuntime.liveHideTimer);
+    loaderRuntime.liveHideTimer = null;
+  }
+  live.classList.add('is-visible');
+}
+
+function hideLiveLoader() {
+  const live = $('live-loader');
+  if (!live) return;
+  const elapsed = Date.now() - loaderRuntime.liveShownAt;
+  const remaining = Math.max(0, loaderRuntime.liveMinMs - elapsed);
+  loaderRuntime.liveHideTimer = setTimeout(() => {
+    live.classList.remove('is-visible');
+    live.setAttribute('aria-busy', 'false');
+  }, remaining);
+}
 
 function setReviewStatus(message, type='') {
   const status = $('review-status');
@@ -2682,6 +3223,7 @@ function exportCSV() {
 function importCSV() { $('csv-file-input').click(); }
 function handleCSVImport(event) {
   const file=event.target.files[0]; if(!file) return;
+  showLiveLoader('Importing CSV data…', 800);
   const reader=new FileReader();
   reader.onload=e=>{
     try {
@@ -2705,6 +3247,12 @@ function handleCSVImport(event) {
       rebuildMarksTable();
       toast(`Imported ${state.students.length} students`,'ok');
     } catch(err){ toast('CSV import failed: '+err.message,'err'); }
+    hideLiveLoader();
+    event.target.value='';
+  };
+  reader.onerror=()=>{
+    hideLiveLoader();
+    toast('CSV import failed: could not read the file','err');
     event.target.value='';
   };
   reader.readAsText(file);
@@ -2718,22 +3266,32 @@ function parseCsvLine(line){
 /* ╔═══════════════════════════════════════════════════╗
    ║              ANALYSIS                             ║
    ╚═══════════════════════════════════════════════════╝ */
-function runAnalysis() {
+async function runAnalysis() {
   if(!state.students.length) { toast('Add some students first','warn'); return; }
   const valid = state.students.filter(s=>s.name&&Object.values(s.marks).some(v=>v!==''&&v!==null&&!isNaN(parseFloat(v))));
   if(valid.length<2) { toast('Need at least 2 students with marks','warn'); return; }
 
-  state.analysis = Stat.computeAll();
-  renderAnalysisTab();
-  renderGraphsTab();
-  renderReportsTab();
+  showLiveLoader('Analyzing class performance…', 900);
+  await yieldToUI(30);
 
-  // Save to cache
-  const cacheId = Cache.saveEntry();
-  updateHistoryDisplay();
+  try {
+    state.analysis = Stat.computeAll();
+    await yieldToUI(10);
+    renderAnalysisTab();
+    renderGraphsTab();
+    renderReportsTab();
 
-  switchTab('analysis');
-  toast('Analysis complete ✓','ok');
+    // Save to cache
+    const cacheId = Cache.saveEntry();
+    updateHistoryDisplay();
+
+    switchTab('analysis');
+    toast('Analysis complete ✓','ok');
+  } catch (err) {
+    toast('Analysis failed: ' + (err?.message || err), 'err');
+  } finally {
+    hideLiveLoader();
+  }
 }
 
 function renderAnalysisTab() {
@@ -2741,6 +3299,25 @@ function renderAnalysisTab() {
   if(!A) return;
   const n = A.studentStats.length;
   const top = A.sorted[0], bot = A.sorted[A.sorted.length-1];
+  const fmtOne = (v) => (v == null || isNaN(v)) ? '—' : Number(v).toFixed(1);
+  const normalizeToPercent = (score, subject) => {
+    const maxMark = state.subjectMaxMarks[subject] || 100;
+    return (Number(score) / maxMark) * 100;
+  };
+  const studentsForNormalizedValue = (entries, subject, target) =>
+    entries.filter(e => Math.abs(normalizeToPercent(e.value, subject) - target) < 0.05);
+  const detailTip = (title, students, includeIds=false, emptyLabel='No students') => {
+    if(!students.length) {
+      return `<div class="detail-tip"><div class="detail-tip-title">${esc(title)}</div><div class="detail-tip-count">0 students</div><ul class="detail-tip-list"><li>${esc(emptyLabel)}</li></ul></div>`;
+    }
+    const maxRows = 8;
+    const listed = students.slice(0, maxRows);
+    const extraCount = students.length - listed.length;
+    return `<div class="detail-tip"><div class="detail-tip-title">${esc(title)}</div><div class="detail-tip-count">${students.length} student${students.length===1?'':'s'}</div><ul class="detail-tip-list">${listed.map(st => {
+      const label = includeIds && st.id ? `${st.name} (ID: ${st.id})` : st.name;
+      return `<li>${esc(label || st.id || 'Unnamed student')}</li>`;
+    }).join('')}${extraCount > 0 ? `<li>...and ${extraCount} more</li>` : ''}</ul></div>`;
+  };
 
   let html = `
   <!-- Summary cards -->
@@ -2791,15 +3368,12 @@ function renderAnalysisTab() {
   <table class="stats-tbl">
   <thead><tr>
     <th>Subject</th>
-    <th>Students<br><span style="font-weight:400;font-size:10px">with marks</span></th>
+    <th>Total Students</th>
+    <th>Max Mark</th>
     <th>Mean<span class="tip" data-tip="Average mark for the whole class in this subject.">?</span></th>
     <th>Median<span class="tip" data-tip="The middle score when all marks are sorted low to high.">?</span></th>
-    <th>Most Common Score<span class="tip" data-tip="Mode: The most frequently occurring score. Blank if all scores are different.">?</span></th>
     <th>Variation<span class="tip" data-tip="Std Dev: Standard Deviation. Low = similar marks; high = very varied.">?</span></th>
     <th>Min</th>
-    <th>Lower Quartile<span class="tip" data-tip="Q1: 25th percentile — 25% of students scored below this.">?</span></th>
-    <th>Median (Med)</th>
-    <th>Upper Quartile<span class="tip" data-tip="Q3: 75th percentile — 75% of students scored below this.">?</span></th>
     <th>Max</th>
     <th>Spread (IQR)<span class="tip" data-tip="IQR: Interquartile Range (Q3 minus Q1). Shows the spread of the middle 50%.">?</span></th>
     <th>Outliers<span class="tip" data-tip="Students whose score is more than 1.5×IQR below Q1 or above Q3.">?</span></th>
@@ -2809,21 +3383,23 @@ function renderAnalysisTab() {
   state.subjects.forEach(subj=>{
     const ss = A.subjectStats[subj];
     const b = ss.box;
-    const modeStr = ss.mode ? ss.mode.join(', ') : '—';
+    const maxMark = state.subjectMaxMarks[subj] || 100;
+    const minStudents = b ? studentsForNormalizedValue(ss.entries, subj, b.min) : [];
+    const maxStudents = b ? studentsForNormalizedValue(ss.entries, subj, b.max) : [];
+    const minTip = detailTip(`${subj} - Min (${fmtOne(b?.min)})`, minStudents);
+    const maxTip = detailTip(`${subj} - Max (${fmtOne(b?.max)})`, maxStudents);
+    const outlierTip = detailTip(`${subj} - Outliers`, ss.outliers, true, 'No statistical outliers');
     html += `<tr>
       <td>${esc(subj)}</td>
       <td>${ss.count}</td>
-      <td>${fmtNum(ss.mean)}</td>
-      <td>${fmtNum(ss.median)}</td>
-      <td>${modeStr}</td>
-      <td>${fmtNum(ss.stdDev)}</td>
-      <td>${b?fmtNum(b.min):'—'}</td>
-      <td>${b?fmtNum(b.q1):'—'}</td>
-      <td>${b?fmtNum(b.q2):'—'}</td>
-      <td>${b?fmtNum(b.q3):'—'}</td>
-      <td>${b?fmtNum(b.max):'—'}</td>
-      <td>${b?fmtNum(b.iqr):'—'}</td>
-      <td>${ss.outliers.length ? `<span class="badge badge-amber">${ss.outliers.length}</span>` : '<span class="badge badge-green">0</span>'}</td>
+      <td>${fmtOne(maxMark)}</td>
+      <td>${fmtOne(ss.mean)}</td>
+      <td>${fmtOne(ss.median)}</td>
+      <td>${fmtOne(ss.stdDev)}</td>
+      <td class="stat-interactive">${b ? `<span class="hover-value">${fmtOne(b.min)}</span>${minTip}` : '—'}</td>
+      <td class="stat-interactive">${b ? `<span class="hover-value">${fmtOne(b.max)}</span>${maxTip}` : '—'}</td>
+      <td>${b?fmtOne(b.iqr):'—'}</td>
+      <td class="stat-interactive"><span class="hover-value">${ss.outliers.length ? `<span class="badge badge-amber">${ss.outliers.length}</span>` : '<span class="badge badge-green">0</span>'}</span>${outlierTip}</td>
     </tr>`;
   });
   html += `</tbody></table></div></div>`;
@@ -2856,15 +3432,16 @@ function renderAnalysisTab() {
     state.subjects.forEach(subj=>{
       const v=s.marks[subj]; const num=parseFloat(v);
       const b = A.subjectStats[subj].box;
-      let cls='';
+      let cls='rank-score-cell';
       if(!isNaN(num)&&b){
-        if(num<b.fence_lo||num>b.fence_hi) cls=' style="background:var(--amber-pale);font-weight:600"';
-        else if(num>b.q3) cls=' style="background:var(--green-pale)"';
-        else if(num<b.q1) cls=' style="background:var(--red-pale)"';
+        const normalized = normalizeToPercent(num, subj);
+        if(normalized<b.fence_lo||normalized>b.fence_hi) cls+=' outlier';
+        else if(normalized>b.q3) cls+=' high';
+        else if(normalized<b.q1) cls+=' low';
       }
-      html+=`<td${cls}>${(!isNaN(num))?fmtNum(num,1):'—'}</td>`;
+      html+=`<td class="${cls}">${(!isNaN(num))?fmtOne(num):'—'}</td>`;
     });
-    html+=`<td style="font-weight:700;color:var(--blue);font-family:'DM Mono',monospace">${fmtNum(s.mean)}</td>
+    html+=`<td style="font-weight:700;color:var(--primary);font-family:'DM Mono',monospace">${fmtOne(s.mean)}</td>
            <td>${qLabel}</td></tr>`;
   });
   html+=`</tbody></table></div>
@@ -2875,6 +3452,9 @@ function renderAnalysisTab() {
     🟡 Yellow cell = statistical outlier (IQR method)
   </div>
   </div>`;
+
+  // Initialize tooltip positioning after render
+  setTimeout(() => initTooltipPositioning(), 50);
 
   // Flags
   html += `<div class="card"><div class="card-head"><div class="card-title"><span class="icon">🚩</span> Performance Flags</div></div>`;
@@ -3597,6 +4177,30 @@ function buildRadarChart(A, canvasId='chart-radar') {
   });
 }
 
+function ensureChartsBuilt(A) {
+  // Ensure all necessary display containers exist for charts
+  const requiredCharts = ['chart-dist', 'chart-cumfreq', 'chart-subjects', 'chart-box', 'chart-bestfit'];
+  
+  requiredCharts.forEach(chartId => {
+    let canvas = $(chartId);
+    if(!canvas) {
+      // Create container if it doesn't exist
+      const container = document.createElement('div');
+      container.style.display = 'none';
+      container.innerHTML = `<canvas id="${chartId}"></canvas>`;
+      document.body.appendChild(container);
+      canvas = $(chartId);
+    }
+  });
+
+  // Build all charts if they don't have instances
+  if(!state.chartInstances['dist']) buildDistChart(A, 'chart-dist');
+  if(!state.chartInstances['cumfreq']) buildCumFreqChart(A, 'chart-cumfreq');
+  if(!state.chartInstances['subjects']) buildSubjectsChart(A, 'chart-subjects');
+  if(!state.chartInstances['box']) buildBoxChart(A, 'chart-box');
+  if(!state.chartInstances['bestfit']) buildBestFitChart(A, 'chart-bestfit');
+}
+
 /* ╔═══════════════════════════════════════════════════╗
    ║               REPORTS TAB                        ║
    ╚═══════════════════════════════════════════════════╝ */
@@ -3703,25 +4307,364 @@ function checkNewPage(doc, y, margin=20) {
 async function canvasToImg(chartId) {
   return new Promise(resolve=>{
     const canvas = $(chartId);
-    if(!canvas) { resolve(null); return; }
-    resolve(canvas.toDataURL('image/png'));
+
+    // Fallback to chart instance image even if canvas node is unavailable.
+    const idToKey = {
+      'chart-dist': 'dist',
+      'chart-cumfreq': 'cumfreq',
+      'chart-subjects': 'subjects',
+      'chart-box': 'box',
+      'chart-bestfit': 'bestfit',
+      'chart-radar': 'radar'
+    };
+    const chartKey = idToKey[chartId] || chartId;
+    const chartInstance = state.chartInstances?.[chartKey];
+
+    if(!canvas && chartInstance?.toBase64Image) {
+      try {
+        const img = chartInstance.toBase64Image('image/png', 1.0);
+        resolve(img && img.startsWith('data:image/png') ? img : null);
+      } catch(err) {
+        console.error(`Failed to read chart instance image for ${chartId}:`, err);
+        resolve(null);
+      }
+      return;
+    }
+
+    if(!canvas) {
+      console.warn(`Canvas element ${chartId} not found in DOM`);
+      resolve(null);
+      return;
+    }
+
+    // Ensure canvas is fully rendered before converting to PNG
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        try {
+          // Redraw the canvas to ensure it's rendered
+          const chart = chartInstance;
+          if(chart && chart.resize) {
+            chart.resize();
+            chart.update('none');
+          }
+
+          const dataUrl = canvas.toDataURL('image/png');
+
+          if(dataUrl && dataUrl.startsWith('data:image/png')) {
+            resolve(dataUrl);
+          } else {
+            // Last fallback through Chart.js API if present
+            if(chart?.toBase64Image) {
+              const img = chart.toBase64Image('image/png', 1.0);
+              resolve(img && img.startsWith('data:image/png') ? img : null);
+            } else {
+              console.warn(`Canvas ${chartId} did not produce a valid PNG`);
+              resolve(null);
+            }
+          }
+        } catch(err) {
+          console.error(`Failed to convert canvas ${chartId} to PNG:`, err);
+          resolve(null);
+        }
+      }, 220);
+    });
   });
 }
 
-async function makeOffscreenChart(config, w=480, h=260) {
+async function makeOffscreenChart(config, w=720, h=360, mimeType='image/jpeg', quality=0.72) {
+  const PDF_WHITE_BG_PLUGIN = {
+    id: 'pdf-white-background',
+    beforeDraw(chart) {
+      const { ctx, width, height } = chart;
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-over';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
+  };
+
   return new Promise(resolve=>{
     const canvas=document.createElement('canvas');
     canvas.width=w; canvas.height=h;
+    canvas.style.position = 'fixed';
+    canvas.style.left = '-10000px';
+    canvas.style.top = '-10000px';
+    canvas.style.pointerEvents = 'none';
     document.body.appendChild(canvas);
-    const chart=new Chart(canvas.getContext('2d'),{...config,options:{...config.options,animation:false,responsive:false,maintainAspectRatio:false}});
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    const chart=new Chart(ctx,{
+      ...config,
+      plugins: [...(config.plugins || []), PDF_WHITE_BG_PLUGIN],
+      options:{...config.options,animation:false,responsive:false,maintainAspectRatio:false}
+    });
     requestAnimationFrame(()=>{
       setTimeout(()=>{
-        const img=canvas.toDataURL('image/png');
+        const img=canvas.toDataURL(mimeType, quality);
         chart.destroy(); canvas.remove();
         resolve(img);
       },100);
     });
   });
+}
+
+function pdfImageDimensions(pdfWidth, aspectRatio, maxHeight=85) {
+  let w = pdfWidth - 28;
+  let h = w / aspectRatio;
+  if (h > maxHeight) {
+    h = maxHeight;
+    w = h * aspectRatio;
+  }
+  return { w, h };
+}
+
+function getClassPdfChartConfig(kind, A) {
+  const subjs = state.subjects;
+  const theme = {
+    text: '#0f172a',
+    textFaint: '#334155',
+    grid: 'rgba(148,163,184,.18)'
+  };
+  const palette = ['#3d348b', '#0e7490', '#15803d', '#b45309', '#b91c1c', '#6d28d9'];
+
+  if (kind === 'dist') {
+    const bins = Stat.histogram(A.classMeans, Math.min(10, Math.max(5, Math.ceil(A.classMeans.length / 3))));
+    return {
+      type: 'bar',
+      data: {
+        labels: bins.map(b => `${fmtNum(b.from,0)}-${fmtNum(b.to,0)}`),
+        datasets: [{
+          label: 'Students',
+          data: bins.map(b => b.count),
+          backgroundColor: 'rgba(61,52,139,.78)',
+          borderColor: '#3d348b',
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { title: { display: true, text: 'Score Range', color: theme.text, font: { size: 13, weight: '600' } }, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
+          y: { title: { display: true, text: 'No. of Students', color: theme.text, font: { size: 13, weight: '600' } }, beginAtZero: true, ticks: { color: theme.textFaint, stepSize: 1, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+        }
+      }
+    };
+  }
+
+  if (kind === 'cumfreq') {
+    const pts = Stat.cumFreq(A.classMeans);
+    return {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: 'Cumulative Students',
+          data: pts.map(p => ({ x: parseFloat(p.x.toFixed(1)), y: p.y })),
+          fill: true,
+          backgroundColor: 'rgba(61,52,139,.12)',
+          borderColor: '#3d348b',
+          borderWidth: 2.4,
+          pointRadius: 4,
+          tension: .35
+        }]
+      },
+      options: {
+        layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { type: 'linear', title: { display: true, text: 'Score (Mean)', color: theme.text, font: { size: 13, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
+          y: { title: { display: true, text: 'Cumulative Students', color: theme.text, font: { size: 13, weight: '600' } }, beginAtZero: true, ticks: { color: theme.textFaint, stepSize: 1, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+        }
+      }
+    };
+  }
+
+  if (kind === 'subjects') {
+    return {
+      type: 'bar',
+      data: {
+        labels: subjs,
+        datasets: [
+          {
+            label: 'Q3 (75th %ile)',
+            data: subjs.map(s => A.subjectStats[s].box?.q3 ?? null),
+            backgroundColor: 'rgba(21,128,61,.25)',
+            borderColor: 'transparent',
+            borderRadius: 3
+          },
+          {
+            label: 'Mean',
+            data: subjs.map(s => A.subjectStats[s].mean),
+            backgroundColor: subjs.map((_, i) => `${palette[i % palette.length]}cc`),
+            borderColor: subjs.map((_, i) => palette[i % palette.length]),
+            borderWidth: 1.5,
+            borderRadius: 3,
+            type: 'bar'
+          },
+          {
+            label: 'Q1 (25th %ile)',
+            data: subjs.map(s => A.subjectStats[s].box?.q1 ?? null),
+            backgroundColor: 'rgba(185,28,28,.15)',
+            borderColor: 'transparent',
+            borderRadius: 3
+          }
+        ]
+      },
+      options: {
+        layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: '600' }, boxWidth: 12, color: theme.text } } },
+        scales: {
+          x: { ticks: { maxRotation: 30, color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
+          y: { title: { display: true, text: 'Score', color: theme.text, font: { size: 13, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+        }
+      }
+    };
+  }
+
+  if (kind === 'box') {
+    const q1s = subjs.map(s => A.subjectStats[s].box?.q1 ?? 0);
+    const q3s = subjs.map(s => A.subjectStats[s].box?.q3 ?? 0);
+    const medians = subjs.map(s => A.subjectStats[s].box?.q2 ?? null);
+    const mins = subjs.map(s => A.subjectStats[s].box?.min ?? 0);
+    const maxs = subjs.map(s => A.subjectStats[s].box?.max ?? 0);
+
+    return {
+      type: 'bar',
+      data: {
+        labels: subjs,
+        datasets: [
+          {
+            label: 'IQR Box (Q1-Q3)',
+            data: q1s.map((q1, i) => [q1, q3s[i]]),
+            backgroundColor: subjs.map((_, i) => `${palette[i % palette.length]}55`),
+            borderColor: subjs.map((_, i) => palette[i % palette.length]),
+            borderWidth: 2,
+            borderRadius: 2,
+            borderSkipped: false
+          },
+          { label: 'Min', data: mins, type: 'scatter', backgroundColor: '#111827', pointStyle: 'dash', pointRadius: 7, showLine: false },
+          { label: 'Max', data: maxs, type: 'scatter', backgroundColor: '#374151', pointStyle: 'dash', pointRadius: 7, showLine: false },
+          { label: 'Median', data: medians, type: 'scatter', backgroundColor: '#7f1d1d', pointStyle: 'crossRot', pointRadius: 7, showLine: false }
+        ]
+      },
+      options: {
+        layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: '600' }, boxWidth: 12, color: theme.text } } },
+        scales: {
+          x: { ticks: { maxRotation: 30, color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
+          y: { title: { display: true, text: 'Score', color: theme.text, font: { size: 13, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+        }
+      }
+    };
+  }
+
+  // bestfit
+  const pts = [...A.sorted].map((s, i) => ({ x: i + 1, y: s.mean, name: s.name }));
+  const reg = Stat.linReg(pts);
+  const datasets = [{
+    label: 'Student Means',
+    data: pts.map(p => ({ x: p.x, y: p.y, name: p.name })),
+    type: 'scatter',
+    backgroundColor: 'rgba(61,52,139,.65)',
+    borderColor: '#3d348b',
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    showLine: false
+  }];
+  if (reg) {
+    datasets.push({
+      label: `Trend (R²=${reg.r2.toFixed(2)})`,
+      data: [{ x: 1, y: reg.predict(1) }, { x: pts.length, y: reg.predict(pts.length) }],
+      type: 'line',
+      borderColor: '#dc2626',
+      borderWidth: 2,
+      borderDash: [5, 4],
+      pointRadius: 0,
+      fill: false
+    });
+  }
+  return {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: '600' }, boxWidth: 12, color: theme.text } } },
+      scales: {
+        x: { title: { display: true, text: 'Rank (1 = highest)', color: theme.text, font: { size: 13, weight: '600' } }, ticks: { color: theme.textFaint, stepSize: 1, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
+        y: { title: { display: true, text: 'Mean Score', color: theme.text, font: { size: 13, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+      }
+    }
+  };
+}
+
+function getClassPdfGraphProfile(A) {
+  const studentCount = A?.studentStats?.length || A?.sorted?.length || 0;
+  const subjectCount = state.subjects?.length || 0;
+  // Practical bands centered around typical class sizes: 20 / 40 / 60+ students.
+  // Subject count nudges the class into a higher tier when many subjects are present.
+  const subjectBoost = Math.max(0, subjectCount - 6) * 2;
+  const scaledStudents = studentCount + subjectBoost;
+
+  if (scaledStudents >= 60) {
+    return {
+      tier: 'very-large',
+      render: { w: 1500, h: 860, trendW: 1700, trendH: 960 },
+      display: { pairMaxHeight: 90, trendMaxHeight: 112 }
+    };
+  }
+  if (scaledStudents >= 40) {
+    return {
+      tier: 'large',
+      render: { w: 1320, h: 760, trendW: 1500, trendH: 860 },
+      display: { pairMaxHeight: 86, trendMaxHeight: 106 }
+    };
+  }
+  if (scaledStudents >= 20) {
+    return {
+      tier: 'medium',
+      render: { w: 1160, h: 680, trendW: 1320, trendH: 760 },
+      display: { pairMaxHeight: 80, trendMaxHeight: 98 }
+    };
+  }
+  return {
+    tier: 'small',
+    render: { w: 980, h: 580, trendW: 1160, trendH: 680 },
+    display: { pairMaxHeight: 72, trendMaxHeight: 90 }
+  };
+}
+
+function getStudentPdfGraphProfile(subjectCount = 0) {
+  if (subjectCount >= 10) {
+    return {
+      render: { w: 1200, h: 700 },
+      display: { maxHeight: 84 }
+    };
+  }
+  if (subjectCount >= 6) {
+    return {
+      render: { w: 1050, h: 620 },
+      display: { maxHeight: 78 }
+    };
+  }
+  return {
+    render: { w: 900, h: 540 },
+    display: { maxHeight: 70 }
+  };
+}
+
+async function buildClassPdfChartImages(A) {
+  const profile = getClassPdfGraphProfile(A);
+  const { w, h, trendW, trendH } = profile.render;
+  const jpegQuality = profile.tier === 'very-large' ? 0.56 : profile.tier === 'large' ? 0.60 : profile.tier === 'medium' ? 0.66 : 0.72;
+  const distImg = await makeOffscreenChart(getClassPdfChartConfig('dist', A), w, h, 'image/jpeg', jpegQuality);
+  const cumImg = await makeOffscreenChart(getClassPdfChartConfig('cumfreq', A), w, h, 'image/jpeg', jpegQuality);
+  const subjImg = await makeOffscreenChart(getClassPdfChartConfig('subjects', A), w, h, 'image/jpeg', jpegQuality);
+  const boxImg = await makeOffscreenChart(getClassPdfChartConfig('box', A), w, h, 'image/jpeg', jpegQuality);
+  const bfImg = await makeOffscreenChart(getClassPdfChartConfig('bestfit', A), trendW, trendH, 'image/jpeg', Math.max(0.5, jpegQuality - 0.04));
+  return { distImg, cumImg, subjImg, boxImg, bfImg, profile };
 }
 
 /* ── INDIVIDUAL STUDENT PDF ── */
@@ -3736,7 +4679,7 @@ async function generateStudentPDF() {
 
   try {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p','mm','a4');
+    const doc = new jsPDF({ orientation:'p', unit:'mm', format:'a4', compress:true, putOnlyUsedFonts:true, precision:2 });
     const W = doc.internal.pageSize.getWidth();
     const info = getClassInfo();
     let y = pdfHeader(doc, info, 'Student Report');
@@ -3800,6 +4743,7 @@ async function generateStudentPDF() {
     // Bar chart image
     y = pdfSection(doc, y, '2. Score Comparison Chart', W);
     const subjs = state.subjects;
+    const studentGraphProfile = getStudentPdfGraphProfile(subjs.length);
     const chartImg = await makeOffscreenChart({
       type:'bar',
       data:{
@@ -3814,14 +4758,27 @@ async function generateStudentPDF() {
           { label:'Class Mean (Normalized)', data:subjs.map(s=>A.subjectStats[s].mean), backgroundColor:'rgba(118,120,237,.65)', borderColor:'rgba(118,120,237,.9)', borderWidth:1.5, borderRadius:4 }
         ]
       },
-      options:{ responsive:false, animation:false, plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}, scales:{y:{min:0,max:100}} }
-    },540,260);
-    if(chartImg){ doc.addImage(chartImg,'PNG',14,y,W-28,65); y+=70; }
-    y = checkNewPage(doc,y,25);
+      options:{
+        responsive:false,
+        animation:false,
+        layout:{ padding:{ left:6, right:8, top:8, bottom:4 } },
+        plugins:{ legend:{ position:'bottom', labels:{ font:{ size:12, weight:'600' }, color:'#0f172a' } } },
+        scales:{
+          y:{ min:0,max:100, title:{ display:true, text:'Score', color:'#0f172a', font:{ size:13, weight:'600' } }, ticks:{ color:'#334155', font:{ size:11, weight:'500' } }, grid:{ color:'rgba(148,163,184,.18)' } },
+          x:{ ticks:{ color:'#334155', font:{ size:11, weight:'500' } }, grid:{ color:'rgba(148,163,184,.14)' } }
+        }
+      }
+    },studentGraphProfile.render.w,studentGraphProfile.render.h,'image/jpeg',0.68);
+    if(chartImg){
+      const dims = pdfImageDimensions(W, studentGraphProfile.render.w/studentGraphProfile.render.h, studentGraphProfile.display.maxHeight);
+      doc.addImage(chartImg,'JPEG',(W-dims.w)/2,y,dims.w,dims.h, undefined, 'FAST');
+      y+=dims.h+8;
+    }
+    y = checkNewPage(doc,y,30);
 
     // Performance narrative
     y = pdfSection(doc, y, '3. Performance Summary', W);
-    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(30,40,60);
+    doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(30,40,60);
     const best = [...subjs].sort((a,b)=>(parseFloat(student.marks[b])||0)-(parseFloat(student.marks[a])||0))[0];
     const worst = [...subjs].sort((a,b)=>(parseFloat(student.marks[a])||0)-(parseFloat(student.marks[b])||0))[0];
     const performAdj = student.mean>=80?'excellent':student.mean>=65?'good':student.mean>=50?'satisfactory':student.mean>=40?'below average':'poor';
@@ -3832,21 +4789,22 @@ async function generateStudentPDF() {
       A.classBox?`The student is in the ${qLabel} of the class (Class Q1=${fmtNum(A.classBox.q1)}, Q3=${fmtNum(A.classBox.q3)}).`:''
     ].filter(Boolean);
 
-    const lineHeight = 6;
+    const lineHeight = 7;
     narrative.forEach((line,idx)=>{
-      y = checkNewPage(doc, y, 20);
+      y = checkNewPage(doc, y, 25);
       const lines=doc.splitTextToSize(line,W-28);
       doc.text(lines,14,y);
-      y+=lines.length*lineHeight + 4;
+      y+=lines.length*lineHeight + 5;
     });
 
-    y += 6;
+    y += 8;
 
     // Footer
     const H=doc.internal.pageSize.getHeight();
     doc.setFontSize(8); doc.setTextColor(156,163,175);
     doc.text(`EduStats · ${info.school} · ${info.term} · Confidential`,W/2,H-8,{align:'center'});
 
+    warnIfPdfLarge(doc, 'Student report');
     doc.save(`StudentReport_${(student.name||student.id).replace(/\s+/g,'_')}.pdf`);
     toast('Student report downloaded ✓','ok');
   } catch(e) { console.error(e); toast('Report error: '+e.message,'err'); }
@@ -3860,8 +4818,15 @@ async function generateClassPDF() {
   await new Promise(r=>setTimeout(r,60));
 
   try {
+    updateLoaderStep(1);
+    $('loader-sub').textContent = 'Preparing analysis data…';
+    await new Promise(r=>setTimeout(r,120));
+    updateLoaderStep(2);
+    $('loader-sub').textContent = 'Rendering high-quality chart images…';
+    const pdfCharts = await buildClassPdfChartImages(A);
+
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('l','mm','a4'); // Landscape for wide tables
+    const doc = new jsPDF({ orientation:'l', unit:'mm', format:'a4', compress:true, putOnlyUsedFonts:true, precision:2 }); // Landscape for wide tables
     const W = doc.internal.pageSize.getWidth();
     const info = getClassInfo();
     let y = pdfHeader(doc, info, 'Class Report');
@@ -3893,7 +4858,7 @@ async function generateClassPDF() {
 
     // Per-subject stats
     y = pdfSection(doc, y, '2. Per-Subject Statistics', W);
-    const subjHead=[['Subject','N','Mean','Median','Most Common','Variation','Min','Lower Q','Median','Upper Q','Max','Spread (IQR)','Outliers']];
+    const subjHead=[['Subject','N','Mean','Median','Mode','StdDev','Min','Q1','Med','Q3','Max','IQR','Outliers']];
     const subjBody = state.subjects.map(subj=>{
       const ss=A.subjectStats[subj]; const b=ss.box;
       return [subj,ss.count,fmtNum(ss.mean),fmtNum(ss.median),ss.mode?ss.mode.join(', '):'—',
@@ -3902,45 +4867,61 @@ async function generateClassPDF() {
     });
     doc.autoTable({
       head:subjHead, body:subjBody, startY:y,
-      styles:{fontSize:9,cellPadding:3},
-      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold'},
-      columnStyles:{0:{fontStyle:'bold'},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center'},5:{halign:'center'},6:{halign:'center'},7:{halign:'center'},8:{halign:'center'},9:{halign:'center'},10:{halign:'center'},11:{halign:'center'},12:{halign:'center'}}
+      styles:{fontSize:9,cellPadding:2.5},
+      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:9},
+      columnStyles:{0:{fontStyle:'bold',fontSize:9},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center',fontSize:8},5:{halign:'center'},6:{halign:'center'},7:{halign:'center'},8:{halign:'center'},9:{halign:'center'},10:{halign:'center'},11:{halign:'center'},12:{halign:'center'}}
     });
-    y=doc.lastAutoTable.finalY+10;
+    y=doc.lastAutoTable.finalY+12;
 
     // Charts page
     doc.addPage();
     y=12;
     y = pdfSection(doc, y, '3. Score Distribution & Cumulative Frequency', W);
 
-    const distImg = await canvasToImg('chart-dist');
-    const cumImg  = await canvasToImg('chart-cumfreq');
-    const halfW = (W-42)/2;
-    if(distImg){ doc.addImage(distImg,'PNG',14,y,halfW,65); }
-    if(cumImg){ doc.addImage(cumImg,'PNG',14+halfW+14,y,halfW,65); }
-    y+=72;
+    const distImg = pdfCharts.distImg;
+    const cumImg  = pdfCharts.cumImg;
+    const pairAspect = pdfCharts.profile.render.w / pdfCharts.profile.render.h;
+    const chartColW = (W-42)/2;
+    const chartH = pdfCharts.profile.display.pairMaxHeight;
+    if(distImg){
+      const dimsD = pdfImageDimensions(chartColW, pairAspect, chartH);
+      doc.addImage(distImg,'JPEG',14+(chartColW-dimsD.w)/2,y,dimsD.w,dimsD.h, undefined, 'FAST');
+    }
+    if(cumImg){
+      const dimsC = pdfImageDimensions(chartColW, pairAspect, chartH);
+      doc.addImage(cumImg,'JPEG',14+chartColW+14+(chartColW-dimsC.w)/2,y,dimsC.w,dimsC.h, undefined, 'FAST');
+    }
+    y+=chartH+16;
 
     y = pdfSection(doc, y, '4. Subject Comparison & Box Plot', W);
-    const subjImg = await canvasToImg('chart-subjects');
-    const boxImg  = await canvasToImg('chart-box');
-    if(subjImg){ doc.addImage(subjImg,'PNG',14,y,halfW,65); }
-    if(boxImg){ doc.addImage(boxImg,'PNG',14+halfW+14,y,halfW,65); }
-    y+=72;
+    const subjImg = pdfCharts.subjImg;
+    const boxImg  = pdfCharts.boxImg;
+    if(subjImg){
+      const dimsS = pdfImageDimensions(chartColW, pairAspect, chartH);
+      doc.addImage(subjImg,'JPEG',14+(chartColW-dimsS.w)/2,y,dimsS.w,dimsS.h, undefined, 'FAST');
+    }
+    if(boxImg){
+      const dimsB = pdfImageDimensions(chartColW, pairAspect, chartH);
+      doc.addImage(boxImg,'JPEG',14+chartColW+14+(chartColW-dimsB.w)/2,y,dimsB.w,dimsB.h, undefined, 'FAST');
+    }
+    y+=chartH+16;
 
     // Best fit - place on a dedicated page for better readability and spacing
     doc.addPage();
     y = 12;
     y = pdfSection(doc, y, '5. Trend Analysis', W);
 
-    const bfImg = await canvasToImg('chart-bestfit');
+    const bfImg = pdfCharts.bfImg;
     const trendPoints = A.sorted
       .map((s, i) => ({ x: i + 1, y: parseFloat(s.mean) }))
       .filter(p => !isNaN(p.y));
     const trend = Stat.linReg(trendPoints);
 
     if (bfImg) {
-      doc.addImage(bfImg, 'PNG', 14, y, W - 28, 78);
-      y += 84;
+      const trendAspect = pdfCharts.profile.render.trendW / pdfCharts.profile.render.trendH;
+      const dimsBF = pdfImageDimensions(W, trendAspect, pdfCharts.profile.display.trendMaxHeight);
+      doc.addImage(bfImg, 'JPEG', (W-dimsBF.w)/2, y, dimsBF.w, dimsBF.h, undefined, 'FAST');
+      y += dimsBF.h + 12;
     } else {
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(10);
@@ -3950,58 +4931,62 @@ async function generateClassPDF() {
       y += 14;
     }
 
-    y = checkNewPage(doc, y, 36);
+    y = checkNewPage(doc, y, 40);
     const panelW = (W - 36) / 2;
 
     // Left panel: model metrics
     doc.setFillColor(248, 250, 252);
     doc.setDrawColor(226, 232, 240);
-    doc.roundedRect(14, y, panelW, 34, 2, 2, 'FD');
+    doc.roundedRect(14, y, panelW, 42, 2, 2, 'FD');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setTextColor(30, 75, 143);
     doc.text('Trend Model Summary', 17, y + 7);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setTextColor(51, 65, 85);
     const eq = trend
-      ? `Best-fit equation: y = ${fmtNum(trend.m, 3)}x ${trend.b >= 0 ? '+' : '-'} ${fmtNum(Math.abs(trend.b), 3)}`
+      ? `y = ${fmtNum(trend.m, 3)}x ${trend.b >= 0 ? '+' : '-'} ${fmtNum(Math.abs(trend.b), 3)}`
       : 'Best-fit equation: not available';
-    const r2Text = trend ? `R²: ${fmtNum(trend.r2, 2)} (${fmtNum(trend.r2 * 100, 0)}% explained)` : 'R²: not available';
+    const r2Text = trend ? `R² = ${fmtNum(trend.r2, 2)} (${fmtNum(trend.r2 * 100, 0)}% explained)` : 'R² not available';
     const slopeText = trend
-      ? `Slope direction: ${trend.m > 0 ? 'upward' : trend.m < 0 ? 'downward' : 'flat'}`
-      : 'Slope direction: not available';
-    doc.text(eq, 17, y + 14);
-    doc.text(r2Text, 17, y + 20);
-    doc.text(slopeText, 17, y + 26);
+      ? `Slope: ${trend.m > 0 ? 'upward' : trend.m < 0 ? 'downward' : 'flat'} (${fmtNum(trend.m, 3)})`
+      : 'Slope not available';
+    doc.text('Equation:', 17, y + 15);
+    doc.text(eq, 17, y + 21);
+    doc.text(r2Text, 17, y + 27);
+    doc.text(slopeText, 17, y + 33);
 
     // Right panel: interpretation and action note
     doc.setFillColor(240, 245, 255);
     doc.setDrawColor(226, 232, 240);
-    doc.roundedRect(18 + panelW, y, panelW, 34, 2, 2, 'FD');
+    doc.roundedRect(18 + panelW, y, panelW, 42, 2, 2, 'FD');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setTextColor(30, 75, 143);
     doc.text('Interpretation', 21 + panelW, y + 7);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(9.5);
     doc.setTextColor(51, 65, 85);
     let interpretation = 'Insufficient data for reliable trend interpretation.';
     if (trend) {
       if (Math.abs(trend.m) < 0.02) {
-        interpretation = 'The trend is nearly flat, suggesting performance is fairly uniform across ranked students.';
+        interpretation = 'Trend is nearly flat: performance fairly uniform across ranking.';
       } else if (trend.m > 0) {
-        interpretation = 'The positive slope indicates average scores tend to rise with rank ordering in this view.';
+        interpretation = 'Positive slope: scores tend to rise with rank ordering.';
       } else {
-        interpretation = 'The negative slope indicates average scores decline as rank position increases.';
+        interpretation = 'Negative slope: scores decline as rank position increases.';
       }
-      interpretation += ` Model strength is ${trend.r2 >= 0.6 ? 'high' : trend.r2 >= 0.3 ? 'moderate' : 'low'}.`;
+      interpretation += ` Strength: ${trend.r2 >= 0.6 ? 'high' : trend.r2 >= 0.3 ? 'moderate' : 'low'}.`;
     }
-    const wrapped = doc.splitTextToSize(interpretation, panelW - 6);
-    doc.text(wrapped, 21 + panelW, y + 14);
+    const wrapped = doc.splitTextToSize(interpretation, panelW - 8);
+    doc.text(wrapped, 21 + panelW, y + 15);
     doc.setTextColor(0, 0, 0);
+
+    y += 48;
+    y += 48;
 
     // Performance flags page
     doc.addPage(); y=12;
@@ -4071,6 +5056,8 @@ async function generateClassPDF() {
     }
 
     const fname=`ClassReport_${info.className.replace(/\s+/g,'_')}_${info.term.replace(/\s+/g,'_')}.pdf`;
+    updateLoaderStep(3);
+    warnIfPdfLarge(doc, 'Class report');
     doc.save(fname);
     toast('Class report downloaded ✓','ok');
   } catch(e) { console.error(e); toast('Report error: '+e.message,'err'); }
@@ -4099,7 +5086,9 @@ function switchTab(name) {
 /* ╔═══════════════════════════════════════════════════╗
    ║                  INIT                             ║
    ╚═══════════════════════════════════════════════════╝ */
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded', async ()=>{
+  showLiveLoader('Loading EduStats…', 700);
+  await yieldToUI(25);
   initThemeToggle();
   renderSubjectChips(); // show empty state
   updateBarInfo();
@@ -4115,6 +5104,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   updateHistoryDisplay(); // Initialize history panel
   // Keyboard shortcut: Enter in subject input
   $('subj-input').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addSubject(); } });
+  hideLiveLoader();
 });
 
 </script>
