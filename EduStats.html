@@ -1105,6 +1105,37 @@ html[data-theme='dark'] .btn-danger-ghost:active {
   background: var(--page);
 }
 
+/* Ranking table has many dynamic columns; use tailored sticky widths. */
+.ranking-tbl { table-layout: auto; }
+.ranking-tbl thead th,
+.ranking-tbl tbody td { white-space: nowrap; }
+.ranking-tbl thead th:nth-child(1),
+.ranking-tbl tbody td:nth-child(1) {
+  min-width: 68px;
+}
+.ranking-tbl thead th:nth-child(2),
+.ranking-tbl tbody td:nth-child(2) {
+  min-width: 96px;
+  left: 68px;
+}
+.ranking-tbl thead th:nth-child(3),
+.ranking-tbl tbody td:nth-child(3) {
+  min-width: 180px;
+  left: 164px;
+}
+
+@media (max-width: 1366px) {
+  .ranking-tbl thead th:nth-child(3),
+  .ranking-tbl tbody td:nth-child(3),
+  .ranking-tbl thead th:nth-child(2),
+  .ranking-tbl tbody td:nth-child(2) {
+    position: static;
+    left: auto;
+    z-index: auto;
+    background: inherit;
+  }
+}
+
 @media (max-width: 1024px) {
   .stats-tbl thead th:nth-child(3),
   .stats-tbl tbody td:nth-child(3) {
@@ -3765,6 +3796,7 @@ function renderAnalysisTab() {
   const A = state.analysis;
   if(!A) return;
   let tipCounter = 0;
+  const rankingTableMinWidth = Math.max(980, 420 + state.subjects.length * 92);
   const nextTipId = () => `detail-tip-${++tipCounter}`;
   const n = A.studentStats.length;
   const top = A.sorted[0], bot = A.sorted[A.sorted.length-1];
@@ -3882,7 +3914,7 @@ function renderAnalysisTab() {
     <div class="card-title"><span class="icon">🏅</span> Student Rankings</div>
   </div>
   <div class="tbl-wrap stats-wrap">
-  <table class="stats-tbl">
+  <table class="stats-tbl ranking-tbl" style="min-width:${rankingTableMinWidth}px">
   <thead><tr>
     <th>Rank</th>
     <th style="text-align:left">ID</th>
