@@ -68,7 +68,25 @@ function normalizeMarks(values, maxMark) {
   return values.map(v => (v / max) * 100);
 }
 
-function computeAnalysis({ students, subjects, subjectMaxMarks }) {
+function defaultFailMark(maxMark) {
+  const max = Math.max(1, Number(maxMark) || 100);
+  return Number((max * 0.4).toFixed(1));
+}
+
+function resolveSubjectMax(subjectMaxMarks, subject) {
+  const maxRaw = Number(subjectMaxMarks?.[subject]);
+  return Math.max(1, Number.isFinite(maxRaw) ? maxRaw : 100);
+}
+
+function resolveSubjectFail(subjectFailMarks, subjectMaxMarks, subject) {
+  const maxMark = resolveSubjectMax(subjectMaxMarks, subject);
+  const failRaw = Number(subjectFailMarks?.[subject]);
+  const fallback = defaultFailMark(maxMark);
+  const fail = Number.isFinite(failRaw) ? failRaw : fallback;
+  return Math.min(maxMark, Math.max(0, fail));
+}
+
+function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks }) {
   if (!Array.isArray(students) || !Array.isArray(subjects) || !students.length || !subjects.length) {
     return null;
   }
@@ -81,10 +99,20 @@ function computeAnalysis({ students, subjects, subjectMaxMarks }) {
       })
       .filter(v => !Number.isNaN(v));
 
+    const normalizedVals = subjects
+      .map(subj => {
+        const v = student?.marks?.[subj];
+        const num = v !== '' && v !== undefined && v !== null ? parseFloat(v) : NaN;
+        if (Number.isNaN(num)) return NaN;
+        return (num / resolveSubjectMax(subjectMaxMarks, subj)) * 100;
+      })
+      .filter(v => !Number.isNaN(v));
+
     return {
       ...student,
       validMarks: vals,
-      mean: vals.length ? mean(vals) : null
+      normalizedMarks: normalizedVals,
+      mean: normalizedVals.length ? mean(normalizedVals) : null
     };
   });
 
@@ -100,14 +128,28 @@ function computeAnalysis({ students, subjects, subjectMaxMarks }) {
 
     const vals = entries.map(e => e.value);
     const normalizedVals = normalizeMarks(vals, subjectMaxMarks?.[subj]);
+    const failMark = resolveSubjectFail(subjectFailMarks, subjectMaxMarks, subj);
+    const failThresholdPct = (failMark / resolveSubjectMax(subjectMaxMarks, subj)) * 100;
     const box = boxStats(normalizedVals);
     const outliers = box
       ? entries.filter((entry, i) => normalizedVals[i] < box.fence_lo || normalizedVals[i] > box.fence_hi)
       : [];
+    const failingEntries = entries.filter(entry => entry.value < failMark);
+    const failCount = failingEntries.length;
+    const passCount = entries.length - failCount;
+    const passRate = entries.length ? (100 * passCount) / entries.length : null;
+    const failRate = entries.length ? (100 * failCount) / entries.length : null;
 
     perSubject[subj] = {
       entries,
       vals,
+      failMark,
+      failThresholdPct,
+      failingEntries,
+      failCount,
+      passCount,
+      passRate,
+      failRate,
       rawMean: mean(vals),
       mean: mean(normalizedVals),
       rawMedian: median(vals),
@@ -137,6 +179,17 @@ function computeAnalysis({ students, subjects, subjectMaxMarks }) {
     ? studentStats.filter(s => s.mean !== null && (s.mean < classBox.fence_lo || s.mean > classBox.fence_hi))
     : [];
 
+  const totals = subjects.reduce((acc, subj) => {
+    const ss = perSubject[subj];
+    acc.totalAssessments += ss.count;
+    acc.totalPasses += ss.passCount;
+    acc.totalFails += ss.failCount;
+    return acc;
+  }, { totalAssessments: 0, totalPasses: 0, totalFails: 0 });
+
+  const overallPassRate = totals.totalAssessments ? (100 * totals.totalPasses) / totals.totalAssessments : null;
+  const overallFailRate = totals.totalAssessments ? (100 * totals.totalFails) / totals.totalAssessments : null;
+
   return {
     studentStats,
     subjectStats: perSubject,
@@ -148,7 +201,12 @@ function computeAnalysis({ students, subjects, subjectMaxMarks }) {
     meanOutliers,
     classMean: mean(means),
     classMedian: median(means),
-    classMeans: means
+    classMeans: means,
+    totalAssessments: totals.totalAssessments,
+    totalPasses: totals.totalPasses,
+    totalFails: totals.totalFails,
+    overallPassRate,
+    overallFailRate
   };
 }
 

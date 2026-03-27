@@ -2111,10 +2111,10 @@ body.compact-density .chart-card {
       </div>
       <div class="chips" id="subject-chips"></div>
       <div class="divider"></div>
-      <div class="section-label">Subject Maximum Marks</div>
+      <div class="section-label">Subject Maximum and Fail Marks</div>
       <div class="alert alert-info">
         <span class="alert-icon">ℹ️</span>
-        <div><strong>Default max marks is 100 per subject</strong> if not specified. You can customize this for subjects with different maximum possible scores.</div>
+        <div><strong>Default max marks is 100 per subject</strong>. Fail mark defaults to <strong>40% of each subject's max mark</strong> and can be adjusted per subject.</div>
       </div>
       <div id="max-marks-inputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px"></div>
       <div class="divider"></div>
@@ -2132,7 +2132,17 @@ body.compact-density .chart-card {
             <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Religious Studies')">R.E.</button>
             <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Art')">Art</button>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">📂 Load Sample Data</button>
+          <div style="display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:10px;align-items:end;max-width:620px">
+            <div class="field" style="margin:0">
+              <label for="sample-pack-select">Sample Scenario</label>
+              <select id="sample-pack-select">
+                <option value="mixed">Mixed performance class (realistic)</option>
+                <option value="high-performing">High-performing cohort</option>
+                <option value="support-needed">Intervention-needed cohort</option>
+              </select>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">📂 Load Sample Data</button>
+          </div>
         </div>
       </details>
     </div>
@@ -2364,8 +2374,40 @@ const state = {
   analysis: null,
   chartInstances: {},
   subjectMaxMarks: {},  // {subject: maxMark}
+  subjectFailMarks: {}, // {subject: failMark}
   currentCacheId: null  // Track if viewing a cached entry
 };
+
+const DEFAULT_FAIL_RATIO = 0.4;
+
+function defaultFailMarkForMax(maxMark) {
+  const max = Math.max(1, Number(maxMark) || 100);
+  return Number((max * DEFAULT_FAIL_RATIO).toFixed(1));
+}
+
+function getSubjectMaxMark(subject) {
+  const raw = Number(state.subjectMaxMarks?.[subject]);
+  return Math.max(1, Number.isFinite(raw) ? raw : 100);
+}
+
+function getSubjectFailMark(subject) {
+  const max = getSubjectMaxMark(subject);
+  const raw = Number(state.subjectFailMarks?.[subject]);
+  const fallback = defaultFailMarkForMax(max);
+  const fail = Number.isFinite(raw) ? raw : fallback;
+  return Math.min(max, Math.max(0, fail));
+}
+
+function ensureSubjectThresholds() {
+  if (!state.subjectMaxMarks) state.subjectMaxMarks = {};
+  if (!state.subjectFailMarks) state.subjectFailMarks = {};
+
+  state.subjects.forEach(subject => {
+    const max = getSubjectMaxMark(subject);
+    state.subjectMaxMarks[subject] = max;
+    state.subjectFailMarks[subject] = getSubjectFailMark(subject);
+  });
+}
 
 const loaderRuntime = {
   modalShownAt: 0,
@@ -2501,11 +2543,13 @@ function initDensityPreference() {
 function computeAnalysisInWorker() {
   return new Promise((resolve, reject) => {
     try {
+      ensureSubjectThresholds();
       const worker = new Worker('analysis.worker.js');
       const payload = {
         students: state.students,
         subjects: state.subjects,
-        subjectMaxMarks: state.subjectMaxMarks
+        subjectMaxMarks: state.subjectMaxMarks,
+        subjectFailMarks: state.subjectFailMarks
       };
       const timeoutId = setTimeout(() => {
         worker.terminate();
@@ -2650,6 +2694,7 @@ const Cache = {
       subjects: [...state.subjects],
       students: JSON.parse(JSON.stringify(state.students)),
       subjectMaxMarks: {...state.subjectMaxMarks},
+      subjectFailMarks: {...state.subjectFailMarks},
       analysis: state.analysis ? JSON.parse(JSON.stringify(state.analysis)) : null
     };
 
@@ -2675,6 +2720,8 @@ const Cache = {
     state.subjects = [...entry.subjects];
     state.students = JSON.parse(JSON.stringify(entry.students));
     state.subjectMaxMarks = {...entry.subjectMaxMarks};
+    state.subjectFailMarks = {...(entry.subjectFailMarks || {})};
+    ensureSubjectThresholds();
     state.analysis = entry.analysis ? JSON.parse(JSON.stringify(entry.analysis)) : null;
     state.currentCacheId = id;
 
@@ -3384,7 +3431,7 @@ const Stat = {
   },
 
   normalizeMarks(marks, subject) {
-    const maxMark = state.subjectMaxMarks[subject] || 100;
+    const maxMark = getSubjectMaxMark(subject);
     return marks.map(m => (m / maxMark) * 100);
   },
 
@@ -3426,6 +3473,7 @@ const Stat = {
   computeAll() {
     const { students, subjects } = state;
     if(!students.length||!subjects.length) return null;
+    ensureSubjectThresholds();
 
     // Per-student means
     const studentStats = students.map(s=>{
@@ -3433,7 +3481,18 @@ const Stat = {
         const v=s.marks[subj];
         return (v!==''&&v!==undefined&&v!==null) ? parseFloat(v) : NaN;
       }).filter(v=>!isNaN(v));
-      return { ...s, validMarks:vals, mean: vals.length ? Stat.mean(vals) : null };
+      const normalizedVals = subjects.map(subj => {
+        const v = s.marks[subj];
+        const num = (v!==''&&v!==undefined&&v!==null) ? parseFloat(v) : NaN;
+        if (isNaN(num)) return NaN;
+        return (num / getSubjectMaxMark(subj)) * 100;
+      }).filter(v => !isNaN(v));
+      return {
+        ...s,
+        validMarks: vals,
+        normalizedMarks: normalizedVals,
+        mean: normalizedVals.length ? Stat.mean(normalizedVals) : null
+      };
     });
 
     // Per-subject stats
@@ -3447,11 +3506,25 @@ const Stat = {
 
       const vals = entries.map(e=>e.value);
       const normalizedVals = Stat.normalizeMarks(vals, subj);
+      const failMark = getSubjectFailMark(subj);
+      const failThresholdPct = (failMark / getSubjectMaxMark(subj)) * 100;
       const box = Stat.boxStats(normalizedVals);
       const outliers = box ? entries.filter((e,i)=>normalizedVals[i]<box.fence_lo||normalizedVals[i]>box.fence_hi) : [];
+      const failingEntries = entries.filter(e => e.value < failMark);
+      const failCount = failingEntries.length;
+      const passCount = entries.length - failCount;
+      const passRate = entries.length ? (100 * passCount) / entries.length : null;
+      const failRate = entries.length ? (100 * failCount) / entries.length : null;
 
       subjectStats[subj] = {
         entries, vals,
+        failMark,
+        failThresholdPct,
+        failingEntries,
+        failCount,
+        passCount,
+        passRate,
+        failRate,
         rawMean: Stat.mean(vals),
         mean: Stat.mean(normalizedVals),
         rawMedian: Stat.median(vals),
@@ -3476,11 +3549,27 @@ const Stat = {
     // Outlier students by overall mean
     const meanOutliers = classBox ? studentStats.filter(s=>s.mean!==null&&(s.mean<classBox.fence_lo||s.mean>classBox.fence_hi)) : [];
 
+    const totals = subjects.reduce((acc, subj) => {
+      const ss = subjectStats[subj];
+      acc.totalAssessments += ss.count;
+      acc.totalPasses += ss.passCount;
+      acc.totalFails += ss.failCount;
+      return acc;
+    }, { totalAssessments: 0, totalPasses: 0, totalFails: 0 });
+
+    const overallPassRate = totals.totalAssessments ? (100 * totals.totalPasses) / totals.totalAssessments : null;
+    const overallFailRate = totals.totalAssessments ? (100 * totals.totalFails) / totals.totalAssessments : null;
+
     return { studentStats, subjectStats, classBox, sorted,
              lowerQ, topQ, botQ, meanOutliers,
              classMean: Stat.mean(means),
              classMedian: Stat.median(means),
-             classMeans: means };
+             classMeans: means,
+             totalAssessments: totals.totalAssessments,
+             totalPasses: totals.totalPasses,
+             totalFails: totals.totalFails,
+             overallPassRate,
+             overallFailRate };
   }
 };
 
@@ -3505,6 +3594,8 @@ function addSubject() {
   if(state.subjects.includes(name)) { toast('Subject already added','warn'); return; }
   if(state.subjects.length>=12) { toast('Maximum 12 subjects allowed','warn'); return; }
   state.subjects.push(name);
+  state.subjectMaxMarks[name] = 100;
+  state.subjectFailMarks[name] = defaultFailMarkForMax(100);
   inp.value='';
   renderSubjectChips();
   updateContextualCTAs();
@@ -3514,12 +3605,16 @@ function addSubjectByName(name) {
   if(state.subjects.includes(name)) { toast(name+' already added','warn'); return; }
   if(state.subjects.length>=12) { toast('Maximum 12 subjects','warn'); return; }
   state.subjects.push(name);
+  state.subjectMaxMarks[name] = 100;
+  state.subjectFailMarks[name] = defaultFailMarkForMax(100);
   renderSubjectChips();
   updateContextualCTAs();
 }
 function removeSubject(name) {
   if(!confirm(`Remove "${name}"? Existing marks for this subject will be kept in memory but won't be shown.`)) return;
   state.subjects = state.subjects.filter(s=>s!==name);
+  delete state.subjectMaxMarks[name];
+  delete state.subjectFailMarks[name];
   renderSubjectChips();
   updateContextualCTAs();
 }
@@ -3537,23 +3632,42 @@ function renderSubjectChips() {
 function renderMaxMarksInputs() {
   const container = $('max-marks-inputs');
   if(!container) return;
+  ensureSubjectThresholds();
   if(!state.subjects.length) {
-    container.innerHTML = '<span class="text-sm text-muted">Add subjects to customize max marks.</span>';
+    container.innerHTML = '<span class="text-sm text-muted">Add subjects to customize max and fail marks.</span>';
     return;
   }
   container.innerHTML = state.subjects.map(subj=>{
-    const maxMark = state.subjectMaxMarks[subj] || 100;
+    const maxMark = getSubjectMaxMark(subj);
+    const failMark = getSubjectFailMark(subj);
     return `<div class="field">
-      <label>${esc(subj)}</label>
-      <input type="number" min="1" max="1000" step="1" value="${maxMark}"
-        onchange='updateSubjectMaxMark(${JSON.stringify(subj)}, this.value)'>
+      <label>${esc(subj)} (max and fail mark)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input type="number" min="1" max="1000" step="1" value="${maxMark}" title="Maximum Mark"
+          onchange='updateSubjectMaxMark(${JSON.stringify(subj)}, this.value)'>
+        <input type="number" min="0" max="${maxMark}" step="0.5" value="${failMark}" title="Fail Mark (below this is fail)"
+          onchange='updateSubjectFailMark(${JSON.stringify(subj)}, this.value)'>
+      </div>
     </div>`;
   }).join('');
 }
 
 function updateSubjectMaxMark(subject, value) {
   const max = parseInt(value) || 100;
-  state.subjectMaxMarks[subject] = Math.max(1, max);
+  const safeMax = Math.max(1, max);
+  state.subjectMaxMarks[subject] = safeMax;
+  state.subjectFailMarks[subject] = defaultFailMarkForMax(safeMax);
+  renderMaxMarksInputs();
+  rebuildMarksTable();
+  updateContextualCTAs();
+}
+
+function updateSubjectFailMark(subject, value) {
+  const maxMark = getSubjectMaxMark(subject);
+  const numeric = parseFloat(value);
+  const fail = isNaN(numeric) ? defaultFailMarkForMax(maxMark) : numeric;
+  state.subjectFailMarks[subject] = Math.min(maxMark, Math.max(0, fail));
+  renderMaxMarksInputs();
   updateContextualCTAs();
 }
 
@@ -3563,33 +3677,144 @@ function proceedToEntry() {
   switchTab('entry');
 }
 
-function loadSampleData() {
-  $('school-name').value = 'Greenfield Secondary School';
-  $('teacher-name').value = 'Mr. James Omondi';
-  $('class-name').value = 'Form 3A';
-  $('term-name').value = 'Term 2 — Mid-Year 2025';
-  state.subjects = ['Mathematics','English','Biology','History','Geography'];
+const SAMPLE_DATASETS = {
+  mixed: {
+    schoolName: 'Riverside Mixed Day Secondary School',
+    teacherName: 'Ms. Ruth Ndlovu',
+    className: 'Grade 9B',
+    termName: 'Term 1 2026 - Mid-Term Assessment',
+    subjects: ['Mathematics','English','Integrated Science','Kiswahili','Social Studies','Computer Studies','Agriculture'],
+    subjectMaxMarks: {
+      Mathematics: 100,
+      English: 100,
+      'Integrated Science': 80,
+      Kiswahili: 100,
+      'Social Studies': 60,
+      'Computer Studies': 50,
+      Agriculture: 40
+    },
+    records: [
+      { id: 'G9B001', name: 'Aisha Mwangi', marks: [91, 84, 72, 88, 53, 45, 34] },
+      { id: 'G9B002', name: 'Brian Otieno', marks: [67, 58, 49, 62, 37, 31, 24] },
+      { id: 'G9B003', name: 'Carol Njeri', marks: [78, 81, 66, 74, 44, 39, 30] },
+      { id: 'G9B004', name: 'David Kiptoo', marks: [42, 46, 31, 39, 24, 18, 14] },
+      { id: 'G9B005', name: 'Esther Wanjiku', marks: [95, 93, 78, 90, 57, 49, 38] },
+      { id: 'G9B006', name: 'Farid Yusuf', marks: [55, 61, 44, 58, 34, 26, 20] },
+      { id: 'G9B007', name: 'Grace Muthoni', marks: [83, 76, 63, 80, 48, 41, 32] },
+      { id: 'G9B008', name: 'Henry Maina', marks: [36, 40, 28, 35, 20, 15, 11] },
+      { id: 'G9B009', name: 'Irene Chebet', marks: [88, 86, 70, 84, 51, 44, 35] },
+      { id: 'G9B010', name: 'Joel Musyoka', marks: [73, 69, 54, 71, 40, 34, 27] },
+      { id: 'G9B011', name: 'Kevin Simiyu', marks: [64, 72, 57, 68, 42, 36, 29] },
+      { id: 'G9B012', name: 'Lillian Akinyi', marks: [49, 53, 37, 47, 28, 22, 17] },
+      { id: 'G9B013', name: 'Mercy Atieno', marks: [92, 89, 75, 91, 55, 47, 36] },
+      { id: 'G9B014', name: 'Noah Wekesa', marks: [58, 62, 46, 60, 35, 29, 22] },
+      { id: 'G9B015', name: 'Olivia Wambui', marks: [81, 79, 68, 77, 46, 40, 31] },
+      { id: 'G9B016', name: 'Peter Ochieng', marks: [27, 34, 19, 30, 16, 12, 8] },
+      { id: 'G9B017', name: 'Queen Naliaka', marks: [70, '', 52, 66, 39, 33, 25] },
+      { id: 'G9B018', name: 'Samuel Kariuki', marks: [85, 88, 71, 83, '', 46, 34] },
+      { id: 'G9B019', name: 'Tabitha Mumo', marks: [59, 87, 35, 90, 56, 21, 18] },
+      { id: 'G9B020', name: 'Victor Mwale', marks: [89, 52, 74, 48, 29, 43, 33] }
+    ],
+    toastMessage: 'Mixed-performance sample loaded. Click Analyse Data to continue.'
+  },
+  'high-performing': {
+    schoolName: 'Hillcrest Girls Academy',
+    teacherName: 'Mr. Peter Maseko',
+    className: 'Grade 10A',
+    termName: 'Term 1 2026 - End-Term Exams',
+    subjects: ['Mathematics','English','Biology','Chemistry','Physics','History','ICT'],
+    subjectMaxMarks: {
+      Mathematics: 100,
+      English: 100,
+      Biology: 80,
+      Chemistry: 80,
+      Physics: 80,
+      History: 60,
+      ICT: 50
+    },
+    records: [
+      { id: 'G10A001', name: 'Amara Ndlovu', marks: [94, 88, 74, 72, 70, 51, 46] },
+      { id: 'G10A002', name: 'Beth Atieno', marks: [89, 91, 76, 75, 73, 55, 47] },
+      { id: 'G10A003', name: 'Chioma Maina', marks: [92, 86, 71, 74, 68, 49, 44] },
+      { id: 'G10A004', name: 'Diana Wanjiru', marks: [87, 90, 70, 69, 67, 53, 45] },
+      { id: 'G10A005', name: 'Evelyn Sifa', marks: [96, 93, 79, 77, 76, 58, 49] },
+      { id: 'G10A006', name: 'Faith Musonda', marks: [85, 84, 68, 66, 65, 47, 42] },
+      { id: 'G10A007', name: 'Gloria Njeri', marks: [90, 87, 73, 72, 71, 52, 46] },
+      { id: 'G10A008', name: 'Hilda Otieno', marks: [88, 85, 69, 68, 66, 48, 43] },
+      { id: 'G10A009', name: 'Imani Wekesa', marks: [93, 89, 75, 74, 72, 54, 48] },
+      { id: 'G10A010', name: 'Janet Moyo', marks: [86, 83, 67, 65, 64, 46, 41] },
+      { id: 'G10A011', name: 'Keisha Kamau', marks: [91, 90, 74, 73, 71, 55, 47] },
+      { id: 'G10A012', name: 'Lydia Chebet', marks: [95, 92, 78, 76, 75, 57, 49] },
+      { id: 'G10A013', name: 'Miriam Mwikali', marks: [84, 82, 66, 64, 62, 45, 40] },
+      { id: 'G10A014', name: 'Nadia Akinyi', marks: [90, '', 72, 71, 69, 50, 45] },
+      { id: 'G10A015', name: 'Olive Tendo', marks: [97, 94, 80, 78, 77, 59, 50] }
+    ],
+    toastMessage: 'High-performing sample loaded. Click Analyse Data to continue.'
+  },
+  'support-needed': {
+    schoolName: 'Lakeview Community School',
+    teacherName: 'Ms. Hellen Banda',
+    className: 'Grade 8C',
+    termName: 'Term 2 2026 - Continuous Assessment',
+    subjects: ['Mathematics','English','General Science','Kiswahili','Social Studies','Creative Arts'],
+    subjectMaxMarks: {
+      Mathematics: 100,
+      English: 100,
+      'General Science': 80,
+      Kiswahili: 100,
+      'Social Studies': 60,
+      'Creative Arts': 40
+    },
+    records: [
+      { id: 'G8C001', name: 'Abel Karanja', marks: [34, 41, 29, 46, 24, 17] },
+      { id: 'G8C002', name: 'Brenda Limo', marks: [48, 52, 37, 58, 31, 22] },
+      { id: 'G8C003', name: 'Caleb Muli', marks: [27, 36, 22, 40, 19, 14] },
+      { id: 'G8C004', name: 'Doris Achieng', marks: [55, 60, 45, 64, 35, 25] },
+      { id: 'G8C005', name: 'Elly Waweru', marks: [31, 38, 25, 42, 21, 16] },
+      { id: 'G8C006', name: 'Frida Mumbi', marks: [46, 50, 34, 57, 30, 21] },
+      { id: 'G8C007', name: 'George Njoroge', marks: [22, 29, 16, 33, 14, 11] },
+      { id: 'G8C008', name: 'Hassan Ali', marks: [61, 67, 52, 71, 41, 29] },
+      { id: 'G8C009', name: 'Ivy Chepkemoi', marks: [39, 44, 31, 49, 27, 19] },
+      { id: 'G8C010', name: 'Juma Said', marks: [18, 25, 13, 28, 11, 9] },
+      { id: 'G8C011', name: 'Khadija Noor', marks: [43, '', 30, 52, 26, 20] },
+      { id: 'G8C012', name: 'Lazarus Omari', marks: [52, 58, '', 61, 34, 24] },
+      { id: 'G8C013', name: 'Mary Atieno', marks: [29, 35, 24, 39, 18, 15] },
+      { id: 'G8C014', name: 'Nixon Okoth', marks: [37, 43, 28, 47, 23, 18] },
+      { id: 'G8C015', name: 'Prisca Wanjiru', marks: [57, 62, 46, 66, 36, 26] }
+    ],
+    toastMessage: 'Intervention-focused sample loaded. Click Analyse Data to continue.'
+  }
+};
 
-  const names = ['Amina Hassan','Brian Otieno','Cynthia Mwangi','Daniel Kiprop','Esther Njeri',
-                 'Felix Ochieng','Grace Wambua','Hassan Ali','Irene Chebet','James Mutua',
-                 'Kendi Waweru','Lucy Akinyi','Martin Simiyu','Naomi Kamau','Oscar Odhiambo'];
-  const seeds = [
-    [78,82,71,88,76],[45,52,39,61,50],[88,91,85,92,87],[30,41,28,35,38],[95,97,93,89,96],
-    [62,58,70,65,60],[72,75,68,80,74],[55,49,60,52,58],[83,86,79,90,85],[41,38,45,42,44],
-    [68,72,65,70,67],[57,61,53,66,59],[91,89,94,87,92],[48,54,44,50,51],[76,80,73,82,77]
-  ];
+function loadSampleData(selectedKey) {
+  const picker = $('sample-pack-select');
+  const chosen = selectedKey || (picker ? picker.value : 'mixed');
+  const sample = SAMPLE_DATASETS[chosen] || SAMPLE_DATASETS.mixed;
 
-  state.students = names.map((name,i)=>{
-    const marks={};
-    state.subjects.forEach((subj,j)=>{ marks[subj]=seeds[i][j]; });
-    return { id:`S${String(i+1).padStart(3,'0')}`, name, marks };
+  $('school-name').value = sample.schoolName;
+  $('teacher-name').value = sample.teacherName;
+  $('class-name').value = sample.className;
+  $('term-name').value = sample.termName;
+  state.subjects = [...sample.subjects];
+  state.subjectMaxMarks = { ...sample.subjectMaxMarks };
+  state.subjectFailMarks = {};
+  state.subjects.forEach(subj => {
+    state.subjectFailMarks[subj] = defaultFailMarkForMax(getSubjectMaxMark(subj));
+  });
+
+  state.students = sample.records.map(row => {
+    const marks = {};
+    state.subjects.forEach((subj, i) => {
+      marks[subj] = row.marks[i];
+    });
+    return { id: row.id, name: row.name, marks };
   });
 
   renderSubjectChips();
   updateBarInfo();
   rebuildMarksTable();
   updateContextualCTAs();
-  toast('Sample data loaded! Click Analyse Data to continue.','ok');
+  toast(sample.toastMessage,'ok');
   switchTab('entry');
 }
 
@@ -3605,7 +3830,7 @@ function rebuildMarksTable() {
     <th style="width:90px">ID</th>
     <th>Full Name</th>`;
   subjs.forEach(s=>{ th+=`<th>${esc(s)}</th>`; });
-  th += `<th>Mean<span class="tip" data-tip="Average of all entered marks for this student.">?</span></th>
+  th += `<th>Mean<span class="tip" data-tip="Average of entered scores after normalizing each subject by its max mark.">?</span></th>
          <th>Action</th></tr>`;
   $('marks-thead').innerHTML = th;
 
@@ -3629,7 +3854,7 @@ function renderMarksRows() {
       <td><input type="text" value="${esc(s.name)}" onchange="updateStudentName(${i},this.value)" placeholder="Student name" style="width:160px"></td>`;
     state.subjects.forEach(subj=>{
       const v = s.marks[subj]!==undefined ? s.marks[subj] : '';
-      const maxMark = state.subjectMaxMarks[subj] || 100;
+      const maxMark = getSubjectMaxMark(subj);
       row += `<td><input type="number" min="0" max="${maxMark}" step="0.5" value="${v}"
         onchange="updateMark(${i},${JSON.stringify(subj)},this.value)"
         oninput="updateMark(${i},${JSON.stringify(subj)},this.value)"></td>`;
@@ -3645,7 +3870,9 @@ function renderMarksRows() {
 function computeStudentMean(student) {
   const vals = state.subjects.map(subj=>{
     const v=student.marks[subj];
-    return (v!==''&&v!==undefined&&v!==null) ? parseFloat(v) : NaN;
+    const num = (v!==''&&v!==undefined&&v!==null) ? parseFloat(v) : NaN;
+    if (isNaN(num)) return NaN;
+    return (num / getSubjectMaxMark(subj)) * 100;
   }).filter(v=>!isNaN(v));
   return vals.length ? Stat.mean(vals) : null;
 }
@@ -3695,10 +3922,21 @@ function updateEntryCount() {
 /* ── CSV ── */
 function exportCSV() {
   if(!state.students.length) { toast('No data to export','warn'); return; }
-  let csv = ['Student ID','Full Name',...state.subjects,'Mean'].join(',') + '\n';
+  ensureSubjectThresholds();
+  const q = (v) => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  let csv = '';
+  state.subjects.forEach(subj => {
+    csv += ['__EDUSTATS_THRESHOLD__', q(subj), getSubjectMaxMark(subj), getSubjectFailMark(subj)].join(',') + '\n';
+  });
+
+  csv += ['Student ID','Full Name',...state.subjects,'Mean'].join(',') + '\n';
   state.students.forEach(s=>{
     const mean = computeStudentMean(s);
-    const row = [s.id, `"${s.name}"`, ...state.subjects.map(subj=>s.marks[subj]!==undefined?s.marks[subj]:''), mean!==null?fmtNum(mean):''];
+    const row = [q(s.id), q(s.name), ...state.subjects.map(subj=>s.marks[subj]!==undefined?s.marks[subj]:''), mean!==null?fmtNum(mean):''];
     csv += row.join(',') + '\n';
   });
   const blob = new Blob([csv], {type:'text/csv'});
@@ -3718,21 +3956,49 @@ function handleCSVImport(event) {
   reader.onload=e=>{
     try {
       const lines=e.target.result.split('\n').filter(l=>l.trim());
-      const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+      const importedMaxMarks = {};
+      const importedFailMarks = {};
+      let headerIndex = 0;
+
+      while (headerIndex < lines.length) {
+        const metaCells = parseCsvLine(lines[headerIndex]);
+        if ((metaCells[0] || '').trim() !== '__EDUSTATS_THRESHOLD__') break;
+
+        const subject = (metaCells[1] || '').trim().replace(/"/g,'');
+        const max = parseFloat(metaCells[2]);
+        const fail = parseFloat(metaCells[3]);
+        if (subject) {
+          importedMaxMarks[subject] = !isNaN(max) ? Math.max(1, max) : 100;
+          const fallbackFail = defaultFailMarkForMax(importedMaxMarks[subject]);
+          importedFailMarks[subject] = !isNaN(fail)
+            ? Math.min(importedMaxMarks[subject], Math.max(0, fail))
+            : fallbackFail;
+        }
+        headerIndex++;
+      }
+
+      if (headerIndex >= lines.length) throw new Error('CSV has no student header row');
+
+      const headers=parseCsvLine(lines[headerIndex]).map(h=>h.trim().replace(/"/g,''));
       const subjCols=headers.slice(2, headers.indexOf('Mean')>-1 ? headers.indexOf('Mean') : headers.length);
       // Merge subjects
       subjCols.forEach(s=>{
         if(!state.subjects.includes(s)) state.subjects.push(s);
-        if(!state.subjectMaxMarks[s]) state.subjectMaxMarks[s] = 100;
+        if(importedMaxMarks[s] !== undefined) state.subjectMaxMarks[s] = importedMaxMarks[s];
+        else if(!state.subjectMaxMarks[s]) state.subjectMaxMarks[s] = 100;
+
+        if(importedFailMarks[s] !== undefined) state.subjectFailMarks[s] = importedFailMarks[s];
+        else if(!state.subjectFailMarks[s]) state.subjectFailMarks[s] = defaultFailMarkForMax(state.subjectMaxMarks[s]);
       });
       state.students=[];
-      for(let i=1;i<lines.length;i++){
+      for(let i=headerIndex+1;i<lines.length;i++){
         const cells=parseCsvLine(lines[i]);
         if(cells.length<2||!cells[0]) continue;
         const marks={};
         subjCols.forEach((subj,j)=>{ marks[subj]=cells[j+2]!==undefined&&cells[j+2]!==''?parseFloat(cells[j+2]):''; });
         state.students.push({id:cells[0].trim(),name:(cells[1]||'').replace(/"/g,'').trim(),marks});
       }
+      ensureSubjectThresholds();
       renderSubjectChips();
       rebuildMarksTable();
       updateContextualCTAs();
@@ -3763,6 +4029,7 @@ function parseCsvLine(line){
    ╚═══════════════════════════════════════════════════╝ */
 async function runAnalysis() {
   if (isTaskBusy('analysis')) return;
+  ensureSubjectThresholds();
   const validationMsg = validateEntryForAnalysis();
   if(validationMsg) {
     setInlineValidation(validationMsg, 'err');
@@ -3816,7 +4083,7 @@ function renderAnalysisTab() {
   const top = A.sorted[0], bot = A.sorted[A.sorted.length-1];
   const fmtOne = (v) => (v == null || isNaN(v)) ? '—' : Number(v).toFixed(1);
   const normalizeToPercent = (score, subject) => {
-    const maxMark = state.subjectMaxMarks[subject] || 100;
+    const maxMark = getSubjectMaxMark(subject);
     return (Number(score) / maxMark) * 100;
   };
   const studentsForNormalizedValue = (entries, subject, target) =>
@@ -3851,6 +4118,16 @@ function renderAnalysisTab() {
       <div class="lbl">Class Median</div>
       <div class="val">${fmtNum(A.classMedian)}</div>
       <div class="sub">middle value</div>
+    </div>
+    <div class="stat-card blue-card">
+      <div class="lbl">Pass Rate</div>
+      <div class="val">${A.overallPassRate == null ? '—' : fmtNum(A.overallPassRate, 1) + '%'}</div>
+      <div class="sub">across all assessments</div>
+    </div>
+    <div class="stat-card blue-card">
+      <div class="lbl">Fail Records</div>
+      <div class="val">${A.totalFails ?? 0}</div>
+      <div class="sub">below subject fail marks</div>
     </div>`;
 
   if(A.classBox) html += `
@@ -3885,6 +4162,9 @@ function renderAnalysisTab() {
     <th>Subject</th>
     <th>Total Students</th>
     <th>Max Mark</th>
+    <th>Fail Mark<span class="tip" data-tip="Scores below this mark are counted as fail for this subject.">?</span></th>
+    <th>Pass %</th>
+    <th>Fail %</th>
     <th>Mean<span class="tip" data-tip="Average mark for the whole class in this subject.">?</span></th>
     <th>Median<span class="tip" data-tip="The middle score when all marks are sorted low to high.">?</span></th>
     <th>Variation<span class="tip" data-tip="Std Dev: Standard Deviation. Low = similar marks; high = very varied.">?</span></th>
@@ -3898,12 +4178,15 @@ function renderAnalysisTab() {
   state.subjects.forEach(subj=>{
     const ss = A.subjectStats[subj];
     const b = ss.box;
-    const maxMark = state.subjectMaxMarks[subj] || 100;
+    const maxMark = getSubjectMaxMark(subj);
+    const failMark = getSubjectFailMark(subj);
     const minStudents = b ? studentsForNormalizedValue(ss.entries, subj, b.min) : [];
     const maxStudents = b ? studentsForNormalizedValue(ss.entries, subj, b.max) : [];
+    const failTipId = nextTipId();
     const minTipId = nextTipId();
     const maxTipId = nextTipId();
     const outlierTipId = nextTipId();
+    const failTip = detailTip(failTipId, `${subj} - Failing Students`, ss.failingEntries, true, 'No failing students');
     const minTip = detailTip(minTipId, `${subj} - Min (${fmtOne(b?.min)})`, minStudents);
     const maxTip = detailTip(maxTipId, `${subj} - Max (${fmtOne(b?.max)})`, maxStudents);
     const outlierTip = detailTip(outlierTipId, `${subj} - Outliers`, ss.outliers, true, 'No statistical outliers');
@@ -3911,6 +4194,9 @@ function renderAnalysisTab() {
       <td>${esc(subj)}</td>
       <td>${ss.count}</td>
       <td>${fmtOne(maxMark)}</td>
+      <td>${fmtOne(failMark)}</td>
+      <td>${ss.passRate == null ? '—' : fmtOne(ss.passRate) + '%'}</td>
+      <td class="stat-interactive"><button type="button" class="hover-value" aria-describedby="${failTipId}" aria-label="Show failing students for ${esc(subj)}">${ss.failRate == null ? '—' : fmtOne(ss.failRate) + '%'}</button>${failTip}</td>
       <td>${fmtOne(ss.mean)}</td>
       <td>${fmtOne(ss.median)}</td>
       <td>${fmtOne(ss.stdDev)}</td>
@@ -3950,10 +4236,12 @@ function renderAnalysisTab() {
     state.subjects.forEach(subj=>{
       const v=s.marks[subj]; const num=parseFloat(v);
       const b = A.subjectStats[subj].box;
+      const failMark = getSubjectFailMark(subj);
       let cls='rank-score-cell';
       if(!isNaN(num)&&b){
         const normalized = normalizeToPercent(num, subj);
-        if(normalized<b.fence_lo||normalized>b.fence_hi) cls+=' outlier';
+        if(num < failMark) cls+=' low';
+        else if(normalized<b.fence_lo||normalized>b.fence_hi) cls+=' outlier';
         else if(normalized>b.q3) cls+=' high';
         else if(normalized<b.q1) cls+=' low';
       }
@@ -4657,7 +4945,7 @@ function buildRadarChart(A, canvasId='chart-radar') {
   const bot = A.sorted[A.sorted.length-1];
   const classMeans = subjs.map(s=>A.subjectStats[s].mean||0);
   const toPct = (score, subject) => {
-    const maxMark = state.subjectMaxMarks[subject] || 100;
+    const maxMark = getSubjectMaxMark(subject);
     const num = parseFloat(score);
     if (isNaN(num)) return null;
     return (num / maxMark) * 100;
@@ -5255,29 +5543,42 @@ async function generateStudentPDF() {
     y = pdfSection(doc, y, '1. Mark Breakdown', W);
     const subjRows = state.subjects.map(subj=>{
       const v=student.marks[subj]; const num=parseFloat(v);
-      const maxMark = state.subjectMaxMarks[subj] || 100;
+      const maxMark = getSubjectMaxMark(subj);
+      const failMark = getSubjectFailMark(subj);
       const cm=A.subjectStats[subj].rawMean;
       const diff=(!isNaN(num)&&cm)?num-cm:null;
+      const status = isNaN(num) ? 'Missing' : (num < failMark ? 'Fail' : 'Pass');
       return [
         subj,
         !isNaN(num)?fmtNum(num):'—',
+        fmtNum(maxMark),
+        fmtNum(failMark),
         cm?fmtNum(cm):'—',
         diff!==null?(diff>=0?'+':'')+fmtNum(diff):'—',
-        !isNaN(num)?(num>=80?'Excellent':num>=65?'Good':num>=50?'Average':num>=40?'Below Average':'Poor'):'—'
+        status
       ];
     });
     doc.autoTable({
-      head:[['Subject','Student Score','Class Mean','Difference','Performance']],
+      head:[['Subject','Student Score','Max Mark','Fail Mark','Class Mean','Difference','Status']],
       body:subjRows,
       startY:y,
       styles:{fontSize:9,cellPadding:3.5,halign:'center'},
       headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:10},
-      columnStyles:{0:{halign:'left',fontStyle:'bold'},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center'}},
+      columnStyles:{0:{halign:'left',fontStyle:'bold'},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center'},5:{halign:'center'},6:{halign:'center'}},
       margin:{top:2,right:2,bottom:2,left:2},
       didParseCell:data=>{
-        if(data.section==='body'&&data.column.index===3){
+        if(data.section==='body'&&data.column.index===5){
           const v=parseFloat(data.cell.raw);
           if(!isNaN(v)){ data.cell.styles.textColor=v>=0?[21,128,61]:[185,28,28]; data.cell.styles.fontStyle='bold'; }
+        }
+        if(data.section==='body'&&data.column.index===6){
+          if(data.cell.raw==='Fail') {
+            data.cell.styles.textColor=[185,28,28];
+            data.cell.styles.fontStyle='bold';
+          } else if(data.cell.raw==='Pass') {
+            data.cell.styles.textColor=[21,128,61];
+            data.cell.styles.fontStyle='bold';
+          }
         }
       }
     });
@@ -5296,7 +5597,7 @@ async function generateStudentPDF() {
           { label:'Student (Normalized)', data:subjs.map(s=>{
             const v=student.marks[s];
             if(isNaN(parseFloat(v))) return null;
-            const maxMark = state.subjectMaxMarks[s] || 100;
+            const maxMark = getSubjectMaxMark(s);
             return (parseFloat(v) / maxMark) * 100;
           }), backgroundColor:'rgba(61,52,139,.9)', borderColor:'rgba(61,52,139,1)', borderWidth:1.5, borderRadius:4 },
           { label:'Class Mean (Normalized)', data:subjs.map(s=>A.subjectStats[s].mean), backgroundColor:'rgba(118,120,237,.65)', borderColor:'rgba(118,120,237,.9)', borderWidth:1.5, borderRadius:4 }
@@ -5325,9 +5626,14 @@ async function generateStudentPDF() {
     doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(30,40,60);
     const best = [...subjs].sort((a,b)=>(parseFloat(student.marks[b])||0)-(parseFloat(student.marks[a])||0))[0];
     const worst = [...subjs].sort((a,b)=>(parseFloat(student.marks[a])||0)-(parseFloat(student.marks[b])||0))[0];
+    const failedSubjects = subjs.filter(s => {
+      const v = parseFloat(student.marks[s]);
+      return !isNaN(v) && v < getSubjectFailMark(s);
+    });
     const performAdj = student.mean>=80?'excellent':student.mean>=65?'good':student.mean>=50?'satisfactory':student.mean>=40?'below average':'poor';
     const narrative = [
       `${student.name||student.id} achieved an overall mean of ${fmtNum(student.mean)} (${performAdj}) and ranked ${rank} out of ${total} students.`,
+      failedSubjects.length ? `Below fail mark in: ${failedSubjects.join(', ')}.` : 'No subject score fell below the fail mark.',
       best?`Their strongest subject was ${best} (${fmtNum(parseFloat(student.marks[best]))}).`:'',
       worst&&worst!==best?`Their weakest subject was ${worst} (${fmtNum(parseFloat(student.marks[worst]))}), which may benefit from additional support.`:'',
       A.classBox?`The student is in the ${qLabel} of the class (Class Q1=${fmtNum(A.classBox.q1)}, Q3=${fmtNum(A.classBox.q3)}).`:''
@@ -5407,10 +5713,12 @@ async function generateClassPDF() {
 
     // Per-subject stats
     y = pdfSection(doc, y, '2. Per-Subject Statistics', W);
-    const subjHead=[['Subject','N','Mean','Median','Mode','StdDev','Min','Q1','Med','Q3','Max','IQR','Outliers']];
+    const subjHead=[['Subject','N','Max Mark','Fail Mark','Pass %','Fail %','Mean','Median','Mode','StdDev','Min','Q1','Med','Q3','Max','IQR','Outliers']];
     const subjBody = state.subjects.map(subj=>{
       const ss=A.subjectStats[subj]; const b=ss.box;
-      return [subj,ss.count,fmtNum(ss.mean),fmtNum(ss.median),ss.mode?ss.mode.join(', '):'—',
+      return [subj,ss.count,fmtNum(getSubjectMaxMark(subj)),fmtNum(ss.failMark),
+              ss.passRate==null?'—':fmtNum(ss.passRate,1)+'%',ss.failRate==null?'—':fmtNum(ss.failRate,1)+'%',
+              fmtNum(ss.mean),fmtNum(ss.median),ss.mode?ss.mode.join(', '):'—',
               fmtNum(ss.stdDev),b?fmtNum(b.min):'—',b?fmtNum(b.q1):'—',b?fmtNum(b.q2):'—',
               b?fmtNum(b.q3):'—',b?fmtNum(b.max):'—',b?fmtNum(b.iqr):'—',ss.outliers.length];
     });
@@ -5418,7 +5726,12 @@ async function generateClassPDF() {
       head:subjHead, body:subjBody, startY:y,
       styles:{fontSize:9,cellPadding:2.5},
       headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:9},
-      columnStyles:{0:{fontStyle:'bold',fontSize:9},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center',fontSize:8},5:{halign:'center'},6:{halign:'center'},7:{halign:'center'},8:{halign:'center'},9:{halign:'center'},10:{halign:'center'},11:{halign:'center'},12:{halign:'center'}}
+      columnStyles:{
+        0:{fontStyle:'bold',fontSize:9},
+        1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center'},5:{halign:'center'},
+        6:{halign:'center'},7:{halign:'center'},8:{halign:'center',fontSize:8},9:{halign:'center'},10:{halign:'center'},
+        11:{halign:'center'},12:{halign:'center'},13:{halign:'center'},14:{halign:'center'},15:{halign:'center'},16:{halign:'center'}
+      }
     });
     y=doc.lastAutoTable.finalY+12;
 
@@ -5584,10 +5897,13 @@ async function generateClassPDF() {
             const v=parseFloat(d.cell.raw);
             const subj=state.subjects[colIdx-3];
             const b=A.subjectStats[subj]?.box;
+            const failMark = getSubjectFailMark(subj);
             if(!isNaN(v)&&b){
-              if(v<b.fence_lo||v>b.fence_hi){d.cell.styles.fillColor=[254,243,199];d.cell.styles.fontStyle='bold';}
-              else if(v>b.q3){d.cell.styles.fillColor=[220,252,231];}
-              else if(v<b.q1){d.cell.styles.fillColor=[254,226,226];}
+              const normalized = (v / getSubjectMaxMark(subj)) * 100;
+              if(v < failMark){ d.cell.styles.fillColor=[254,226,226]; d.cell.styles.fontStyle='bold'; d.cell.styles.textColor=[153,27,27]; }
+              else if(normalized<b.fence_lo||normalized>b.fence_hi){d.cell.styles.fillColor=[254,243,199];d.cell.styles.fontStyle='bold';}
+              else if(normalized>b.q3){d.cell.styles.fillColor=[220,252,231];}
+              else if(normalized<b.q1){d.cell.styles.fillColor=[254,226,226];}
             }
           }
         }
