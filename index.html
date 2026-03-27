@@ -13,6 +13,7 @@
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const theme = isValid ? saved : (prefersDark ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', theme);
+    void document.documentElement.offsetHeight;
   } catch (err) {
     document.documentElement.setAttribute('data-theme', 'light');
   }
@@ -84,10 +85,7 @@ html { color-scheme: light; }
 
 html[data-theme='dark'] {
   color-scheme: dark;
-}
 
-html[data-theme='dark'] :root,
-html[data-theme='dark'] {
   --ink:       #e5ecf6;
   --ink-light: #c4d1e3;
   --ink-faint: #90a2be;
@@ -219,7 +217,7 @@ body {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
+  transition: transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition), color var(--transition);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -234,6 +232,17 @@ body {
 .theme-toggle:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
+}
+
+html[data-theme='dark'] .theme-toggle {
+  border-color: rgba(255,255,255,.15);
+  background: rgba(255,255,255,.08);
+}
+
+html[data-theme='dark'] .theme-toggle:hover {
+  background: rgba(255,255,255,.15);
+  border-color: rgba(255,255,255,.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
 }
 
 .theme-toggle-icon {
@@ -1851,7 +1860,6 @@ function initThemeToggle() {
     });
   });
   observer.observe(document.documentElement, { attributes: true });
-  }
 }
 
 const Cache = {
@@ -4108,6 +4116,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Keyboard shortcut: Enter in subject input
   $('subj-input').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addSubject(); } });
 });
+
 </script>
 <script data-goatcounter="https://mohamza.goatcounter.com/count"
   async src="//gc.zgo.at/count.js"></script>
