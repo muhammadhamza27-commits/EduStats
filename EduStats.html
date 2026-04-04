@@ -1650,6 +1650,24 @@ html[data-theme='dark'] .data-tbl .mark-inp.is-invalid {
   background: var(--page);
 }
 
+.per-subject-tbl {
+  table-layout: fixed;
+}
+
+.per-subject-tbl .subject-name-col,
+.per-subject-tbl .subject-name-cell {
+  width: clamp(140px, 34vw, 220px);
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.per-subject-tbl .subject-name-cell .subject-name-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Ranking table has many dynamic columns; use tailored sticky widths. */
 .ranking-tbl { table-layout: auto; }
 .ranking-tbl thead th,
@@ -1708,6 +1726,16 @@ html[data-theme='dark'] .data-tbl .mark-inp.is-invalid {
 @media (max-width: 768px) {
   .stats-tbl thead th:nth-child(2),
   .stats-tbl tbody td:nth-child(2) {
+    position: static;
+    left: auto;
+    z-index: auto;
+    background: inherit;
+  }
+
+  .per-subject-tbl thead th:nth-child(1),
+  .per-subject-tbl tbody td:nth-child(1),
+  .per-subject-tbl thead th:nth-child(3),
+  .per-subject-tbl tbody td:nth-child(3) {
     position: static;
     left: auto;
     z-index: auto;
@@ -6181,9 +6209,9 @@ function renderAnalysisTab() {
     <button class="btn btn-outline btn-sm" onclick="toggleAnalysisDetailView()" aria-pressed="${showDetailed ? 'true' : 'false'}">${showDetailed ? 'Hide Detailed Statistics' : 'Show Detailed Statistics'}</button>
   </div>
   <div class="tbl-wrap stats-wrap">
-  <table class="stats-tbl">
+  <table class="stats-tbl per-subject-tbl">
   <thead><tr>
-    <th>Subject</th>
+    <th class="subject-name-col">Subject</th>
     <th>Students</th>
     <th>Max Mark</th>
     <th>Min</th>
@@ -6216,7 +6244,7 @@ function renderAnalysisTab() {
     const maxTip = detailTip(maxTipId, `${subj} - Max (${fmtOne(b?.max)})`, maxStudents);
     const outlierTip = detailTip(outlierTipId, `${subj} - Outliers`, ss.outliers, true, 'No statistical outliers');
     html += `<tr>
-      <td>${esc(subj)}</td>
+      <td class="subject-name-cell" title="${esc(subj)}"><span class="subject-name-text">${esc(subj)}</span></td>
       <td>${ss.count}</td>
       <td>${fmtOne(maxMark)}</td>
       <td class="stat-interactive">${b ? `<button type="button" class="hover-value" aria-describedby="${minTipId}" aria-label="Show minimum scorers for ${esc(subj)}">${fmtOne(b.min)}</button>${minTip}` : '—'}</td>
