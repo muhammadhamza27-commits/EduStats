@@ -125,6 +125,15 @@ html[data-theme='dark'] {
   --tooltip-bg: #0f1724;
   --tooltip-fg: #e5ecf6;
   --tooltip-border: rgba(255,255,255,.14);
+
+  --loader-overlay: rgba(4, 10, 22, 0.76);
+  --loader-surface: rgba(22, 33, 50, .98);
+  --loader-step-bg: rgba(148,163,184,.1);
+  --loader-step-active-bg: rgba(156, 173, 255, .16);
+  --loader-step-active-ring: rgba(156, 173, 255, .26);
+  --loader-ring-base: rgba(156, 173, 255, .18);
+  --loader-ring-top: rgba(156, 173, 255, .96);
+  --loader-ring-right: rgba(103, 232, 249, .9);
 }
 
 /* Tablet breakpoint (481px+) */
@@ -254,8 +263,9 @@ html[data-theme='dark'] .theme-toggle:hover {
 }
 
 .theme-toggle-icon {
-  font-size: 16px;
-  line-height: 1;
+  width: 16px;
+  height: 16px;
+  display: block;
   transition: transform .25s ease;
 }
 
@@ -335,6 +345,11 @@ html[data-theme='dark'] .theme-toggle-icon {
 .tab-btn:active { color: var(--primary); border-bottom-color: var(--primary); }
 .tab-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; background: var(--primary-tint); }
+.tab-btn.is-disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .tab-btn:hover::after,
 .tab-btn:focus-visible::after { opacity: .72; transform: translateX(0); }
 .tab-btn.active::after { opacity: 0; transform: translateX(-2px); }
@@ -360,11 +375,17 @@ html[data-theme='dark'] .theme-toggle-icon {
 
 .tab-select-wrap {
   display: none;
-  background: linear-gradient(180deg, var(--primary-tint) 0%, #ffffff 86%);
+  background: linear-gradient(180deg, var(--primary-tint) 0%, var(--white) 86%);
   border-bottom: 1px solid var(--primary-pale);
   padding: 10px 12px 12px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
 }
+
+html[data-theme='dark'] .tab-select-wrap {
+  background: linear-gradient(180deg, var(--primary-tint) 0%, var(--white) 86%);
+  box-shadow: inset 0 1px 0 rgba(0,0,0,.3);
+}
+
 .tab-select-head {
   display: flex;
   align-items: center;
@@ -382,6 +403,15 @@ html[data-theme='dark'] .theme-toggle-icon {
   background: var(--primary);
   color: #fff;
 }
+
+.tab-select-icon .ui-icon {
+  filter: brightness(0) invert(1);
+}
+
+html[data-theme='dark'] .tab-select-icon .ui-icon {
+  filter: none;
+}
+
 .tab-select-label {
   font-family: 'Montserrat', sans-serif;
   font-size: 12px;
@@ -423,6 +453,25 @@ html[data-theme='dark'] .theme-toggle-icon {
   border-color: var(--primary-light);
 }
 
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -44px;
+  z-index: 300;
+  background: var(--white);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top .2s ease;
+}
+
+.skip-link:focus-visible {
+  top: 10px;
+}
+
 /* Tablet: larger font */
 @media (min-width: 481px) {
   .tab-btn { font-size: 13px; padding: 14px 16px; }
@@ -442,16 +491,14 @@ html[data-theme='dark'] .theme-toggle-icon {
 /* Phones only: replace horizontal tab strip with dropdown */
 @media (max-width: 640px) {
   .tab-bar {
-    display: flex;
+    display: none;
+  }
+  .tab-select-wrap {
+    display: block;
     position: sticky;
     top: 60px;
     z-index: 182;
-    padding: 0 8px;
-    box-shadow: 0 2px 10px rgba(26, 35, 50, .08);
   }
-  .tab-btn { padding: 12px 12px; min-height: 48px; font-size: 12px; }
-  .tab-btn .step-dot { width: 18px; height: 18px; }
-  .tab-select-wrap { display: none; }
 }
 
 .tab-progress {
@@ -468,7 +515,7 @@ html[data-theme='dark'] .theme-toggle-icon {
   .tab-progress {
     display: block;
     position: sticky;
-    top: 108px;
+    top: 124px;
     z-index: 181;
   }
 }
@@ -614,7 +661,34 @@ html[data-theme='dark'] .theme-toggle-icon {
   gap: 8px;
   font-family: 'Montserrat', sans-serif;
 }
-.card-title .icon { font-size: 18px; }
+.card-title .icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ui-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.15em;
+  filter: var(--icon-filter, none);
+}
+
+.card-title .icon .ui-icon { width: 18px; height: 18px; }
+
+.tab-select-icon .ui-icon { width: 14px; height: 14px; }
+
+html[data-theme='dark'] .ui-icon,
+html[data-theme='dark'] .theme-toggle-icon,
+html[data-theme='dark'] .alert-icon {
+  filter: brightness(0) invert(0.92);
+}
+
+.review-pill .ui-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+}
 
 /* ── FORMS ── */
 .form-row { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
@@ -1004,6 +1078,20 @@ html[data-theme='dark'] .btn-danger-ghost:active {
 .data-tbl thead th:first-child,
 .data-tbl thead th:nth-child(2),
 .data-tbl thead th:nth-child(3) { text-align: left; }
+
+.data-tbl thead th .th-main {
+  display: block;
+}
+
+.data-tbl thead th .th-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: .88;
+}
 .data-tbl tbody tr { transition: background var(--transition); }
 .data-tbl tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--white) 92%, var(--page) 8%); }
 .data-tbl tbody tr:hover td { background: var(--primary-tint); }
@@ -1112,10 +1200,61 @@ html[data-theme='dark'] .btn-danger-ghost:active {
   width: clamp(62px, 9vw, 86px);
 }
 
+.data-tbl .mark-inp.is-invalid {
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, .14);
+  background: rgba(211, 47, 47, .05);
+}
+
+html[data-theme='dark'] .data-tbl .mark-inp.is-invalid {
+  background: rgba(255, 112, 112, .08);
+}
+
 .entry-grid-help {
   margin-top: 8px;
   font-size: 12px;
   color: var(--ink-faint);
+}
+
+.entry-readiness {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.entry-check {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--white);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.entry-check-label {
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 700;
+}
+
+.entry-check-value {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.entry-check.ok {
+  border-color: color-mix(in srgb, var(--green) 42%, var(--rule));
+  background: color-mix(in srgb, var(--green-pale) 58%, var(--white));
+}
+
+.entry-check.warn {
+  border-color: color-mix(in srgb, var(--amber) 44%, var(--rule));
+  background: color-mix(in srgb, var(--amber-pale) 62%, var(--white));
 }
 
 .entry-mobile-meta {
@@ -1202,6 +1341,10 @@ html[data-theme='dark'] .btn-danger-ghost:active {
 @media (max-width: 640px) {
   .data-tbl {
     min-width: 760px;
+  }
+
+  .entry-readiness {
+    grid-template-columns: 1fr;
   }
 
   .data-tbl input[type="number"] {
@@ -1317,6 +1460,138 @@ html[data-theme='dark'] .btn-danger-ghost:active {
 .stat-card.amber-card .val { color: var(--amber); }
 .stat-card.red-card { background: var(--red-pale); border-color: #fca5a5; }
 .stat-card.red-card .val { color: var(--red); }
+
+.analysis-table-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.analysis-table-note {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.ranking-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ranking-sort-bar {
+  justify-content: space-between;
+  background: color-mix(in srgb, var(--primary-tint) 70%, var(--white) 30%);
+  border: 1px solid var(--primary-pale);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.ranking-sort-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ranking-sort-label {
+  font-size: 12px;
+  color: var(--ink-light);
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.ranking-sort-select-wrap {
+  position: relative;
+}
+
+.ranking-sort-select-wrap::after {
+  content: '▾';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-faint);
+  pointer-events: none;
+  font-size: 12px;
+}
+
+#ranking-sort-select {
+  appearance: none;
+  min-height: 36px;
+  min-width: 220px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 30px 7px 10px;
+}
+
+#ranking-sort-select:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 1px;
+}
+
+.ranking-current-sort {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.ranking-current-sort strong {
+  color: var(--primary);
+  background: var(--white);
+  border: 1px solid var(--primary-pale);
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.ranking-filter-row {
+  row-gap: 6px;
+}
+
+.filter-btn.is-active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-tint);
+}
+
+.filter-btn {
+  border-radius: 999px;
+}
+
+.filter-btn:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .analysis-table-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ranking-sort-bar {
+    align-items: stretch;
+  }
+
+  .ranking-sort-left {
+    width: 100%;
+  }
+
+  #ranking-sort-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ranking-current-sort {
+    width: 100%;
+  }
+}
 
 /* ── STATS TABLE ── */
 .stats-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -1597,34 +1872,116 @@ html[data-theme='dark'] .stats-tbl tbody td .detail-tip {
 }
 
 /* ── FLAG SECTIONS ── */
-.flags-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.flags-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 
 @media (min-width: 600px) {
   .flags-grid { grid-template-columns: 1fr 1fr; }
 }
 
-.flag-box {
-  border-radius: var(--r);
-  padding: 16px;
-  border: 1px solid;
+@media (min-width: 1025px) {
+  .flags-grid { grid-template-columns: 1fr 1fr; }
 }
-.flag-box.top-flag { background: var(--green-pale); border-color: #86efac; }
+
+.flag-box {
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid var(--rule);
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.flag-box::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 12px 0 0 12px;
+  background: var(--primary);
+}
+
+.flag-box.top-flag { border-color: color-mix(in srgb, var(--green) 25%, var(--rule)); }
+.flag-box.top-flag::before { background: var(--green); }
 .flag-box.top-flag .flag-title { color: var(--green); }
-.flag-box.bottom-flag { background: var(--red-pale); border-color: #fca5a5; }
+
+.flag-box.bottom-flag { border-color: color-mix(in srgb, var(--red) 28%, var(--rule)); }
+.flag-box.bottom-flag::before { background: var(--red); }
 .flag-box.bottom-flag .flag-title { color: var(--red); }
-.flag-box.lower-q-flag { background: var(--amber-pale); border-color: #fcd34d; }
+
+.flag-box.lower-q-flag { border-color: color-mix(in srgb, var(--amber) 30%, var(--rule)); }
+.flag-box.lower-q-flag::before { background: var(--amber); }
 .flag-box.lower-q-flag .flag-title { color: var(--amber); }
-.flag-box.outlier-flag { background: var(--purple-pale); border-color: #c4b5fd; }
+
+.flag-box.outlier-flag { border-color: color-mix(in srgb, var(--purple) 30%, var(--rule)); }
+.flag-box.outlier-flag::before { background: var(--purple); }
 .flag-box.outlier-flag .flag-title { color: var(--purple); }
-.flag-title { font-weight: 700; font-size: 13px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif; }
-.flag-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-.flag-list li { font-size: 12.5px; display: flex; align-items: center; gap: 6px; color: var(--ink); }
+
+.flag-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.flag-title-wrap {
+  min-width: 0;
+}
+
+.flag-title {
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.flag-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.flag-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flag-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flag-list li {
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  padding: 2px 0;
+}
+
 .flag-list li::before { content: '•'; font-size: 18px; line-height: 0; vertical-align: middle; }
 .flag-box.top-flag .flag-list li::before { color: var(--green); }
 .flag-box.bottom-flag .flag-list li::before { color: var(--red); }
 .flag-box.lower-q-flag .flag-list li::before { color: var(--amber); }
 .flag-box.outlier-flag .flag-list li::before { color: var(--purple); }
-.flag-score { font-family: 'DM Mono', monospace; font-size: 12px; margin-left: auto; padding: 1px 7px; border-radius: 10px; background: var(--surface-soft); font-weight: 600; }
+.flag-score {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-pale) 60%, var(--white));
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  font-weight: 700;
+}
 
 /* ── EXPANDABLE FLAGS ── */
 .flag-box .flag-list li:nth-child(n+9) {
@@ -1641,23 +1998,24 @@ html[data-theme='dark'] .stats-tbl tbody td .detail-tip {
 }
 .flag-box .flag-expand-btn {
   margin-left: auto;
-  padding: 8px;
-  min-width: 44px;
-  min-height: 44px;
+  padding: 6px;
+  min-width: 34px;
+  min-height: 34px;
   line-height: 1;
   font-size: 12px;
   font-weight: 600;
-  background: none;
-  border: none;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
   cursor: pointer;
   color: var(--ink-light);
-  transition: color var(--transition);
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
   touch-action: manipulation;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.flag-box .flag-expand-btn:hover { color: var(--ink); }
+.flag-box .flag-expand-btn:hover { color: var(--ink); border-color: var(--primary-pale); background: var(--white); }
 .flag-box .flag-expand-btn:active { color: var(--ink); }
 .flag-box .flag-expand-text {
   font-size: 12px;
@@ -1685,14 +2043,15 @@ html[data-theme='dark'] .stats-tbl tbody td .detail-tip {
   border-radius: var(--r-lg);
   box-shadow: var(--shadow);
   padding: 16px;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: auto;
+  min-height: 380px;
   display: flex;
   flex-direction: column;
 }
 
 @media (min-width: 600px) {
   .chart-card {
-    aspect-ratio: 16 / 9;
+    min-height: 430px;
     padding: 20px;
   }
 }
@@ -1700,7 +2059,200 @@ html[data-theme='dark'] .stats-tbl tbody td .detail-tip {
 .chart-head { margin-bottom: 12px; }
 .chart-title { font-weight: 600; font-size: 14px; color: var(--ink); font-family: 'Montserrat', sans-serif; }
 .chart-desc { font-size: 12.5px; color: var(--ink-light); margin-top: 2px; }
-.chart-body { position: relative; flex: 1; max-height: 100%; }
+.chart-body { position: relative; flex: 1; min-height: 210px; }
+
+.chart-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.chart-actions .btn {
+  min-height: 32px;
+  font-size: 11.5px;
+  padding: 7px 9px;
+}
+
+.chart-actions .btn.is-active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-tint);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+.chart-actions .btn.is-active:hover {
+  transform: none;
+}
+
+.chart-mini-insight {
+  margin-top: 10px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--primary-tint);
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--ink-light);
+  line-height: 1.45;
+}
+
+.chart-mini-insight strong {
+  color: var(--ink);
+}
+
+.graph-interpret {
+  margin-top: 10px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--white) 86%, var(--primary-tint));
+}
+
+.graph-interpret summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  padding: 9px 10px;
+}
+
+.graph-interpret summary::-webkit-details-marker {
+  display: none;
+}
+
+.entry-analysis-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink-light);
+  max-width: 340px;
+}
+
+.entry-analysis-hint.ready {
+  color: var(--green);
+}
+
+.graph-interpret summary::after {
+  content: ' +';
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+
+.graph-interpret[open] summary::after {
+  content: ' -';
+}
+
+.graph-interpret-body {
+  border-top: 1px dashed var(--rule);
+  padding: 10px;
+  font-size: 12px;
+  color: var(--ink-light);
+  line-height: 1.55;
+}
+
+.graph-interpret-body strong {
+  color: var(--ink);
+}
+
+.graphs-overview {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.graphs-overview-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.graphs-overview-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(110px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.insight-pill {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--primary-tint);
+}
+
+.insight-pill .k {
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 700;
+}
+
+.insight-pill .v {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.chart-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chart-jump .btn {
+  min-height: 34px;
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+@media (max-width: 640px) {
+  .graphs-overview-row {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card {
+    min-height: 360px;
+    padding: 14px;
+  }
+
+  .chart-body {
+    min-height: 180px;
+  }
+
+  .chart-actions .btn {
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+  }
+
+  .chart-jump {
+    gap: 5px;
+  }
+
+  .chart-jump .btn {
+    flex: 1 1 calc(50% - 5px);
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .chart-card {
+    min-height: 340px;
+  }
+
+  .chart-actions {
+    gap: 5px;
+  }
+
+  .chart-actions .btn {
+    flex: 1 1 100%;
+  }
+}
 
 .interp-wrap {
   max-width: 1200px;
@@ -1798,7 +2350,8 @@ body.compact-density .chart-card {
 }
 .rpt-card:hover { border-color: var(--primary); background: var(--primary-tint); box-shadow: var(--shadow); }
 .rpt-card:active { background: var(--primary-pale); border-color: var(--primary); }
-.rpt-card .rpt-icon { font-size: 44px; margin-bottom: 12px; display: block; }
+.rpt-card .rpt-icon { margin-bottom: 12px; display: inline-flex; }
+.rpt-card .rpt-icon .ui-icon { width: 44px; height: 44px; }
 .rpt-card h3 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 8px; font-family: 'Montserrat', sans-serif; }
 .rpt-card p { font-size: 13px; color: var(--ink-light); margin-bottom: 18px; line-height: 1.6; }
 .rpt-card .rpt-features { list-style: none; text-align: left; font-size: 12px; color: var(--ink-light); display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px; }
@@ -1863,7 +2416,7 @@ body.compact-density .chart-card {
 }
 .alert-info { background: var(--primary-tint); border: 1px solid var(--primary-pale); color: var(--primary); }
 .alert-warn { background: var(--amber-pale); border: 1px solid #fcd34d; color: var(--amber); }
-.alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert-icon { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
 
 /* ── DIVIDERS ── */
 .divider { height: 1px; background: var(--rule); margin: 20px 0; }
@@ -1875,7 +2428,8 @@ body.compact-density .chart-card {
   padding: 60px 24px;
   color: var(--ink-faint);
 }
-.empty-state .empty-icon { font-size: 52px; margin-bottom: 16px; opacity: .5; }
+.empty-state .empty-icon { margin-bottom: 16px; opacity: .5; }
+.empty-state .empty-icon .ui-icon { width: 52px; height: 52px; }
 .empty-state h3 { font-size: 16px; color: var(--ink-light); margin-bottom: 8px; font-family: 'Lexend', sans-serif; font-weight: 600; }
 .empty-state p { font-size: 13px; max-width: 320px; margin: 0 auto 20px; font-family: 'Lexend', sans-serif; }
 
@@ -1910,7 +2464,8 @@ body.compact-density .chart-card {
  /* ── LOADING ── */
  #loader {
    position: fixed; inset: 0;
-   background: rgba(0,0,0,.65);
+   background: var(--loader-overlay, rgba(0,0,0,.65));
+   background-image: radial-gradient(circle at top, rgba(255,255,255,.08), transparent 42%);
    z-index: 9998;
    display: flex;
    align-items: center;
@@ -1927,12 +2482,14 @@ body.compact-density .chart-card {
    pointer-events: auto;
  }
  .loader-box {
-   background: var(--white);
+   background: var(--loader-surface, var(--white));
    border-radius: 14px;
    padding: 40px 52px;
    width: min(92vw, 520px);
    text-align: center;
    box-shadow: var(--shadow-lg);
+  border-top: 3px solid color-mix(in srgb, var(--primary) 85%, white);
+   border: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
    transform: translate3d(0, 14px, 0) scale(.975);
    opacity: 0;
    transition: transform .42s cubic-bezier(.2,.8,.2,1), opacity .32s ease;
@@ -1955,13 +2512,24 @@ body.compact-density .chart-card {
  }
  
  @keyframes spin {
+   from { transform: rotate(0deg); }
    to { transform: rotate(360deg); }
+ }
+ 
+ @keyframes spinReverse {
+   from { transform: rotate(360deg); }
+   to { transform: rotate(0deg); }
  }
  
  @keyframes pulse-dot {
    0%, 100% { transform: translateY(0) scale(.78); opacity: .42; }
    40% { transform: translateY(-4px) scale(1); opacity: 1; }
    70% { transform: translateY(-1px) scale(.9); opacity: .72; }
+ }
+ 
+ @keyframes glowPulse {
+   0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7), inset 0 1px 2px rgba(255,255,255,.2); }
+   50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0), inset 0 1px 2px rgba(255,255,255,.2); }
  }
  
  @keyframes stepPulse {
@@ -1992,27 +2560,40 @@ body.compact-density .chart-card {
   transform: translateZ(0);
  }
 
+.spinner::after {
+  content: '';
+  position: absolute;
+  inset: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary) 30%, transparent) 0%, transparent 68%);
+  opacity: .7;
+  filter: blur(2px);
+  animation: pulse-dot 1.3s cubic-bezier(.4,0,.2,1) infinite;
+}
+
 .spinner-orbit {
   position: absolute;
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 2px solid rgba(37, 99, 235, 0.18);
-  border-top-color: rgba(37, 99, 235, 0.88);
-  animation: spin 1.25s linear infinite;
+  border: 2.5px solid var(--loader-ring-base, rgba(37, 99, 235, 0.18));
+  border-top-color: var(--loader-ring-top, rgba(37, 99, 235, 0.92));
+  border-right-color: var(--loader-ring-right, rgba(56, 189, 248, 0.75));
+  animation: spin 1.1s linear infinite;
   transform: translateZ(0);
   will-change: transform;
+  box-shadow: inset 0 0 8px rgba(37, 99, 235, 0.12);
 }
  
  .spinner-dot {
    width: 10px;
    height: 10px;
    border-radius: 50%;
-  background: #2563eb;
-  animation: pulse-dot 1.05s cubic-bezier(.4,0,.2,1) infinite;
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+  background: var(--primary);
+  animation: pulse-dot 1.15s cubic-bezier(.4,0,.2,1) infinite, glowPulse 1.8s ease-in-out infinite;
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--primary-light) 35%, transparent), 0 0 12px rgba(37, 99, 235, 0.3);
   transform: translateZ(0);
-  will-change: transform, opacity;
+  will-change: transform, opacity, box-shadow;
  }
  
  .spinner-dot:nth-child(2) {
@@ -2023,20 +2604,25 @@ body.compact-density .chart-card {
    animation-delay: 0.4s;
  }
 
+/* Dots-only loader variant for PDF generation */
+#loader.loader--dots-only .spinner-orbit {
+  display: none;
+}
+
 #loader.is-visible .spinner-orbit {
-  animation: spin 1.05s linear infinite !important;
+  animation: spin 1.1s linear infinite !important;
 }
 
 #loader.is-visible .spinner-dot {
-  animation: pulse-dot 1.05s cubic-bezier(.4,0,.2,1) infinite !important;
+  animation: pulse-dot 1.15s cubic-bezier(.4,0,.2,1) infinite, glowPulse 1.8s ease-in-out infinite !important;
 }
 
 #loader.is-visible .spinner-dot:nth-child(2) {
-  animation-delay: 0.2s !important;
+  animation-delay: 0.25s !important;
 }
 
 #loader.is-visible .spinner-dot:nth-child(3) {
-  animation-delay: 0.4s !important;
+  animation-delay: 0.5s !important;
 }
  
  .loader-msg {
@@ -2074,6 +2660,10 @@ body.compact-density .chart-card {
    gap: 4px;
    font-size: 11px;
    color: var(--ink-faint);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--loader-step-bg, rgba(148,163,184,.08));
+  transition: background-color .24s ease, color .24s ease, transform .24s ease, box-shadow .24s ease;
    will-change: transform, opacity;
 }
 
@@ -2092,6 +2682,9 @@ body.compact-density .chart-card {
  .loader-step.active {
    color: var(--primary);
    font-weight: 500;
+  background: var(--loader-step-active-bg, color-mix(in srgb, var(--primary) 10%, transparent));
+  box-shadow: inset 0 0 0 1px var(--loader-step-active-ring, color-mix(in srgb, var(--primary) 24%, transparent));
+  transform: translateY(-1px);
  }
 
 .loader-step.active::before {
@@ -2119,26 +2712,7 @@ body.compact-density .chart-card {
   animation: statusTextIn .36s cubic-bezier(.2,.8,.2,1) both;
  }
 
-.loader-track {
-  width: 100%;
-  max-width: 280px;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.24);
-  overflow: hidden;
-  margin: 6px auto 0;
-  box-shadow: inset 0 1px 1px rgba(0,0,0,.08);
-}
 
-.loader-bar {
-  height: 100%;
-  width: 0%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
-  transition: width 440ms cubic-bezier(.22,.61,.36,1);
-  /* Removed continuous shimmer loop to avoid long-run background repaint churn. */
-  will-change: width;
-}
 
 .live-loader {
   position: fixed;
@@ -2169,6 +2743,7 @@ body.compact-density .chart-card {
   border-radius: 12px;
   background: color-mix(in srgb, var(--white) 88%, transparent);
   border: 1px solid color-mix(in srgb, var(--rule) 80%, transparent);
+  border-left: 4px solid color-mix(in srgb, var(--primary) 70%, white);
   box-shadow: var(--shadow);
   display: flex;
   align-items: center;
@@ -2183,17 +2758,25 @@ body.compact-density .chart-card {
   opacity: 1;
 }
 
+.live-loader-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
 .live-ring {
   width: 30px;
   height: 30px;
   border-radius: 50%;
   border: 3px solid rgba(37, 99, 235, .2);
-  border-top-color: rgba(37, 99, 235, .98);
-  border-right-color: rgba(56, 189, 248, .95);
-  /* Single transform animation is cheaper and remains stable over long sessions. */
-  animation: spin .95s linear infinite;
+  border-top-color: rgba(37, 99, 235, .95);
+  border-right-color: rgba(56, 189, 248, .9);
+  border-bottom-color: rgba(37, 99, 235, .4);
+  animation: spin 0.9s linear infinite;
   flex: 0 0 auto;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08) inset;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) inset, 0 0 8px rgba(37, 99, 235, 0.2);
   transform: translateZ(0);
   will-change: transform;
 }
@@ -2208,12 +2791,21 @@ body.compact-density .chart-card {
   will-change: transform, opacity;
 }
 
+
+
+.live-loader-caption {
+  font-size: 11px;
+  color: var(--ink-faint);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .live-loader.is-visible .live-loader-text {
   animation: statusTextIn .32s cubic-bezier(.2,.8,.2,1) .05s both;
 }
 
 .live-loader.is-visible .live-ring {
-  animation: spin .95s linear infinite !important;
+  animation: spin 0.9s linear infinite !important;
 }
 
 .live-loader-text.text-refresh {
@@ -2257,10 +2849,7 @@ body.compact-density .chart-card {
 
   .loader-step {
     font-size: 10.5px;
-  }
-
-  .loader-track {
-    max-width: 100%;
+    padding: 2px 7px;
   }
 
   .loader-sub {
@@ -2273,10 +2862,15 @@ body.compact-density .chart-card {
     min-width: 0;
     padding: 14px 14px;
     gap: 10px;
+    align-items: flex-start;
   }
 
   .live-loader-text {
     font-size: 12.5px;
+  }
+
+  .live-loader-caption {
+    font-size: 10.5px;
   }
 }
 
@@ -2851,6 +3445,8 @@ html[data-theme='dark'] .review-rating-hint.negative {
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
 <!-- APP BAR -->
 <header class="app-bar">
   <div class="app-bar-logo">Edu<span>Stats</span></div>
@@ -2858,13 +3454,13 @@ html[data-theme='dark'] .review-rating-hint.negative {
   <div class="app-bar-spacer"></div>
   <div class="app-bar-info" id="bar-class-info"></div>
   <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch theme">
-    <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
+    <img class="theme-toggle-icon" src="icons/edu-outline/moon.svg" alt="" aria-hidden="true">
   </button>
 </header>
 
 <!-- TABS -->
-<nav class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('setup')" id="tab-setup">
+<nav class="tab-bar" aria-label="Section navigation">
+  <button class="tab-btn active" onclick="switchTab('setup')" id="tab-setup" aria-current="page">
     <span class="step-dot">1</span> Setup
   </button>
   <button class="tab-btn" onclick="switchTab('entry')" id="tab-entry">
@@ -2879,19 +3475,16 @@ html[data-theme='dark'] .review-rating-hint.negative {
   <button class="tab-btn" onclick="switchTab('reports')" id="tab-reports">
     <span class="step-dot">5</span> Reports
   </button>
-  <button class="tab-btn" onclick="switchTab('guide')" id="tab-guide">
-    <span class="step-dot">📚</span> Graph Interpretation
-  </button>
   <button class="tab-btn" onclick="switchTab('review')" id="tab-review">
-    <span class="step-dot">💬</span> Reviews
+    <span class="step-dot">6</span> Reviews
   </button>
 </nav>
 
-<div id="tab-progress" class="tab-progress" aria-live="polite">Step 1 of 7 - Setup</div>
+<div id="tab-progress" class="tab-progress" aria-live="polite">Step 1 of 6 - Setup</div>
 
 <div class="tab-select-wrap">
   <div class="tab-select-head">
-    <span class="tab-select-icon" aria-hidden="true">☰</span>
+    <span class="tab-select-icon" aria-hidden="true"><img class="ui-icon" src="icons/edu-outline/filter.svg" alt=""></span>
     <label for="section-select" class="tab-select-label">Navigate Section</label>
   </div>
   <select id="section-select" class="tab-select" aria-label="Choose section">
@@ -2900,24 +3493,23 @@ html[data-theme='dark'] .review-rating-hint.negative {
     <option value="analysis">Analysis</option>
     <option value="graphs">Graphs</option>
     <option value="reports">Reports</option>
-    <option value="guide">Graph Interpretation</option>
     <option value="review">Reviews</option>
   </select>
 </div>
 
 <!-- ── MAIN ── -->
-<main class="main">
+<main class="main" id="main-content" tabindex="-1">
 
   <!-- ══════════════════ SETUP ══════════════════ -->
   <div class="panel active" id="panel-setup">
     <div class="alert alert-info">
-      <span class="alert-icon">ℹ️</span>
-      <div><strong>Welcome!</strong> Fill in your class details and add the subjects you teach. Then click <strong>Continue to Enter Marks</strong> to start entering student scores.</div>
+      <img class="alert-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true">
+      <div><strong>Welcome!</strong> Fill in your class details and add the subjects you teach, or jump to <strong>Enter Marks</strong> to type scores or import a CSV file.</div>
     </div>
 
     <div class="card">
       <div class="card-head">
-        <div class="card-title"><span class="icon">🏫</span> Class Information</div>
+        <div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/school.svg" alt="" aria-hidden="true"></span> Class Information</div>
       </div>
       <div class="form-row">
         <div class="field">
@@ -2944,7 +3536,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
     <div class="card">
       <div class="card-head">
         <div class="card-title">
-          <span class="icon">📚</span> Subjects
+          <span class="icon"><img class="ui-icon" src="icons/edu-outline/book.svg" alt="" aria-hidden="true"></span> Subjects
           <span class="tip" data-tip="Add all subjects you want to track marks for. You can add up to 12 subjects.">?</span>
         </div>
       </div>
@@ -2957,7 +3549,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
       <div class="divider"></div>
       <div class="section-label">Subject Maximum and Fail Marks</div>
       <div class="alert alert-info">
-        <span class="alert-icon">ℹ️</span>
+        <img class="alert-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true">
         <div><strong>Default max marks is 100 per subject</strong>. Fail mark defaults to <strong>40% of each subject's max mark</strong> and can be adjusted per subject.</div>
       </div>
       <div id="max-marks-inputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px"></div>
@@ -2985,7 +3577,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
                 <option value="support-needed">Intervention-needed cohort</option>
               </select>
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">📂 Load Sample Data</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadSampleData()"><img class="ui-icon" src="icons/edu-outline/folder.svg" alt="" aria-hidden="true"> Load Sample Data</button>
           </div>
         </div>
       </details>
@@ -2993,7 +3585,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
 
     <div class="action-bar">
       <div class="ml-auto">
-        <button class="btn btn-primary" onclick="proceedToEntry()" style="padding:12px 28px;">Continue to Enter Marks →</button>
+        <button class="btn btn-primary" onclick="proceedToEntry()" style="padding:12px 28px;">Continue to Enter Marks</button>
       </div>
     </div>
   </div>
@@ -3002,13 +3594,14 @@ html[data-theme='dark'] .review-rating-hint.negative {
   <div class="panel" id="panel-entry">
     <div class="card">
       <div class="card-head">
-        <div class="card-title"><span class="icon">✏️</span> Student Marks
+        <div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/pencil.svg" alt="" aria-hidden="true"></span> Student Marks
           <span class="tip" data-tip="Enter marks from 0 to 100. Leave a cell blank if a student was absent for that subject — blank marks are not counted in averages.">?</span>
         </div>
         <div class="gap-row">
           <button class="btn btn-primary btn-sm" onclick="addStudentRow()">+ Add Student</button>
         </div>
       </div>
+      <div id="entry-readiness" class="entry-readiness" aria-live="polite"></div>
       <div class="tbl-wrap">
         <table class="data-tbl" id="marks-table">
           <thead id="marks-thead"></thead>
@@ -3022,8 +3615,8 @@ html[data-theme='dark'] .review-rating-hint.negative {
         <summary>Tools: import/export and saved entries</summary>
         <div class="tools-content">
           <div class="gap-row" style="margin-bottom:12px">
-            <button id="btn-import-csv" class="btn btn-outline btn-sm" onclick="importCSV()" title="Import a CSV file">📥 Import CSV</button>
-            <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Save your data as CSV">📤 Export CSV</button>
+            <button id="btn-import-csv" class="btn btn-outline btn-sm" onclick="importCSV()" title="Import a CSV file"><img class="ui-icon" src="icons/edu-outline/import.svg" alt="" aria-hidden="true"> Import CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Save your data as CSV"><img class="ui-icon" src="icons/edu-outline/export.svg" alt="" aria-hidden="true"> Export CSV</button>
             <button class="btn btn-outline btn-sm" onclick="toggleTableDensity()" id="btn-density-toggle" data-density-toggle="true">Compact View</button>
           </div>
           <div id="history-panel" style="min-height: 40px;"></div>
@@ -3032,15 +3625,16 @@ html[data-theme='dark'] .review-rating-hint.negative {
     </div>
 
     <div class="entry-footer">
-      <button class="btn btn-ghost btn-sm" onclick="switchTab('setup')">← Back to Setup</button>
+      <button class="btn btn-ghost btn-sm" onclick="switchTab('setup')">Back to Setup</button>
       <div class="entry-footer-actions">
         <span class="text-sm text-muted" id="entry-count-info"></span>
-        <button class="btn btn-danger-ghost btn-sm" onclick="showClearAllConfirmation()" title="Clear all student marks">🗑️ Clear All</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="showClearAllConfirmation()" title="Clear all student marks"><img class="ui-icon" src="icons/edu-outline/trash.svg" alt="" aria-hidden="true"> Clear All</button>
       </div>
       <div class="entry-primary-cta">
         <button id="btn-run-analysis" class="btn btn-success" onclick="runAnalysis()" style="padding:12px 28px;">
-          Analyse Data →
+          Analyse Data
         </button>
+        <div id="entry-analysis-hint" class="entry-analysis-hint" aria-live="polite"></div>
       </div>
     </div>
     <div id="entry-inline-validation" class="inline-validation" aria-live="polite"></div>
@@ -3054,7 +3648,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
     <div id="analysis-context-cta" class="context-cta" style="margin-bottom:12px" aria-live="polite"></div>
     <div id="analysis-content">
       <div class="empty-state">
-        <div class="empty-icon">📊</div>
+        <div class="empty-icon"><img class="ui-icon" src="icons/edu-outline/chart.svg" alt="" aria-hidden="true"></div>
         <h3>No analysis yet</h3>
         <p>Enter student marks and click "Analyse Data" to see statistics here.</p>
         <button class="btn btn-primary" onclick="switchTab('entry')">Go to Enter Marks</button>
@@ -3066,7 +3660,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
   <div class="panel" id="panel-graphs">
     <div id="graphs-content">
       <div class="empty-state">
-        <div class="empty-icon">📈</div>
+        <div class="empty-icon"><img class="ui-icon" src="icons/edu-outline/line-chart.svg" alt="" aria-hidden="true"></div>
         <h3>No graphs yet</h3>
         <p>Analyse your data first to generate visualizations.</p>
         <button class="btn btn-primary" onclick="switchTab('entry')">Go to Enter Marks</button>
@@ -3078,21 +3672,9 @@ html[data-theme='dark'] .review-rating-hint.negative {
   <div class="panel" id="panel-reports">
     <div id="reports-content">
       <div class="empty-state">
-        <div class="empty-icon">📄</div>
+        <div class="empty-icon"><img class="ui-icon" src="icons/edu-outline/document.svg" alt="" aria-hidden="true"></div>
         <h3>No reports ready yet</h3>
         <p>Analyse your data first, then come back here to download PDF reports.</p>
-        <button class="btn btn-primary" onclick="switchTab('entry')">Go to Enter Marks</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════ GRAPH INTERPRETATION ══════════════════ -->
-  <div class="panel" id="panel-guide">
-    <div id="interp-content">
-      <div class="empty-state">
-        <div class="empty-icon">📚</div>
-        <h3>No interpretation yet</h3>
-        <p>Analyse your data first to see graph interpretations and conclusions.</p>
         <button class="btn btn-primary" onclick="switchTab('entry')">Go to Enter Marks</button>
       </div>
     </div>
@@ -3102,7 +3684,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
   <div class="panel" id="panel-review">
     <div class="card review-card">
       <div class="card-head">
-        <div class="card-title"><span class="icon">💬</span> Leave a Review</div>
+        <div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/document.svg" alt="" aria-hidden="true"></span> Leave a Review</div>
       </div>
 
       <div class="review-intro review-intro-google is-active-channel" id="review-google-block">
@@ -3122,12 +3704,12 @@ html[data-theme='dark'] .review-rating-hint.negative {
             rel="noopener noreferrer"
             aria-label="Open Google Form in a new tab"
           >Open Google Form</a>
-          <span class="review-cta-note">Opens in new tab • ~2 minutes</span>
+          <span class="review-cta-note">Opens in new tab | ~2 minutes</span>
         </div>
         <div class="review-pill-row">
-          <span class="review-pill">⚡ Fast structured response</span>
-          <span class="review-pill">📊 Easier analytics</span>
-          <span class="review-pill">🔒 No email draft required</span>
+          <span class="review-pill"><img class="ui-icon" src="icons/edu-outline/sparkles.svg" alt="" aria-hidden="true">Fast structured response</span>
+          <span class="review-pill"><img class="ui-icon" src="icons/edu-outline/chart.svg" alt="" aria-hidden="true">Easier analytics</span>
+          <span class="review-pill"><img class="ui-icon" src="icons/edu-outline/check-circle.svg" alt="" aria-hidden="true">No email draft required</span>
         </div>
       </div>
 
@@ -3207,9 +3789,9 @@ html[data-theme='dark'] .review-rating-hint.negative {
             <div class="review-meta">This sends only after you click Send in your own Gmail.</div>
           </div>
           <div class="review-pill-row">
-            <span class="review-pill">📝 More detailed narrative</span>
-            <span class="review-pill">👤 Personalized context</span>
-            <span class="review-pill">📬 Direct creator inbox</span>
+            <span class="review-pill"><img class="ui-icon" src="icons/edu-outline/document.svg" alt="" aria-hidden="true">More detailed narrative</span>
+            <span class="review-pill"><img class="ui-icon" src="icons/edu-outline/users.svg" alt="" aria-hidden="true">Personalized context</span>
+            <span class="review-pill"><img class="ui-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true">Direct creator inbox</span>
           </div>
         </div>
 
@@ -3228,7 +3810,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
     </div>
   </div>
 
-  <!-- Legacy static guide payload removed to reduce initial load. Guide content is now generated lazily when the tab is opened. -->
+  <!-- Graph interpretations are rendered inline within each chart card. -->
 
 </main>
 
@@ -3250,15 +3832,17 @@ html[data-theme='dark'] .review-rating-hint.negative {
       <span class="loader-step" id="step-2">Building charts</span>
       <span class="loader-step" id="step-3">Rendering PDFs</span>
     </div>
-    <div class="loader-track"><div class="loader-bar" id="loader-bar"></div></div>
     <div class="loader-sub" id="loader-sub">This may take a moment.</div>
   </div>
 </div>
 
 <div id="live-loader" class="live-loader" aria-live="polite" aria-busy="false">
   <div class="live-loader-card">
-    <div class="live-ring"></div>
-    <div class="live-loader-text" id="live-loader-text">Working...</div>
+    <div class="live-ring" aria-hidden="true"></div>
+    <div class="live-loader-copy">
+      <div class="live-loader-text" id="live-loader-text">Working...</div>
+      <div class="live-loader-caption" id="live-loader-caption">Preparing the next update...</div>
+    </div>
   </div>
 </div>
 
@@ -3272,7 +3856,14 @@ const state = {
   subjects: [],
   students: [],   // [{id, name, marks:{subject: value}}]
   analysis: null,
+  analysisDetailView: false,
+  analysisRankSort: 'weighted-total',
+  analysisRankFilter: 'all',
   chartInstances: {},
+  chartPrefs: {
+    distType: 'bar',
+    cumfreqType: 'line'
+  },
   subjectMaxMarks: {},  // {subject: maxMark}
   subjectFailMarks: {}, // {subject: failMark}
   currentCacheId: null  // Track if viewing a cached entry
@@ -3322,14 +3913,13 @@ const loaderRuntime = {
 const PDF_MAX_BYTES = 2 * 1024 * 1024;
 const taskLocks = new Set();
 let tableHintsResizeObserver = null;
-const TAB_ORDER = ['setup', 'entry', 'analysis', 'graphs', 'reports', 'guide', 'review'];
+const TAB_ORDER = ['setup', 'entry', 'analysis', 'graphs', 'reports', 'review'];
 const TAB_LABELS = {
   setup: 'Setup',
   entry: 'Enter Marks',
   analysis: 'Analysis',
   graphs: 'Graphs',
   reports: 'Reports',
-  guide: 'Graph Interpretation',
   review: 'Reviews'
 };
 
@@ -3360,7 +3950,7 @@ function setInlineValidation(message='', type='') {
 
 function validateEntryForAnalysis() {
   if(!state.students.length) return 'Add at least 2 students before running analysis.';
-  if(!state.subjects.length) return 'Add at least one subject in Setup first.';
+  if(!state.subjects.length) return 'Add at least one subject or import a CSV before running analysis.';
 
   const namedStudents = state.students.filter(s => (s.name || '').trim());
   if(namedStudents.length < 2) return 'At least 2 students must have names.';
@@ -3374,12 +3964,16 @@ function validateEntryForAnalysis() {
 function updateContextualCTAs() {
   const entryCta = $('entry-context-cta');
   const analysisCta = $('analysis-context-cta');
+  const subjectCount = state.subjects.length;
+  const studentCount = state.students.length;
+  const valid = state.students.filter(s=>s.name&&Object.values(s.marks).some(v=>v!==''&&v!==null&&!isNaN(parseFloat(v)))).length;
+
+  renderEntryReadiness(subjectCount, studentCount, valid);
+  updateAnalyzeButtonState(subjectCount, valid);
+
   if (entryCta) {
-    const subjectCount = state.subjects.length;
-    const studentCount = state.students.length;
-    const valid = state.students.filter(s=>s.name&&Object.values(s.marks).some(v=>v!==''&&v!==null&&!isNaN(parseFloat(v)))).length;
     if (!subjectCount) {
-      entryCta.textContent = 'Next step: add subjects in Setup, then return to Enter Marks.';
+      entryCta.textContent = 'No subjects yet. Add them in Setup or import a CSV from Enter Marks.';
     } else if (studentCount < 2) {
       entryCta.textContent = 'Next step: add at least 2 students and enter marks to unlock analysis.';
     } else if (valid < 2) {
@@ -3396,6 +3990,66 @@ function updateContextualCTAs() {
   updateTabCompletion();
 }
 
+function renderEntryReadiness(subjectCount, studentCount, validCount) {
+  const el = $('entry-readiness');
+  if (!el) return;
+
+  const checks = [
+    {
+      label: 'Subjects',
+      value: `${subjectCount}`,
+      state: subjectCount > 0 ? 'ok' : 'warn'
+    },
+    {
+      label: 'Students Added',
+      value: `${studentCount}`,
+      state: studentCount >= 2 ? 'ok' : 'warn'
+    },
+    {
+      label: 'Rows With Marks',
+      value: `${validCount}`,
+      state: validCount >= 2 ? 'ok' : 'warn'
+    }
+  ];
+
+  el.innerHTML = checks.map(c => `
+    <div class="entry-check ${c.state}">
+      <div class="entry-check-label">${c.label}</div>
+      <div class="entry-check-value">${c.value}</div>
+    </div>
+  `).join('');
+}
+
+function updateAnalyzeButtonState(subjectCount, validCount) {
+  const btn = $('btn-run-analysis');
+  const hint = $('entry-analysis-hint');
+  if (!btn) return;
+
+  const ready = subjectCount > 0 && validCount >= 2;
+  btn.disabled = !ready;
+  btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+
+  if (ready) {
+    btn.title = 'Generate class statistics, graphs, and report-ready insights';
+    if (hint) {
+      hint.classList.add('ready');
+      hint.textContent = 'Ready to analyze: your data meets all requirements.';
+    }
+  } else if (!subjectCount) {
+    btn.title = 'Add at least one subject or import a CSV first';
+    if (hint) {
+      hint.classList.remove('ready');
+      hint.textContent = 'Ready when you add at least 1 subject or import a CSV, then enter marks for 2 students.';
+    }
+  } else {
+    btn.title = 'Add marks for at least 2 students to run analysis';
+    if (hint) {
+      hint.classList.remove('ready');
+      hint.textContent = 'Ready when marks are entered for at least 2 students.';
+    }
+  }
+}
+
 function updateTabProgress(name) {
   const idx = TAB_ORDER.indexOf(name);
   const progress = $('tab-progress');
@@ -3407,18 +4061,43 @@ function updateTabCompletion() {
   const validStudents = state.students.filter(s => s.name && Object.values(s.marks).some(v => v !== '' && v !== null && !isNaN(parseFloat(v)))).length;
   const completion = {
     setup: state.subjects.length > 0,
-    entry: validStudents >= 2,
+    entry: validStudents >= 1,
     analysis: !!state.analysis,
     graphs: !!state.analysis,
     reports: !!state.analysis,
-    guide: !!state.analysis,
+    review: false
+  };
+
+  const locked = {
+    setup: false,
+    entry: false,
+    analysis: !completion.entry,
+    graphs: !completion.analysis,
+    reports: !completion.analysis,
     review: false
   };
 
   TAB_ORDER.forEach(name => {
     const el = $(`tab-${name}`);
-    if (el) el.classList.toggle('done', !!completion[name]);
+    if (!el) return;
+    el.classList.toggle('done', !!completion[name]);
+    el.classList.toggle('is-disabled', !!locked[name]);
+    el.setAttribute('aria-disabled', locked[name] ? 'true' : 'false');
   });
+}
+
+function canOpenTab(name) {
+  const validStudents = state.students.filter(s => s.name && Object.values(s.marks).some(v => v !== '' && v !== null && !isNaN(parseFloat(v)))).length;
+  const completion = {
+    setup: state.subjects.length > 0,
+    entry: validStudents >= 2,
+    analysis: !!state.analysis
+  };
+  if (name === 'setup' || name === 'review') return true;
+  if (name === 'entry') return true;
+  if (name === 'analysis') return completion.entry;
+  if (name === 'graphs' || name === 'reports') return completion.analysis;
+  return true;
 }
 
 function setTableDensity(mode) {
@@ -3517,7 +4196,7 @@ function updateThemeToggle(theme) {
   toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
   toggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
   const icon = toggle.querySelector('.theme-toggle-icon');
-  if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+  if (icon) icon.src = isDark ? 'icons/edu-outline/sun.svg' : 'icons/edu-outline/moon.svg';
 }
 
 function applyTheme(theme, persist = true) {
@@ -3670,7 +4349,7 @@ function updateHistoryDisplay() {
   const html = `
     <div style="padding: 16px; background: var(--primary-tint); border-radius: var(--r); margin-bottom: 16px;">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-        <div style="font-weight: 600; color: var(--primary); font-size: 14px;">📚 Saved Entries</div>
+        <div style="font-weight: 600; color: var(--primary); font-size: 14px; display:flex; align-items:center; gap:6px;"><img class="ui-icon" src="icons/edu-outline/book.svg" alt="" aria-hidden="true">Saved Entries</div>
         <div style="font-size: 12px; color: var(--ink-faint);">${entries.length} of ${MAX_CACHE_ENTRIES}</div>
       </div>
       ${entries.length === 0 ?
@@ -3685,7 +4364,7 @@ function updateHistoryDisplay() {
                   <div style="font-size: 11px; color: var(--ink-faint); margin-top: 4px;">${entry.className || 'No class'} • ${entry.termName || 'No term'}</div>
                   <div style="font-size: 10px; color: var(--ink-faint);">${entry.timestamp}</div>
                 </div>
-                <button class="btn btn-xs btn-danger-ghost" onclick="event.stopPropagation(); Cache.deleteEntry(${entry.id}); updateHistoryDisplay(); toast('Entry deleted', 'ok');" title="Delete entry">🗑️</button>
+                <button class="btn btn-xs btn-danger-ghost" onclick="event.stopPropagation(); Cache.deleteEntry(${entry.id}); updateHistoryDisplay(); toast('Entry deleted', 'ok');" title="Delete entry"><img class="ui-icon" src="icons/edu-outline/trash.svg" alt="" aria-hidden="true"></button>
               </div>
             </div>
           `).join('')}
@@ -3704,7 +4383,7 @@ function showClearAllConfirmation() {
   }
 
   const confirmed = confirm(
-    `⚠️  CLEAR ALL MARKS?\n\n` +
+    `WARNING: CLEAR ALL MARKS?\n\n` +
     `This will permanently delete all ${state.students.length} student${state.students.length !== 1 ? 's' : ''} and their marks.\n\n` +
     `This action CANNOT be undone.\n\n` +
     `Click OK to confirm, or Cancel to go back.`
@@ -3733,7 +4412,7 @@ function clearAllMarks() {
   if (analysisMock) {
     analysisMock.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">📊</div>
+        <div class="empty-icon"><img class="ui-icon" src="icons/edu-outline/chart.svg" alt="" aria-hidden="true"></div>
         <h3>No analysis yet</h3>
         <p>Enter student marks and click "Analyse Data" to see statistics here.</p>
         <button class="btn btn-primary" onclick="switchTab('entry')">Go to Enter Marks</button>
@@ -3743,7 +4422,7 @@ function clearAllMarks() {
 
   rebuildMarksTable();
   updateHistoryDisplay();
-  toast('All marks cleared ✓', 'ok');
+  toast('All marks cleared', 'ok');
 }
 
 /* ╔═══════════════════════════════════════════════════╗
@@ -3950,20 +4629,32 @@ function setAnimatedStatusText(el, text) {
   });
 }
 
-function showLoader(msg='Generating…', minMs=700) {
+function setLiveLoaderProgress(percent, caption='') {
+  const text = $('live-loader-caption');
+  if (text && caption) {
+    setAnimatedStatusText(text, caption);
+  }
+}
+
+function showLoader(msg='Generating…', minMs=700, hideDisc=false) {
   const loader = $('loader');
   const loaderMsg = $('loader-msg');
   const loaderProgress = $('loader-progress');
-  const loaderBar = $('loader-bar');
   const loaderSub = $('loader-sub');
   if (!loader) return;
 
   setAnimatedStatusText(loaderMsg, msg);
   if (loaderProgress) loaderProgress.style.display = 'flex';
-  if (loaderBar) loaderBar.style.width = '22%';
   setAnimatedStatusText(loaderSub, 'Preparing resources...');
   loaderRuntime.modalShownAt = Date.now();
   loaderRuntime.modalMinMs = Math.max(500, minMs);
+
+  // Apply dots-only style if hideDisc is true
+  if (hideDisc) {
+    loader.classList.add('loader--dots-only');
+  } else {
+    loader.classList.remove('loader--dots-only');
+  }
 
   // Ensure only one pending hide timer exists.
   if (loaderRuntime.modalHideTimer) {
@@ -3976,13 +4667,20 @@ function showLoader(msg='Generating…', minMs=700) {
 function updateLoaderStep(step) {
   for(let i=1; i<=3; i++) {
     const el = $("step-" + i);
-    if(el) el.classList.toggle('active', i === step);
+    if(el) {
+      const active = i === step;
+      el.classList.toggle('active', active);
+      el.setAttribute('aria-current', active ? 'step' : 'false');
+    }
   }
-  const bar = $('loader-bar');
-  if (bar) {
-    const widths = { 1: '34%', 2: '72%', 3: '100%' };
-    bar.style.width = widths[step] || '22%';
-  }
+}
+
+function setLoaderPhase(step, message, subMessage, percent) {
+  const loaderMsg = $('loader-msg');
+  const loaderSub = $('loader-sub');
+  if (message) setAnimatedStatusText(loaderMsg, message);
+  if (subMessage) setAnimatedStatusText(loaderSub, subMessage);
+  updateLoaderStep(step);
 }
 function hideLoader() {
   if (loaderRuntime.modalHideTimer) {
@@ -3991,14 +4689,12 @@ function hideLoader() {
   }
 
   const loader = $('loader');
-  const loaderBar = $('loader-bar');
   if (!loader) return;
 
   const elapsed = Date.now() - loaderRuntime.modalShownAt;
   const remaining = Math.max(0, loaderRuntime.modalMinMs - elapsed);
   loaderRuntime.modalHideTimer = setTimeout(() => {
     loader.classList.remove('is-visible');
-    if (loaderBar) loaderBar.style.width = '0%';
     loaderRuntime.modalHideTimer = null;
   }, remaining);
 }
@@ -4006,9 +4702,12 @@ function hideLoader() {
 function showLiveLoader(msg='Working…', minMs=600) {
   const live = $('live-loader');
   const text = $('live-loader-text');
+  const caption = $('live-loader-caption');
   if (!live || !text) return;
   setAnimatedStatusText(text, msg);
   live.setAttribute('aria-busy', 'true');
+  live.setAttribute('aria-live', 'polite');
+  if (caption) setAnimatedStatusText(caption, 'Preparing the next update...');
   loaderRuntime.liveShownAt = Date.now();
   loaderRuntime.liveMinMs = Math.max(500, minMs);
 
@@ -4034,6 +4733,7 @@ function hideLiveLoader() {
   loaderRuntime.liveHideTimer = setTimeout(() => {
     live.classList.remove('is-visible');
     live.setAttribute('aria-busy', 'false');
+    live.setAttribute('aria-live', 'off');
     loaderRuntime.liveHideTimer = null;
   }, remaining);
 }
@@ -4380,27 +5080,40 @@ function initTabBarScroll() {
 /* ── TAB BAR KEYBOARD NAVIGATION ── */
 function initTabKeyboardNav() {
   const tabs = document.querySelectorAll('.tab-btn');
+
+  function nextEnabledIndex(startIndex, step) {
+    if (!tabs.length) return startIndex;
+    let idx = startIndex;
+    for (let i = 0; i < tabs.length; i++) {
+      idx = (idx + step + tabs.length) % tabs.length;
+      if (tabs[idx].getAttribute('aria-disabled') !== 'true') return idx;
+    }
+    return startIndex;
+  }
+
   tabs.forEach((tab, index) => {
     tab.addEventListener('keydown', (e) => {
       let target;
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
-        target = tabs[index + 1] || tabs[0];
+        target = tabs[nextEnabledIndex(index, 1)];
         target.focus();
         target.click();
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
-        target = tabs[index - 1] || tabs[tabs.length - 1];
+        target = tabs[nextEnabledIndex(index, -1)];
         target.focus();
         target.click();
       } else if (e.key === 'Home') {
         e.preventDefault();
-        tabs[0].focus();
-        tabs[0].click();
+        const homeIdx = nextEnabledIndex(tabs.length - 1, 1);
+        tabs[homeIdx].focus();
+        tabs[homeIdx].click();
       } else if (e.key === 'End') {
         e.preventDefault();
-        tabs[tabs.length - 1].focus();
-        tabs[tabs.length - 1].click();
+        const endIdx = nextEnabledIndex(0, -1);
+        tabs[endIdx].focus();
+        tabs[endIdx].click();
       }
     });
   });
@@ -4717,9 +5430,17 @@ function updateSubjectFailMark(subject, value) {
 }
 
 function proceedToEntry() {
-  if(!state.subjects.length) { toast('Please add at least one subject first','warn'); return; }
   rebuildMarksTable();
   switchTab('entry');
+  requestAnimationFrame(() => {
+    const firstInput = document.querySelector('#marks-tbody input, #marks-tbody textarea, #marks-tbody select');
+    if (firstInput) {
+      firstInput.focus();
+      return;
+    }
+    const importBtn = $('btn-import-csv');
+    if (importBtn) importBtn.focus();
+  });
 }
 
 const SAMPLE_DATASETS = {
@@ -4874,7 +5595,11 @@ function rebuildMarksTable() {
     <th style="width:45px">#</th>
     <th style="width:90px">ID</th>
     <th>Full Name</th>`;
-  subjs.forEach(s=>{ th+=`<th>${esc(s)}</th>`; });
+  subjs.forEach(s=>{
+    const maxMark = getSubjectMaxMark(s);
+    const failMark = getSubjectFailMark(s);
+    th+=`<th><span class="th-main">${esc(s)}</span><span class="th-meta">Max ${fmtNum(maxMark, 0)} · Fail ${fmtNum(failMark, 0)}</span></th>`;
+  });
   th += `<th>Mean<span class="tip" data-tip="Average of entered scores after normalizing each subject by its max mark.">?</span></th>
          <th>Action</th></tr>`;
   $('marks-thead').innerHTML = th;
@@ -4919,8 +5644,9 @@ function renderMarksRows() {
       const maxMark = getSubjectMaxMark(subj);
       row += `<td><input type="number" class="mark-inp" data-row-idx="${i}" data-subj-idx="${subjIdx}" min="0" max="${maxMark}" step="0.5" value="${v}"
         inputmode="decimal"
-        oninput='updateMark(${i},${JSON.stringify(subj)},this.value,false)'
-        onchange='updateMark(${i},${JSON.stringify(subj)},this.value,true)'></td>`;
+        oninput='updateMark(${i},${JSON.stringify(subj)},this.value,false,this)'
+        onchange='updateMark(${i},${JSON.stringify(subj)},this.value,true,this)'
+        onblur='updateMark(${i},${JSON.stringify(subj)},this.value,true,this)'></td>`;
     });
     const meanDisp = mean!==null ? fmtNum(mean) : '—';
     row += `<td class="mean-cell">${meanDisp}</td>
@@ -4940,8 +5666,49 @@ function computeStudentMean(student) {
   return vals.length ? Stat.mean(vals) : null;
 }
 
+function formatMarkValue(value) {
+  const numeric = Number(value);
+  return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(1).replace(/\.0$/, '');
+}
+
+function getMarkValidationError(rawValue, maxMark, finalCheck = false) {
+  const text = String(rawValue ?? '').trim();
+  if (text === '') return '';
+
+  const parsed = Number(text);
+  if (!Number.isFinite(parsed)) {
+    return finalCheck ? `Enter a mark between 0 and ${fmtNum(maxMark, 0)}.` : '';
+  }
+  if (parsed < 0) {
+    return `Marks cannot be negative. Use a value from 0 to ${fmtNum(maxMark, 0)}.`;
+  }
+  if (parsed > maxMark) {
+    return `Mark cannot exceed ${fmtNum(maxMark, 0)} for this subject.`;
+  }
+  return '';
+}
+
+function markInputError(inputEl, message, fallbackValue) {
+  if (!inputEl) return;
+  inputEl.classList.add('is-invalid');
+  inputEl.setAttribute('aria-invalid', 'true');
+  inputEl.value = fallbackValue;
+  inputEl.dataset.lastValid = fallbackValue;
+  toast(message, 'err');
+  requestAnimationFrame(() => {
+    inputEl.focus();
+    inputEl.select();
+  });
+}
+
+function clearMarkInputError(inputEl) {
+  if (!inputEl) return;
+  inputEl.classList.remove('is-invalid');
+  inputEl.removeAttribute('aria-invalid');
+}
+
 function addStudentRow() {
-  if(!state.subjects.length) { toast('Add subjects in Setup first','warn'); switchTab('setup'); return; }
+  if(!state.subjects.length) { toast('Add subjects in Setup or import a CSV first','warn'); return; }
   state.students.push({ id:genStudentId(), name:'', marks:{} });
   renderMarksRows();
   updateEntryCount();
@@ -4973,31 +5740,57 @@ function updateStudentName(idx,val) {
   updateContextualCTAs();
 }
 
-function updateMark(idx, subj, val, commit=false) {
-  const s=state.students[idx];
-  if(!s) return;
-  if (val === '') {
-    s.marks[subj] = '';
-  } else if (commit) {
-    const maxMark = getSubjectMaxMark(subj);
-    const parsed = parseFloat(val);
-    if (isNaN(parsed)) {
-      s.marks[subj] = '';
-    } else {
-      const clamped = Math.min(maxMark, Math.max(0, parsed));
-      s.marks[subj] = Number.isInteger(clamped) ? String(clamped) : clamped.toFixed(1).replace(/\.0$/, '');
-    }
+function updateMark(idx, subj, val, commit=false, inputEl=null) {
+  const s = state.students[idx];
+  if (!s) return;
+  const maxMark = getSubjectMaxMark(subj);
+  const fallbackValue = s.marks[subj] ?? '';
+  const validationMessage = getMarkValidationError(val, maxMark, commit);
+
+  if (validationMessage) {
+    s.marks[subj] = fallbackValue;
+    markInputError(inputEl, validationMessage, fallbackValue);
   } else {
-    s.marks[subj] = val;
+    clearMarkInputError(inputEl);
+    if (val === '') {
+      s.marks[subj] = '';
+      if (inputEl) {
+        inputEl.dataset.lastValid = '';
+      }
+    } else {
+      const parsed = parseFloat(val);
+      if (isNaN(parsed)) {
+        s.marks[subj] = '';
+        if (commit && inputEl) {
+          inputEl.value = '';
+          inputEl.dataset.lastValid = '';
+        } else if (inputEl) {
+          inputEl.dataset.lastValid = '';
+        }
+      } else if (commit) {
+        const clamped = Math.min(maxMark, Math.max(0, parsed));
+        const normalized = formatMarkValue(clamped);
+        s.marks[subj] = normalized;
+        if (inputEl) {
+          inputEl.value = normalized;
+          inputEl.dataset.lastValid = normalized;
+        }
+      } else {
+        s.marks[subj] = val;
+        if (inputEl) {
+          inputEl.dataset.lastValid = val;
+        }
+      }
+    }
   }
 
   // Update mean cell
   const row = $('marks-tbody').querySelectorAll('tr')[idx];
-  if(row) {
+  if (row) {
     const meanCell = row.querySelector('.mean-cell');
-    if(meanCell) {
+    if (meanCell) {
       const m = computeStudentMean(s);
-      meanCell.textContent = m!==null ? fmtNum(m) : '—';
+      meanCell.textContent = m !== null ? fmtNum(m) : '—';
     }
   }
   updateContextualCTAs();
@@ -5035,7 +5828,7 @@ function updateEntryMobileMetaSummary() {
     return;
   }
   if (!state.subjects.length) {
-    meta.textContent = 'Add subjects in Setup to enable mark entry.';
+    meta.textContent = 'Add subjects in Setup or import a CSV to create mark columns.';
     return;
   }
   const completed = state.students.filter(s =>
@@ -5058,7 +5851,7 @@ function initEntryKeyboardFlow() {
 
   tbody.addEventListener('focusin', (e) => {
     const target = e.target;
-    if (!(target instanceof HTMLInputElement) || !target.classList.contains('mark-inp')) return;
+    if (!(target instanceof HTMLInputElement)) return;
     clearActiveMarkCell();
     const td = target.closest('td');
     if (td) td.classList.add('is-active-cell');
@@ -5068,8 +5861,9 @@ function initEntryKeyboardFlow() {
   tbody.addEventListener('focusout', () => {
     setTimeout(() => {
       const active = document.activeElement;
-      if (!(active instanceof HTMLInputElement) || !active.classList.contains('mark-inp')) {
+      if (!tbody.contains(active)) {
         clearActiveMarkCell();
+        updateEntryMobileMetaSummary();
       }
     }, 0);
   });
@@ -5170,6 +5964,7 @@ function handleCSVImport(event) {
   const reader=new FileReader();
   reader.onload=e=>{
     try {
+      setLiveLoaderProgress(22, 'Scanning CSV structure…');
       const lines=e.target.result.split('\n').filter(l=>l.trim());
       const importedMaxMarks = {};
       const importedFailMarks = {};
@@ -5194,6 +5989,7 @@ function handleCSVImport(event) {
 
       if (headerIndex >= lines.length) throw new Error('CSV has no student header row');
 
+      setLiveLoaderProgress(42, 'Reading subjects and thresholds…');
       const headers=parseCsvLine(lines[headerIndex]).map(h=>h.trim().replace(/"/g,''));
       const subjCols=headers.slice(2, headers.indexOf('Mean')>-1 ? headers.indexOf('Mean') : headers.length);
       // Merge subjects
@@ -5206,6 +6002,7 @@ function handleCSVImport(event) {
         else if(!state.subjectFailMarks[s]) state.subjectFailMarks[s] = defaultFailMarkForMax(state.subjectMaxMarks[s]);
       });
       state.students=[];
+      setLiveLoaderProgress(66, 'Parsing student rows…');
       for(let i=headerIndex+1;i<lines.length;i++){
         const cells=parseCsvLine(lines[i]);
         if(cells.length<2||!cells[0]) continue;
@@ -5213,10 +6010,12 @@ function handleCSVImport(event) {
         subjCols.forEach((subj,j)=>{ marks[subj]=cells[j+2]!==undefined&&cells[j+2]!==''?parseFloat(cells[j+2]):''; });
         state.students.push({id:cells[0].trim(),name:(cells[1]||'').replace(/"/g,'').trim(),marks});
       }
+      setLiveLoaderProgress(88, 'Normalizing thresholds and refreshing views…');
       ensureSubjectThresholds();
       renderSubjectChips();
       rebuildMarksTable();
       updateContextualCTAs();
+      setLiveLoaderProgress(100, 'Import complete. Reports are ready.');
       toast(`Imported ${state.students.length} students`,'ok');
     } catch(err){ toast('CSV import failed: '+err.message,'err'); }
     hideLiveLoader();
@@ -5260,15 +6059,19 @@ async function runAnalysis() {
   await yieldToUI(30);
 
   try {
+    setLiveLoaderProgress(24, 'Validating marks and thresholds…');
+    await yieldToUI(15);
     try {
       state.analysis = await computeAnalysisInWorker();
     } catch {
       state.analysis = Stat.computeAll();
     }
+    setLiveLoaderProgress(62, 'Computing class statistics…');
     await yieldToUI(10);
     renderAnalysisTab();
     renderGraphsTab();
     renderReportsTab();
+    setLiveLoaderProgress(88, 'Rendering report views…');
 
     // Save to cache
     const cacheId = Cache.saveEntry();
@@ -5276,6 +6079,7 @@ async function runAnalysis() {
 
     switchTab('analysis');
     updateContextualCTAs();
+    setLiveLoaderProgress(100, 'Analysis complete. Reports are ready.');
     setInlineValidation('Analysis complete. You can now view graphs and export reports.', 'ok');
     toast('Analysis complete ✓','ok');
   } catch (err) {
@@ -5291,8 +6095,9 @@ async function runAnalysis() {
 function renderAnalysisTab() {
   const A = state.analysis;
   if(!A) return;
+  const showDetailed = !!state.analysisDetailView;
   let tipCounter = 0;
-  const rankingTableMinWidth = Math.max(860, 350 + state.subjects.length * 84);
+  const rankingTableMinWidth = Math.max(showDetailed ? 860 : 760, (showDetailed ? 350 : 260) + state.subjects.length * 84);
   const nextTipId = () => `detail-tip-${++tipCounter}`;
   const n = A.studentStats.length;
   const top = A.sorted[0], bot = A.sorted[A.sorted.length-1];
@@ -5345,7 +6150,7 @@ function renderAnalysisTab() {
       <div class="sub">below subject fail marks</div>
     </div>`;
 
-  if(A.classBox) html += `
+  if(A.classBox && showDetailed) html += `
     <div class="stat-card">
       <div class="lbl">Q1 (25th %ile)</div>
       <div class="val">${fmtNum(A.classBox.q1)}</div>
@@ -5369,24 +6174,29 @@ function renderAnalysisTab() {
   // Per-subject stats table
   html += `<div class="card">
   <div class="card-head">
-    <div class="card-title"><span class="icon">📐</span> Per-Subject Statistics</div>
+    <div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/chart.svg" alt="" aria-hidden="true"></span> Per-Subject Statistics</div>
+  </div>
+  <div class="analysis-table-tools">
+    <div class="analysis-table-note">Basic view shows the key numbers most teachers use daily.</div>
+    <button class="btn btn-outline btn-sm" onclick="toggleAnalysisDetailView()" aria-pressed="${showDetailed ? 'true' : 'false'}">${showDetailed ? 'Hide Detailed Statistics' : 'Show Detailed Statistics'}</button>
   </div>
   <div class="tbl-wrap stats-wrap">
   <table class="stats-tbl">
   <thead><tr>
     <th>Subject</th>
-    <th>Total Students</th>
+    <th>Students</th>
     <th>Max Mark</th>
-    <th>Fail Mark<span class="tip" data-tip="Scores below this mark are counted as fail for this subject.">?</span></th>
+    <th>Min</th>
+    <th>Mean</th>
+    <th>Max</th>
+    ${showDetailed ? `
+    <th>Fail Mark</th>
     <th>Pass %</th>
     <th>Fail %</th>
-    <th>Mean<span class="tip" data-tip="Average mark for the whole class in this subject.">?</span></th>
-    <th>Median<span class="tip" data-tip="The middle score when all marks are sorted low to high.">?</span></th>
-    <th>Variation<span class="tip" data-tip="Std Dev: Standard Deviation. Low = similar marks; high = very varied.">?</span></th>
-    <th>Min</th>
-    <th>Max</th>
-    <th>Spread (IQR)<span class="tip" data-tip="IQR: Interquartile Range (Q3 minus Q1). Shows the spread of the middle 50%.">?</span></th>
-    <th>Outliers<span class="tip" data-tip="Students whose score is more than 1.5×IQR below Q1 or above Q3.">?</span></th>
+    <th>Middle Score</th>
+    <th>Variation</th>
+    <th>Middle Spread</th>
+    <th>Unusual Scores</th>` : ''}
   </tr></thead>
   <tbody>`;
 
@@ -5409,24 +6219,145 @@ function renderAnalysisTab() {
       <td>${esc(subj)}</td>
       <td>${ss.count}</td>
       <td>${fmtOne(maxMark)}</td>
+      <td class="stat-interactive">${b ? `<button type="button" class="hover-value" aria-describedby="${minTipId}" aria-label="Show minimum scorers for ${esc(subj)}">${fmtOne(b.min)}</button>${minTip}` : '—'}</td>
+      <td>${fmtOne(ss.mean)}</td>
+      <td class="stat-interactive">${b ? `<button type="button" class="hover-value" aria-describedby="${maxTipId}" aria-label="Show maximum scorers for ${esc(subj)}">${fmtOne(b.max)}</button>${maxTip}` : '—'}</td>
+      ${showDetailed ? `
       <td>${fmtOne(failMark)}</td>
       <td>${ss.passRate == null ? '—' : fmtOne(ss.passRate) + '%'}</td>
       <td class="stat-interactive"><button type="button" class="hover-value" aria-describedby="${failTipId}" aria-label="Show failing students for ${esc(subj)}">${ss.failRate == null ? '—' : fmtOne(ss.failRate) + '%'}</button>${failTip}</td>
-      <td>${fmtOne(ss.mean)}</td>
       <td>${fmtOne(ss.median)}</td>
       <td>${fmtOne(ss.stdDev)}</td>
-      <td class="stat-interactive">${b ? `<button type="button" class="hover-value" aria-describedby="${minTipId}" aria-label="Show minimum scorers for ${esc(subj)}">${fmtOne(b.min)}</button>${minTip}` : '—'}</td>
-      <td class="stat-interactive">${b ? `<button type="button" class="hover-value" aria-describedby="${maxTipId}" aria-label="Show maximum scorers for ${esc(subj)}">${fmtOne(b.max)}</button>${maxTip}` : '—'}</td>
       <td>${b?fmtOne(b.iqr):'—'}</td>
-      <td class="stat-interactive"><button type="button" class="hover-value" aria-describedby="${outlierTipId}" aria-label="Show outlier list for ${esc(subj)}">${ss.outliers.length ? `<span class="badge badge-amber">${ss.outliers.length}</span>` : '<span class="badge badge-green">0</span>'}</button>${outlierTip}</td>
+      <td class="stat-interactive"><button type="button" class="hover-value" aria-describedby="${outlierTipId}" aria-label="Show outlier list for ${esc(subj)}">${ss.outliers.length ? `<span class="badge badge-amber">${ss.outliers.length}</span>` : '<span class="badge badge-green">0</span>'}</button>${outlierTip}</td>` : ''}
     </tr>`;
   });
   html += `</tbody></table></div></div>`;
 
+  const rankingRows = A.studentStats.map((s) => {
+    const subjectScores = {};
+    let passCount = 0;
+    let failCount = 0;
+    let missingCount = 0;
+    let weightedNumerator = 0;
+    let weightedDenominator = 0;
+    let borderlineCount = 0;
+
+    state.subjects.forEach((subj) => {
+      const raw = s.marks[subj];
+      const num = (raw !== '' && raw !== undefined && raw !== null) ? parseFloat(raw) : NaN;
+      const maxMark = getSubjectMaxMark(subj);
+      const failMark = getSubjectFailMark(subj);
+      const safeMax = maxMark > 0 ? maxMark : 100;
+      const normalized = !isNaN(num) ? (num / safeMax) * 100 : null;
+      subjectScores[subj] = normalized;
+
+      if (normalized === null) {
+        missingCount += 1;
+        return;
+      }
+
+      if (num < failMark) failCount += 1;
+      else passCount += 1;
+
+      const borderlineMargin = Math.max(2, safeMax * 0.05);
+      if (num >= failMark && num <= failMark + borderlineMargin) borderlineCount += 1;
+
+      weightedNumerator += num;
+      weightedDenominator += safeMax;
+    });
+
+    const weightedTotal = weightedDenominator ? (weightedNumerator / weightedDenominator) * 100 : null;
+    const isAtRisk = failCount > 0 || (weightedTotal !== null && weightedTotal < 45);
+    const isBorderline = !isAtRisk && borderlineCount > 0;
+
+    return {
+      ...s,
+      subjectScores,
+      passCount,
+      failCount,
+      missingCount,
+      weightedTotal,
+      borderlineCount,
+      isAtRisk,
+      isBorderline
+    };
+  });
+
+  const sortKey = state.analysisRankSort || 'weighted-total';
+  const filterKey = state.analysisRankFilter || 'all';
+
+  const compareBySort = (a, b) => {
+    if (sortKey === 'pass-count') {
+      return (b.passCount - a.passCount) || ((b.weightedTotal ?? -Infinity) - (a.weightedTotal ?? -Infinity));
+    }
+    if (sortKey === 'fail-count') {
+      return (b.failCount - a.failCount) || ((a.weightedTotal ?? Infinity) - (b.weightedTotal ?? Infinity));
+    }
+    if (sortKey === 'support-priority') {
+      const aPriority = (a.failCount * 10) + (a.isBorderline ? 2 : 0) + (a.missingCount > 0 ? 1 : 0);
+      const bPriority = (b.failCount * 10) + (b.isBorderline ? 2 : 0) + (b.missingCount > 0 ? 1 : 0);
+      return (bPriority - aPriority) || ((a.weightedTotal ?? Infinity) - (b.weightedTotal ?? Infinity));
+    }
+    if (sortKey.startsWith('subject:')) {
+      const subj = sortKey.slice(8);
+      return ((b.subjectScores[subj] ?? -Infinity) - (a.subjectScores[subj] ?? -Infinity))
+        || ((b.weightedTotal ?? -Infinity) - (a.weightedTotal ?? -Infinity));
+    }
+    return ((b.weightedTotal ?? -Infinity) - (a.weightedTotal ?? -Infinity)) || ((b.mean ?? -Infinity) - (a.mean ?? -Infinity));
+  };
+
+  const sortedRows = [...rankingRows].sort(compareBySort);
+
+  let displayRows = sortedRows;
+  if (filterKey === 'top') {
+    const topCount = Math.max(1, Math.ceil(sortedRows.length * 0.25));
+    displayRows = sortedRows.slice(0, topCount);
+  } else if (filterKey === 'at-risk') {
+    displayRows = sortedRows.filter(r => r.isAtRisk);
+  } else if (filterKey === 'missing') {
+    displayRows = sortedRows.filter(r => r.missingCount > 0);
+  } else if (filterKey === 'borderline') {
+    displayRows = sortedRows.filter(r => r.isBorderline);
+  } else if (filterKey === 'needs-support-first') {
+    displayRows = sortedRows.filter(r => r.isAtRisk || r.isBorderline || r.missingCount > 0);
+  }
+
+  const sortLabel = (() => {
+    if (sortKey === 'weighted-total') return 'Weighted Total (highest first)';
+    if (sortKey === 'pass-count') return 'Pass Count (highest first)';
+    if (sortKey === 'fail-count') return 'Fail Count (highest first)';
+    if (sortKey === 'support-priority') return 'Needs Support Priority';
+    if (sortKey.startsWith('subject:')) return `${sortKey.slice(8)} (highest first)`;
+    return 'Weighted Total (highest first)';
+  })();
+
   // Student rankings table
   html += `<div class="card">
   <div class="card-head">
-    <div class="card-title"><span class="icon">🏅</span> Student Rankings</div>
+    <div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/target.svg" alt="" aria-hidden="true"></span> Student Rankings</div>
+  </div>
+  <div class="ranking-controls ranking-sort-bar">
+    <div class="ranking-sort-left">
+      <label class="ranking-sort-label" for="ranking-sort-select">Sort by</label>
+      <div class="ranking-sort-select-wrap">
+        <select id="ranking-sort-select" onchange="setAnalysisRankingSort(this.value)">
+          <option value="weighted-total" ${sortKey==='weighted-total' ? 'selected' : ''}>Weighted Total</option>
+          <option value="pass-count" ${sortKey==='pass-count' ? 'selected' : ''}>Pass Count</option>
+          <option value="fail-count" ${sortKey==='fail-count' ? 'selected' : ''}>Fail Count</option>
+          ${state.subjects.map(subj => `<option value="subject:${esc(subj)}" ${sortKey===`subject:${subj}` ? 'selected' : ''}>${esc(subj)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <span class="ranking-current-sort">Current: <strong>${esc(sortLabel)}</strong></span>
+  </div>
+  <div class="ranking-controls ranking-filter-row" role="group" aria-label="Ranking quick filters">
+    <button class="btn btn-outline btn-sm filter-btn ${filterKey==='all' ? 'is-active' : ''}" onclick="setAnalysisRankingFilter('all')">All</button>
+    <button class="btn btn-outline btn-sm filter-btn ${filterKey==='top' ? 'is-active' : ''}" onclick="setAnalysisRankingFilter('top')">Top Performers</button>
+    <button class="btn btn-outline btn-sm filter-btn ${filterKey==='at-risk' ? 'is-active' : ''}" onclick="setAnalysisRankingFilter('at-risk')">At-Risk</button>
+    <button class="btn btn-outline btn-sm filter-btn ${filterKey==='missing' ? 'is-active' : ''}" onclick="setAnalysisRankingFilter('missing')">Missing Marks</button>
+    <button class="btn btn-outline btn-sm filter-btn ${filterKey==='borderline' ? 'is-active' : ''}" onclick="setAnalysisRankingFilter('borderline')">Borderline</button>
+    <button class="btn btn-primary btn-sm ${filterKey==='needs-support-first' ? 'is-active' : ''}" onclick="applyNeedsSupportFirst()">Needs Support First</button>
   </div>
   <div class="tbl-wrap stats-wrap">
   <table class="stats-tbl ranking-tbl" style="min-width:${rankingTableMinWidth}px">
@@ -5435,9 +6366,9 @@ function renderAnalysisTab() {
     <th style="text-align:left">ID</th>
     <th style="text-align:left">Name</th>`;
   state.subjects.forEach(s=>{ html+=`<th class="subject-col">${esc(s)}</th>`; });
-  html+=`<th class="mean-col">Mean</th><th class="quartile-col">Quartile</th></tr></thead><tbody>`;
+  html+=`<th class="mean-col">Mean</th>${showDetailed ? '<th class="quartile-col">Quartile</th>' : ''}</tr></thead><tbody>`;
 
-  A.sorted.forEach((s,i)=>{
+  displayRows.forEach((s,i)=>{
     const qLabel = A.classBox ? (
       s.mean > A.classBox.q3 ? '<span class="badge badge-green">Top 25%</span>' :
       s.mean >= A.classBox.q2 ? '<span class="badge badge-blue">Upper Mid</span>' :
@@ -5462,15 +6393,18 @@ function renderAnalysisTab() {
       }
       html+=`<td class="${cls} subject-col">${(!isNaN(num))?fmtOne(num):'—'}</td>`;
     });
-    html+=`<td class="mean-col" style="font-weight:700;color:var(--primary);font-family:'DM Mono',monospace">${fmtOne(s.mean)}</td>
-           <td class="quartile-col">${qLabel}</td></tr>`;
+        html+=`<td class="mean-col" style="font-weight:700;color:var(--primary);font-family:'DM Mono',monospace">${fmtOne(s.weightedTotal ?? s.mean)}</td>
+          ${showDetailed ? `<td class="quartile-col">${qLabel}</td>` : ''}</tr>`;
   });
+  if(!displayRows.length) {
+    html += `<tr><td colspan="${4 + state.subjects.length + (showDetailed ? 1 : 0)}" class="text-muted" style="text-align:center;padding:16px">No students match this filter.</td></tr>`;
+  }
   html+=`</tbody></table></div>
   <div class="divider"></div>
   <div class="text-sm text-muted" style="line-height:1.8">
-    🟢 Green cell = above Q3 for that subject &nbsp;|&nbsp;
-    🔴 Red cell = below Q1 for that subject &nbsp;|&nbsp;
-    🟡 Yellow cell = statistical outlier (IQR method)
+      Green cell = stronger relative score in that subject &nbsp;|&nbsp;
+      Red cell = below target or lower relative score
+      ${showDetailed ? '&nbsp;|&nbsp; Yellow cell = unusual score pattern' : ''}
   </div>
   </div>`;
 
@@ -5479,7 +6413,7 @@ function renderAnalysisTab() {
   setTimeout(() => initTableScrollHints(), 80);
 
   // Flags
-  html += `<div class="card"><div class="card-head"><div class="card-title"><span class="icon">🚩</span> Performance Flags</div></div>`;
+  html += `<div class="card"><div class="card-head"><div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/warning.svg" alt="" aria-hidden="true"></span> Performance Flags</div></div>`;
   html += `<div class="flags-grid">`;
 
   const mkFlag = (cls,icon,title,students,scoreKey='mean') => {
@@ -5487,10 +6421,15 @@ function renderAnalysisTab() {
     const moreCount = totalCount > 8 ? totalCount - 8 : 0;
     const flagId = 'flag-' + Math.random().toString(36).substr(2, 9);
     return `<div class="flag-box ${cls}" id="${flagId}">
-      <div class="flag-title">
-        ${icon} ${title}
-        <span class="badge badge-blue" style="font-size:11px">${totalCount}</span>
-        ${moreCount > 0 ? `<button class="flag-expand-btn" onclick="toggleFlagExpand('${flagId}')" title="Show more">▼</button>` : ''}
+      <div class="flag-head">
+        <div class="flag-title-wrap">
+          <div class="flag-title">${icon} ${title}</div>
+          <div class="flag-sub">${totalCount} student${totalCount===1?'':'s'} flagged</div>
+        </div>
+        <div class="flag-head-actions">
+          <span class="badge badge-blue" style="font-size:11px">${totalCount}</span>
+          ${moreCount > 0 ? `<button class="flag-expand-btn" onclick="toggleFlagExpand('${flagId}')" title="Show more">▼</button>` : ''}
+        </div>
       </div>
       <ul class="flag-list">${
         students.length
@@ -5501,13 +6440,49 @@ function renderAnalysisTab() {
     </div>`;
   };
 
-  html += mkFlag('top-flag','🌟','Top Scorers (Above Q3)',A.topQ);
-  html += mkFlag('bottom-flag','⚠️','Bottom Scorers (Below Q1)',A.botQ);
-  html += mkFlag('lower-q-flag','📌','Lower Quartile Students',A.lowerQ);
-  html += mkFlag('outlier-flag','🔬','Statistical Outliers (IQR Method)',A.meanOutliers);
+  html += mkFlag('top-flag','<img class="ui-icon" src="icons/edu-outline/star.svg" alt="" aria-hidden="true">','Top Scorers',A.topQ);
+  html += mkFlag('bottom-flag','<img class="ui-icon" src="icons/edu-outline/warning.svg" alt="" aria-hidden="true">','Students Needing Support',A.botQ);
+  if (showDetailed) {
+    html += mkFlag('lower-q-flag','<img class="ui-icon" src="icons/edu-outline/target.svg" alt="" aria-hidden="true">','Lower Group Students',A.lowerQ);
+    html += mkFlag('outlier-flag','<img class="ui-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true">','Unusually High/Low Scores',A.meanOutliers);
+  }
   html += `</div></div>`;
 
   $('analysis-content').innerHTML = html;
+}
+
+function toggleAnalysisDetailView() {
+  state.analysisDetailView = !state.analysisDetailView;
+  try {
+    localStorage.setItem('eduStats_analysis_detail', state.analysisDetailView ? '1' : '0');
+  } catch (err) {
+    // Ignore storage errors and continue with in-memory preference.
+  }
+  if (state.analysis) renderAnalysisTab();
+}
+
+function setAnalysisRankingSort(sortKey) {
+  state.analysisRankSort = sortKey || 'weighted-total';
+  if (state.analysis) renderAnalysisTab();
+}
+
+function setAnalysisRankingFilter(filterKey) {
+  state.analysisRankFilter = filterKey || 'all';
+  if (state.analysis) renderAnalysisTab();
+}
+
+function applyNeedsSupportFirst() {
+  state.analysisRankFilter = 'needs-support-first';
+  state.analysisRankSort = 'support-priority';
+  if (state.analysis) renderAnalysisTab();
+}
+
+function initAnalysisDetailPreference() {
+  try {
+    state.analysisDetailView = localStorage.getItem('eduStats_analysis_detail') === '1';
+  } catch (err) {
+    state.analysisDetailView = false;
+  }
 }
 
 function toggleFlagExpand(flagId) {
@@ -5532,68 +6507,255 @@ function renderGraphsTab() {
   const A = state.analysis;
   if(!A) return;
 
+  const classMeans = Stat.clean(Array.isArray(A.classMeans) ? A.classMeans : []);
+  const classAvg = classMeans.length ? Stat.mean(classMeans) : null;
+  const classStd = classMeans.length ? Stat.stdDev(classMeans) : null;
+  const subjectEntries = Object.entries(A.subjectStats || {}).filter(([, st]) => Number.isFinite(st?.mean));
+  const strongest = subjectEntries.sort((a,b)=>b[1].mean-a[1].mean)[0];
+
+  const consistency = classStd === null
+    ? '—'
+    : classStd < 12
+      ? 'High'
+      : classStd < 22
+        ? 'Moderate'
+        : 'Wide Spread';
+
   $('graphs-content').innerHTML = `
-  <div class="charts-grid">
-    <div class="chart-card">
-      <div class="chart-head">
-        <div class="chart-title">📊 Score Distribution</div>
-        <div class="chart-desc">How many students fall in each score band</div>
+  <div class="graphs-overview">
+    <div class="graphs-overview-title">Quick Insights</div>
+    <div class="graphs-overview-row">
+      <div class="insight-pill">
+        <div class="k">Class Average</div>
+        <div class="v">${classAvg === null ? '—' : fmtNum(classAvg, 1)}</div>
       </div>
-      <div class="chart-body"><canvas id="chart-dist"></canvas></div>
+      <div class="insight-pill">
+        <div class="k">Consistency</div>
+        <div class="v">${consistency}</div>
+      </div>
+      <div class="insight-pill">
+        <div class="k">Strongest Subject</div>
+        <div class="v">${strongest ? `${esc(strongest[0])} (${fmtNum(strongest[1].mean, 1)})` : '—'}</div>
+      </div>
     </div>
-    <div class="chart-card">
-      <div class="chart-head">
-        <div class="chart-title">📈 Cumulative Frequency</div>
-        <div class="chart-desc">Running total of students at or below each score</div>
-      </div>
-      <div class="chart-body"><canvas id="chart-cumfreq"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-head">
-        <div class="chart-title">📏 Subject Performance Comparison</div>
-        <div class="chart-desc">Class mean, Q1, and Q3 for each subject</div>
-      </div>
-      <div class="chart-body"><canvas id="chart-subjects"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-head">
-        <div class="chart-title">🔵 Best-Fit Trend Line</div>
-        <div class="chart-desc">Student rank vs overall mean with linear trend</div>
-      </div>
-      <div class="chart-body"><canvas id="chart-bestfit"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-head">
-        <div class="chart-title">📦 Box Plot — Subject Spread</div>
-        <div class="chart-desc">Min, Q1, Median, Q3, Max per subject</div>
-      </div>
-      <div class="chart-body"><canvas id="chart-box"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-head">
-        <div class="chart-title">🎯 Student Performance Radar</div>
-        <div class="chart-desc">Class average vs top and bottom performers</div>
-      </div>
-      <div class="chart-body"><canvas id="chart-radar"></canvas></div>
+    <div class="chart-jump" aria-label="Jump to chart">
+      <button class="btn btn-outline btn-sm" onclick="scrollToGraphCard('card-dist')">Distribution</button>
+      <button class="btn btn-outline btn-sm" onclick="scrollToGraphCard('card-cumfreq')">Running Total</button>
+      <button class="btn btn-outline btn-sm" onclick="scrollToGraphCard('card-subjects')">Subjects</button>
     </div>
   </div>
 
-  <div class="card" style="margin-top:16px;text-align:center">
-    <div class="card-head" style="justify-content:center">
-      <div class="card-title"><span class="icon">🧠</span> Ready to Interpret These Graphs?</div>
+  <div class="charts-grid">
+    <div class="chart-card" id="card-dist">
+      <div class="chart-head">
+        <div class="chart-title"><img class="ui-icon" src="icons/edu-outline/chart.svg" alt="" aria-hidden="true"> Score Distribution</div>
+        <div class="chart-desc">How many students fall in each score band</div>
+      </div>
+      <div class="chart-actions">
+        <button class="btn btn-outline btn-xs" data-graph-toggle="dist" data-mode="bar" aria-pressed="false" onclick="setGraphMode('dist', 'bar')">Bar</button>
+        <button class="btn btn-outline btn-xs" data-graph-toggle="dist" data-mode="line" aria-pressed="false" onclick="setGraphMode('dist', 'line')">Line</button>
+        <button class="btn btn-ghost btn-xs" onclick="downloadChartPng('chart-dist','score-distribution')">Download PNG</button>
+      </div>
+      <div class="chart-body"><canvas id="chart-dist"></canvas></div>
+      <div class="chart-mini-insight" id="insight-dist">Preparing insight…</div>
+      <details class="graph-interpret">
+        <summary>Interpret this graph</summary>
+        <div class="graph-interpret-body" id="interp-dist-inline">Preparing interpretation…</div>
+      </details>
     </div>
-    <p class="text-sm text-muted" style="margin-bottom:14px">Use guided insights to turn the charts into clear teaching conclusions.</p>
-    <button class="btn btn-primary" onclick="switchTab('guide')" style="padding:11px 20px">Interpret Graphs →</button>
-  </div>`;
+    <div class="chart-card" id="card-cumfreq">
+      <div class="chart-head">
+        <div class="chart-title"><img class="ui-icon" src="icons/edu-outline/line-chart.svg" alt="" aria-hidden="true"> Running Total Scores</div>
+        <div class="chart-desc">How quickly students accumulate as scores increase</div>
+      </div>
+      <div class="chart-actions">
+        <button class="btn btn-outline btn-xs" data-graph-toggle="cumfreq" data-mode="line" aria-pressed="false" onclick="setGraphMode('cumfreq', 'line')">Line</button>
+        <button class="btn btn-outline btn-xs" data-graph-toggle="cumfreq" data-mode="bar" aria-pressed="false" onclick="setGraphMode('cumfreq', 'bar')">Bar</button>
+        <button class="btn btn-ghost btn-xs" onclick="downloadChartPng('chart-cumfreq','cumulative-frequency')">Download PNG</button>
+      </div>
+      <div class="chart-body"><canvas id="chart-cumfreq"></canvas></div>
+      <div class="chart-mini-insight" id="insight-cumfreq">Preparing insight…</div>
+      <details class="graph-interpret">
+        <summary>Interpret this graph</summary>
+        <div class="graph-interpret-body" id="interp-cumfreq-inline">Preparing interpretation…</div>
+      </details>
+    </div>
+
+    <div class="chart-card" id="card-subjects">
+      <div class="chart-head">
+        <div class="chart-title"><img class="ui-icon" src="icons/edu-outline/book.svg" alt="" aria-hidden="true"> Subject Comparison</div>
+        <div class="chart-desc">Average score and score spread by subject</div>
+      </div>
+      <div class="chart-actions">
+        <button class="btn btn-ghost btn-xs" onclick="downloadChartPng('chart-subjects','subject-comparison')">Download PNG</button>
+      </div>
+      <div class="chart-body"><canvas id="chart-subjects"></canvas></div>
+      <div class="chart-mini-insight" id="insight-subjects">Preparing insight…</div>
+      <details class="graph-interpret">
+        <summary>Interpret this graph</summary>
+        <div class="graph-interpret-body" id="interp-subjects-inline">Preparing interpretation…</div>
+      </details>
+    </div>
+
+  </div>
+`;
 
   requestAnimationFrame(()=>{
-    buildDistChart(A);
-    buildCumFreqChart(A);
-    buildSubjectsChart(A);
-    buildBestFitChart(A);
-    buildBoxChart(A);
-    buildRadarChart(A);
+    const builders = [
+      ['dist', () => buildDistChart(A)],
+      ['cumfreq', () => buildCumFreqChart(A)],
+      ['subjects', () => buildSubjectsChart(A)]
+    ];
+    builders.forEach(([key, build]) => {
+      try {
+        build();
+      } catch (err) {
+        console.error(`Failed to build ${key} chart`, err);
+      }
+    });
+    syncGraphModeButtons();
+    renderGraphMiniTakeaways(A);
+    renderGraphInlineInterpretations(A);
   });
+}
+
+function scrollToGraphCard(cardId) {
+  const node = $(cardId);
+  if (!node) return;
+  node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function setGraphMode(chartKey, mode) {
+  if (!state.analysis) return;
+  if (chartKey === 'dist' && (mode === 'bar' || mode === 'line')) {
+    state.chartPrefs.distType = mode;
+    buildDistChart(state.analysis);
+    syncGraphModeButtons();
+  }
+  if (chartKey === 'cumfreq' && (mode === 'bar' || mode === 'line')) {
+    state.chartPrefs.cumfreqType = mode;
+    buildCumFreqChart(state.analysis);
+    syncGraphModeButtons();
+  }
+}
+
+function syncGraphModeButtons() {
+  const activeModes = {
+    dist: state.chartPrefs?.distType || 'bar',
+    cumfreq: state.chartPrefs?.cumfreqType || 'line'
+  };
+  document.querySelectorAll('[data-graph-toggle][data-mode]').forEach((btn) => {
+    const key = btn.getAttribute('data-graph-toggle');
+    const mode = btn.getAttribute('data-mode');
+    const active = key && mode && activeModes[key] === mode;
+    btn.classList.toggle('is-active', !!active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+}
+
+function downloadChartPng(chartId, filenameBase) {
+  const canvas = $(chartId);
+  const idToKey = {
+    'chart-dist': 'dist',
+    'chart-cumfreq': 'cumfreq',
+    'chart-subjects': 'subjects',
+    'chart-bestfit': 'bestfit',
+    'chart-radar': 'radar'
+  };
+  const chartKey = idToKey[chartId] || chartId;
+  const chart = state.chartInstances?.[chartKey];
+
+  let dataUrl = null;
+  try {
+    if (canvas) dataUrl = canvas.toDataURL('image/png');
+    if (!dataUrl && chart?.toBase64Image) dataUrl = chart.toBase64Image('image/png', 1.0);
+  } catch (err) {
+    console.error(`Unable to export chart ${chartId}`, err);
+  }
+
+  if (!dataUrl || !dataUrl.startsWith('data:image/png')) {
+    toast('Chart is not ready to export yet. Try again in a moment.', 'warn');
+    return;
+  }
+
+  const safe = String(filenameBase || 'chart').toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+  const stamp = new Date().toISOString().slice(0, 10);
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = `edustats-${safe}-${stamp}.png`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function renderGraphMiniTakeaways(A) {
+  const classMeans = Stat.clean(Array.isArray(A.classMeans) ? A.classMeans : []);
+  const subjectEntries = Object.entries(A.subjectStats || {}).filter(([, st]) => Number.isFinite(st?.mean));
+
+  const bins = classMeans.length ? Stat.histogram(classMeans, Math.min(10, Math.max(5, Math.ceil(classMeans.length / 3)))) : [];
+  const peak = bins.length ? bins.reduce((a,b)=>a.count>b.count?a:b) : null;
+  const median = classMeans.length ? Stat.median(classMeans) : null;
+
+  const widest = subjectEntries.length
+    ? [...subjectEntries]
+        .map(([s, st]) => ({ s, iqr: Number(st?.box?.iqr) || 0 }))
+        .sort((a,b)=>b.iqr-a.iqr)[0]
+    : null;
+
+  const set = (id, html) => {
+    const el = $(id);
+    if (el) el.innerHTML = html;
+  };
+
+  set('insight-dist', peak
+    ? `<strong>Main score band:</strong> ${fmtNum(peak.from, 0)}-${fmtNum(peak.to, 0)} has ${peak.count} students.`
+    : `<strong>Main score band:</strong> Not enough data yet.`);
+
+  set('insight-cumfreq', median !== null
+    ? `<strong>Middle score:</strong> ${fmtNum(median, 1)}. About half the class is below this level.`
+    : `<strong>Middle score:</strong> Not enough data yet.`);
+
+  set('insight-subjects', widest
+    ? `<strong>Widest score spread:</strong> ${esc(widest.s)}.`
+    : `<strong>Widest score spread:</strong> Not enough subject data yet.`);
+}
+
+function renderGraphInlineInterpretations(A) {
+  const classMeans = Stat.clean(Array.isArray(A.classMeans) ? A.classMeans : []);
+  const bins = classMeans.length
+    ? Stat.histogram(classMeans, Math.min(10, Math.max(5, Math.ceil(classMeans.length / 3))))
+    : [];
+  const maxBin = bins.length ? bins.reduce((a,b)=>a.count>b.count?a:b) : null;
+  const classAvg = classMeans.length ? Stat.mean(classMeans) : null;
+
+  const sortedMarks = [...classMeans].sort((x,y)=>x-y);
+  const median = sortedMarks.length ? Stat.median(sortedMarks) : null;
+  const q1 = sortedMarks.length ? Stat.quartile(sortedMarks, 25) : null;
+  const q3 = sortedMarks.length ? Stat.quartile(sortedMarks, 75) : null;
+  const iqr = q1 !== null && q3 !== null ? q3 - q1 : null;
+
+  const subjectEntries = Object.entries(A.subjectStats || {})
+    .filter(([, st]) => Number.isFinite(st?.mean));
+  const byMean = [...subjectEntries].sort((a,b)=>b[1].mean-a[1].mean);
+  const strongest = byMean[0] || null;
+  const weakest = byMean.length > 1 ? byMean[byMean.length - 1] : null;
+
+  const set = (id, html) => {
+    const el = $(id);
+    if (el) el.innerHTML = html;
+  };
+
+  set('interp-dist-inline', maxBin
+    ? `<strong>What this shows:</strong> Most students scored between ${fmtNum(maxBin.from, 0)} and ${fmtNum(maxBin.to, 0)}.<br><strong>Key takeaway:</strong> ${maxBin.count} out of ${classMeans.length} students are in this range.${classAvg === null ? '' : ` The class average is ${fmtNum(classAvg, 1)}.`}<br><strong>What to do next:</strong> Give extra support below this range and extension work above it.`
+    : `<strong>What this shows:</strong> There is not enough score data yet.<br><strong>What to do next:</strong> Add marks for at least two students and run analysis again.`);
+
+  set('interp-cumfreq-inline', median !== null
+    ? `<strong>What this shows:</strong> Around half the class is at or below ${fmtNum(median, 1)}.<br><strong>Key takeaway:</strong> The middle group mostly sits between ${fmtNum(q1, 1)} and ${fmtNum(q3, 1)} (a ${fmtNum(iqr, 1)}-point spread).<br><strong>What to do next:</strong> Use ${fmtNum(median, 1)} as your baseline for support groups and goal setting.`
+    : `<strong>What this shows:</strong> There is not enough score data yet.<br><strong>What to do next:</strong> Add more marks, then re-run analysis.`);
+
+  set('interp-subjects-inline', strongest
+    ? `<strong>What this shows:</strong> How each subject is performing and how spread out student scores are.<br><strong>Key takeaway:</strong> Highest average is ${esc(strongest[0])} (${fmtNum(strongest[1].mean, 1)})${weakest ? `, while the lowest is ${esc(weakest[0])} (${fmtNum(weakest[1].mean, 1)}).` : '.'}<br><strong>What to do next:</strong> Reuse teaching strategies from the strongest subject and prioritize support in the weakest one.`
+    : `<strong>What this shows:</strong> Subject comparison is not available yet.<br><strong>What to do next:</strong> Ensure students have marks in listed subjects and run analysis again.`);
 }
 
 const COLORS = ['#1e4b8f','#15803d','#b45309','#6d28d9','#0e7490','#b91c1c','#064e3b','#4338ca'];
@@ -5634,309 +6796,28 @@ function reBuildAllCharts() {
   buildCumFreqChart(A);
   buildSubjectsChart(A);
   buildBestFitChart(A);
-  buildBoxChart(A);
   buildRadarChart(A);
-  if ($('interp-chart-dist')) renderInterpretationTab();
-}
-
-function renderInterpretationTab() {
-  const A = state.analysis;
-  if(!A) return;
-
-  $('interp-content').innerHTML = `
-  <div style="max-width:1200px;margin:0 auto;padding:28px">
-    <div style="background:var(--primary-pale);border-left:4px solid var(--primary);padding:20px 24px;border-radius:6px;margin-bottom:40px">
-      <h1 style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:700;color:var(--primary);margin-bottom:12px">📊 Graph Interpretation & Conclusions</h1>
-      <p style="color:var(--ink-light);font-size:16px">Below are your analysed graphs with specific conclusions about your student data.</p>
-    </div>
-
-    <!-- SCORE DISTRIBUTION -->
-    <div class="chart-card" style="margin-bottom:40px">
-      <div class="chart-head">
-        <div class="chart-title">📊 Score Distribution</div>
-        <div class="chart-desc">How many students fall in each score band</div>
-      </div>
-      <div class="chart-body"><canvas id="interp-chart-dist"></canvas></div>
-      <div style="background:var(--green-pale);border-left:4px solid var(--green);padding:16px 20px;border-radius:6px;margin:16px 0">
-        <h4 style="font-family:'Montserrat',sans-serif;font-weight:600;color:var(--green);margin-bottom:8px">✅ Conclusion:</h4>
-        <div id="interp-dist-conclusion" style="color:var(--ink);line-height:1.7"></div>
-      </div>
-    </div>
-
-    <!-- CUMULATIVE FREQUENCY -->
-    <div class="chart-card" style="margin-bottom:40px">
-      <div class="chart-head">
-        <div class="chart-title">📈 Cumulative Frequency</div>
-        <div class="chart-desc">Running total of students at or below each score</div>
-      </div>
-      <div class="chart-body"><canvas id="interp-chart-cumfreq"></canvas></div>
-      <div style="background:var(--green-pale);border-left:4px solid var(--green);padding:16px 20px;border-radius:6px;margin:16px 0">
-        <h4 style="font-family:'Montserrat',sans-serif;font-weight:600;color:var(--green);margin-bottom:8px">✅ Conclusion:</h4>
-        <div id="interp-cumfreq-conclusion" style="color:var(--ink);line-height:1.7"></div>
-      </div>
-    </div>
-
-    <!-- SUBJECT PERFORMANCE -->
-    <div class="chart-card" style="margin-bottom:40px">
-      <div class="chart-head">
-        <div class="chart-title">📏 Subject Performance Comparison</div>
-        <div class="chart-desc">Class mean, Q1, and Q3 for each subject</div>
-      </div>
-      <div class="chart-body"><canvas id="interp-chart-subjects"></canvas></div>
-      <div style="background:var(--green-pale);border-left:4px solid var(--green);padding:16px 20px;border-radius:6px;margin:16px 0">
-        <h4 style="font-family:'Montserrat',sans-serif;font-weight:600;color:var(--green);margin-bottom:8px">✅ Conclusion:</h4>
-        <div id="interp-subjects-conclusion" style="color:var(--ink);line-height:1.7"></div>
-      </div>
-    </div>
-
-    <!-- BEST-FIT TREND -->
-    <div class="chart-card" style="margin-bottom:40px">
-      <div class="chart-head">
-        <div class="chart-title">🔵 Best-Fit Trend Line</div>
-        <div class="chart-desc">Student rank vs overall mean with linear trend</div>
-      </div>
-      <div class="chart-body"><canvas id="interp-chart-bestfit"></canvas></div>
-      <div style="background:var(--green-pale);border-left:4px solid var(--green);padding:16px 20px;border-radius:6px;margin:16px 0">
-        <h4 style="font-family:'Montserrat',sans-serif;font-weight:600;color:var(--green);margin-bottom:8px">✅ Conclusion:</h4>
-        <div id="interp-bestfit-conclusion" style="color:var(--ink);line-height:1.7"></div>
-      </div>
-    </div>
-
-    <!-- BOX PLOT -->
-    <div class="chart-card" style="margin-bottom:40px">
-      <div class="chart-head">
-        <div class="chart-title">📦 Box Plot — Subject Spread</div>
-        <div class="chart-desc">Min, Q1, Median, Q3, Max per subject</div>
-      </div>
-      <div class="chart-body"><canvas id="interp-chart-box"></canvas></div>
-      <div style="background:var(--green-pale);border-left:4px solid var(--green);padding:16px 20px;border-radius:6px;margin:16px 0">
-        <h4 style="font-family:'Montserrat',sans-serif;font-weight:600;color:var(--green);margin-bottom:8px">✅ Conclusion:</h4>
-        <div id="interp-box-conclusion" style="color:var(--ink);line-height:1.7"></div>
-      </div>
-    </div>
-
-    <!-- RADAR CHART -->
-    <div class="chart-card" style="margin-bottom:40px">
-      <div class="chart-head">
-        <div class="chart-title">🎯 Student Performance Radar</div>
-        <div class="chart-desc">Class average vs top and bottom performers</div>
-      </div>
-      <div class="chart-body"><canvas id="interp-chart-radar"></canvas></div>
-      <div style="background:var(--green-pale);border-left:4px solid var(--green);padding:16px 20px;border-radius:6px;margin:16px 0">
-        <h4 style="font-family:'Montserrat',sans-serif;font-weight:600;color:var(--green);margin-bottom:8px">✅ Conclusion:</h4>
-        <div id="interp-radar-conclusion" style="color:var(--ink);line-height:1.7"></div>
-      </div>
-    </div>
-  </div>`;
-
-  requestAnimationFrame(()=>{
-    buildDistChart(A, 'interp-chart-dist');
-    buildCumFreqChart(A, 'interp-chart-cumfreq');
-    buildSubjectsChart(A, 'interp-chart-subjects');
-    buildBestFitChart(A, 'interp-chart-bestfit');
-    buildBoxChart(A, 'interp-chart-box');
-    buildRadarChart(A, 'interp-chart-radar');
-    generateConclusions(A);
-  });
-}
-
-function generateConclusions(A) {
-  // DISTRIBUTION CONCLUSION
-  {
-    const bins = Stat.histogram(A.classMeans, Math.min(10, Math.max(5, Math.ceil(A.classMeans.length/3))));
-    const maxBin = bins.reduce((a,b)=>a.count>b.count?a:b);
-    const classAvg = Stat.mean(A.classMeans);
-    const stdDev = Stat.stdDev(A.classMeans);
-
-    let distInterpretation = `<strong>Peak Range:</strong> ${maxBin.count}/${A.classMeans.length} students (${fmtNum(100*maxBin.count/A.classMeans.length, 0)}%) scored between ${fmtNum(maxBin.from,0)}–${fmtNum(maxBin.to,0)}. `;
-    distInterpretation += `<strong>Class Average:</strong> ${fmtNum(classAvg, 1)} with standard deviation of ${fmtNum(stdDev, 1)}. `;
-
-    if(maxBin.from >= 70) distInterpretation += "✓ Strong performance: Most students clustered in the high range.";
-    else if(maxBin.from >= 50) distInterpretation += "⚬ Moderate performance: Students distributed across middle range.";
-    else distInterpretation += "⚠ Challenge areas: Most students scored in lower range; class needs support.";
-
-    $('interp-dist-conclusion').innerHTML = distInterpretation;
-  }
-
-  // CUMULATIVE FREQUENCY CONCLUSION
-  {
-    const sortedMarks = [...Stat.clean(A.classMeans)].sort((x,y)=>x-y);
-    const median = Stat.median(A.classMeans);
-    const q1 = Stat.quartile(sortedMarks, 25);
-    const q3 = Stat.quartile(sortedMarks, 75);
-    const iqr = q3 - q1;
-
-    let cumInterpretation = `<strong>Central Tendency:</strong> Median is ${fmtNum(median, 1)}, with 25% below ${fmtNum(q1, 1)} and 75% below ${fmtNum(q3, 1)}. `;
-    cumInterpretation += `<strong>Spread (IQR):</strong> ${fmtNum(iqr, 1)} points represents middle 50% of students. `;
-
-    if(iqr < 15) cumInterpretation += "✓ Tight clustering: Students perform consistently similar.";
-    else if(iqr < 30) cumInterpretation += "⚬ Moderate spread: Mix of achievement levels but manageable.";
-    else cumInterpretation += "⚠ Wide spread: Significant variation; diverse learner needs.";
-
-    $('interp-cumfreq-conclusion').innerHTML = cumInterpretation;
-  }
-
-  // SUBJECT PERFORMANCE COMPARISON
-  {
-    const subjectPerf = {};
-    const subjects = state.subjects || A.subjects || [];
-
-    subjects.forEach(s => {
-      const subjData = A.subjectStats && A.subjectStats[s];
-      if(subjData) {
-        const vals = subjData.vals || [];
-        if(vals.length) {
-          const sorted = [...vals].sort((x,y)=>x-y);
-          subjectPerf[s] = {
-            mean: subjData.mean || Stat.mean(vals),
-            q1: subjData.box?.q1 || Stat.quartile(sorted, 25),
-            q3: subjData.box?.q3 || Stat.quartile(sorted, 75),
-            stdDev: subjData.stdDev || Stat.stdDev(vals),
-            count: vals.length
-          };
-        }
-      }
-    });
-
-    if(Object.keys(subjectPerf).length === 0) {
-      $('interp-subjects-conclusion').innerHTML = "Insufficient subject data for comparison.";
-      return;
-    }
-
-    const sorted = Object.entries(subjectPerf).sort((a,b)=>b[1].mean-a[1].mean);
-    const best = sorted[0];
-    const worst = sorted[sorted.length-1];
-
-    let subjInterpretation = `<strong>Strongest:</strong> <strong>${best[0]}</strong> (avg ${fmtNum(best[1].mean, 1)}, varies ±${fmtNum(best[1].stdDev, 1)}). `;
-    subjInterpretation += `<strong>Needs Support:</strong> <strong>${worst[0]}</strong> (avg ${fmtNum(worst[1].mean, 1)}, varies ±${fmtNum(worst[1].stdDev, 1)}). `;
-    subjInterpretation += `Gap: ${fmtNum(best[1].mean - worst[1].mean, 1)} points. `;
-
-    if(best[1].stdDev < worst[1].stdDev) {
-      subjInterpretation += `✓ ${best[0]} shows more consistent learning than ${worst[0]}.`;
-    } else {
-      subjInterpretation += `⚠ ${worst[0]} has more varied performance (±${fmtNum(worst[1].stdDev - best[1].stdDev, 1)} difference), suggesting knowledge gaps.`;
-    }
-
-    $('interp-subjects-conclusion').innerHTML = subjInterpretation;
-  }
-
-  // BEST-FIT TREND LINE
-  {
-    const sorted = A.sorted || [];
-    if(sorted.length < 3) {
-      $('interp-bestfit-conclusion').innerHTML = "Insufficient student data for trend analysis.";
-      return;
-    }
-
-    const points = sorted.map((s,i)=>({x:i+1, y:s.mean||0})).filter(p=>p.y>0);
-    const trend = Stat.linReg(points);
-
-    let trendInterpretation = "<strong>Ranking Pattern:</strong> ";
-
-    if(!trend) {
-      trendInterpretation += "Not enough data to determine trend.";
-    } else {
-      const topThird = Math.ceil(points.length/3);
-      const topAvg = Stat.mean(points.slice(0, topThird).map(p=>p.y));
-      const bottomAvg = Stat.mean(points.slice(-topThird).map(p=>p.y));
-      const perfGap = topAvg - bottomAvg;
-
-      trendInterpretation += trend.m > 0
-        ? `Strong effect: Top ${topThird} students avg ${fmtNum(topAvg, 1)}, bottom ${topThird} avg ${fmtNum(bottomAvg, 1)}. Gap: ${fmtNum(perfGap, 1)} pts. `
-        : `Weak effect: Performance varies independently of ranking. `;
-
-      trendInterpretation += `(R²=${fmtNum(trend.r2, 2)}) explains ${fmtNum(trend.r2 * 100, 0)}% of variation.`;
-    }
-
-    $('interp-bestfit-conclusion').innerHTML = trendInterpretation;
-  }
-
-  // BOX PLOT CONSISTENCY
-  {
-    const subjects = state.subjects || A.subjects || [];
-    const boxStats = {};
-    let validCount = 0;
-
-    subjects.forEach(s => {
-      const subjData = A.subjectStats && A.subjectStats[s];
-      if(subjData && subjData.box) {
-        boxStats[s] = subjData.box;
-        validCount++;
-      }
-    });
-
-    if(validCount === 0) {
-      $('interp-box-conclusion').innerHTML = "Insufficient data for box plot analysis.";
-      return;
-    }
-
-    const byIQR = Object.entries(boxStats).sort((a,b)=>(a[1].iqr||Infinity)-(b[1].iqr||Infinity));
-    const most = byIQR[0];
-    const least = byIQR[byIQR.length-1];
-
-    let boxInterpretation = `<strong>Most Consistent:</strong> <strong>${most[0]}</strong> (IQR=${fmtNum(most[1].iqr, 1)}) — narrow band proves reliable teaching/learning. `;
-    boxInterpretation += `<strong>Most Varied:</strong> <strong>${least[0]}</strong> (IQR=${fmtNum(least[1].iqr, 1)}) — wide range (${fmtNum(least[1].q1, 1)}–${fmtNum(least[1].q3, 1)}). `;
-    boxInterpretation += `Difference: ${fmtNum(least[1].iqr - most[1].iqr, 1)} points. `;
-
-    if(least[1].iqr > 30) {
-      boxInterpretation += `⚠ ${least[0]} shows mixed mastery levels: some excel, others struggle significantly.`;
-    } else if(most[1].iqr < 10) {
-      boxInterpretation += `✓ Tight consistency across subjects: coherent class performance.`;
-    } else {
-      boxInterpretation += "⚬ Reasonable consistency across subjects.";
-    }
-
-    $('interp-box-conclusion').innerHTML = boxInterpretation;
-  }
-
-  // RADAR CHART - PERFORMER COMPARISON
-  {
-    const sorted = A.sorted || [];
-    if(sorted.length < 2) {
-      $('interp-radar-conclusion').innerHTML = "Insufficient students for comparison.";
-      return;
-    }
-
-    const classAvg = Stat.mean(A.classMeans);
-    const topCount = Math.max(1, Math.ceil(sorted.length / 4));
-    const bottomCount = Math.max(1, Math.ceil(sorted.length / 4));
-
-    const top = sorted.slice(0, topCount);
-    const bottom = sorted.slice(-bottomCount);
-
-    const topAvg = Stat.mean(top.map(s=>s.mean||0));
-    const bottomAvg = Stat.mean(bottom.map(s=>s.mean||0));
-    const perfGap = topAvg - bottomAvg;
-
-    let radarInterpretation = `<strong>Top Performers (${top.length}):</strong> Average ${fmtNum(topAvg, 1)}. `;
-    radarInterpretation += `<strong>Struggling (${bottom.length}):</strong> Average ${fmtNum(bottomAvg, 1)}. `;
-    radarInterpretation += `<strong>Class Average:</strong> ${fmtNum(classAvg, 1)}. `;
-    radarInterpretation += `<strong>Gap:</strong> ${fmtNum(perfGap, 1)} points. `;
-
-    if(perfGap > 45) {
-      radarInterpretation += "⚠ Extreme stratification: Highly differentiated classroom; diverse intervention needs.";
-    } else if(perfGap > 30) {
-      radarInterpretation += "⚬ Significant spread: Clear top/bottom groups with middle range.";
-    } else if(perfGap > 15) {
-      radarInterpretation += "✓ Manageable spread: Most students relatively close in performance.";
-    } else {
-      radarInterpretation += "✓ Tight cohort: Similar achievement across all students.";
-    }
-
-    $('interp-radar-conclusion').innerHTML = radarInterpretation;
-  }
+  renderGraphMiniTakeaways(A);
+  renderGraphInlineInterpretations(A);
 }
 
 
 function buildDistChart(A, canvasId='chart-dist') {
   const chartKey = canvasId === 'chart-dist' ? 'dist' : canvasId;
   destroyChart(chartKey);
-  const bins = Stat.histogram(A.classMeans, Math.min(10, Math.max(5, Math.ceil(A.classMeans.length/3))));
-  const ctx = $(canvasId).getContext('2d');
+  const classMeans = Array.isArray(A.classMeans) ? A.classMeans : [];
+  const canvas = $(canvasId);
+  if (!canvas || !classMeans.length) return;
+  const cleanedMeans = Stat.clean(classMeans);
+  if (!cleanedMeans.length) return;
+  const bins = Stat.histogram(cleanedMeans, Math.min(10, Math.max(5, Math.ceil(cleanedMeans.length/3))));
+  const ctx = canvas.getContext('2d');
   const colors = getChartColors();
   const palette = getChartPaletteColors();
+  const small = window.innerWidth < 640;
+  const mode = canvasId === 'chart-dist' ? (state.chartPrefs?.distType || 'bar') : 'bar';
   state.chartInstances[chartKey] = new Chart(ctx, {
-    type:'bar',
+    type: mode,
     data:{
       labels: bins.map(b=>`${fmtNum(b.from,0)}–${fmtNum(b.to,0)}`),
       datasets:[{
@@ -5944,16 +6825,19 @@ function buildDistChart(A, canvasId='chart-dist') {
         data: bins.map(b=>b.count),
         backgroundColor: palette[0]+'cc',
         borderColor: palette[0],
-        borderWidth:1,
-        borderRadius:4
+        borderWidth:2,
+        borderRadius: mode === 'bar' ? 4 : 0,
+        fill: mode === 'line',
+        tension: mode === 'line' ? .32 : 0,
+        pointRadius: mode === 'line' ? 3 : 0
       }]
     },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{ legend:{display:false}, tooltip:{callbacks:{title:i=>'Score: '+i[0].label}} },
       scales:{
-        x:{ title:{display:true,text:'Score Range',font:{size:11}}, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} },
-        y:{ title:{display:true,text:'No. of Students',font:{size:11}}, ticks:{stepSize:1, color:colors.textFaint}, beginAtZero:true, grid:{color:colors.gridColor} }
+        x:{ title:{display:true,text:'Score Range',font:{size:small?10:11}}, ticks:{font:{size:small?10:11},color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'No. of Students',font:{size:small?10:11}}, ticks:{font:{size:small?10:11},stepSize:1, color:colors.textFaint}, beginAtZero:true, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -5963,30 +6847,37 @@ function buildDistChart(A, canvasId='chart-dist') {
 function buildCumFreqChart(A, canvasId='chart-cumfreq') {
   const chartKey = canvasId === 'chart-cumfreq' ? 'cumfreq' : canvasId;
   destroyChart(chartKey);
-  const pts = Stat.cumFreq(A.classMeans);
-  const ctx = $(canvasId).getContext('2d');
+  const classMeans = Array.isArray(A.classMeans) ? A.classMeans : [];
+  const canvas = $(canvasId);
+  if (!canvas || !classMeans.length) return;
+  const cleanedMeans = Stat.clean(classMeans);
+  if (!cleanedMeans.length) return;
+  const pts = Stat.cumFreq(cleanedMeans);
+  const ctx = canvas.getContext('2d');
   const colors = getChartColors();
   const palette = getChartPaletteColors();
+  const small = window.innerWidth < 640;
+  const mode = canvasId === 'chart-cumfreq' ? (state.chartPrefs?.cumfreqType || 'line') : 'line';
   state.chartInstances[chartKey] = new Chart(ctx, {
-    type:'line',
+    type: mode,
     data:{
       datasets:[{
-        label:'Cumulative Students',
+        label:'Running Total Students',
         data: pts.map(p=>({x:parseFloat(p.x.toFixed(1)),y:p.y})),
-        fill:true,
+        fill: mode === 'line',
         backgroundColor:isDarkTheme()?'rgba(156,173,255,.15)':'rgba(30,75,143,.1)',
         borderColor: palette[0],
         borderWidth:2,
-        pointRadius:3,
-        tension:.35
+        pointRadius: mode === 'line' ? 3 : 0,
+        tension: mode === 'line' ? .35 : 0
       }]
     },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{ legend:{display:false} },
       scales:{
-        x:{ type:'linear', title:{display:true,text:'Score (Mean)',font:{size:11}}, min:0, max:100, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} },
-        y:{ title:{display:true,text:'Cumulative Students',font:{size:11}}, beginAtZero:true, ticks:{stepSize:1, color:colors.textFaint}, grid:{color:colors.gridColor} }
+        x:{ type:'linear', title:{display:true,text:'Score (Mean)',font:{size:small?10:11}}, min:0, max:100, ticks:{font:{size:small?10:11},color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'Running Total Students',font:{size:small?10:11}}, beginAtZero:true, ticks:{font:{size:small?10:11},stepSize:1, color:colors.textFaint}, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -5995,10 +6886,13 @@ function buildCumFreqChart(A, canvasId='chart-cumfreq') {
 function buildSubjectsChart(A, canvasId='chart-subjects') {
   const chartKey = canvasId === 'chart-subjects' ? 'subjects' : canvasId;
   destroyChart(chartKey);
-  const subjs = state.subjects;
-  const ctx = $(canvasId).getContext('2d');
+  const subjs = Array.isArray(state.subjects) ? state.subjects : [];
+  const canvas = $(canvasId);
+  if (!canvas || !subjs.length) return;
+  const ctx = canvas.getContext('2d');
   const colors = getChartColors();
   const palette = getChartPaletteColors();
+  const small = window.innerWidth < 640;
   state.chartInstances[chartKey] = new Chart(ctx, {
     type:'bar',
     data:{
@@ -6006,14 +6900,14 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
       datasets:[
         {
           label:'Q3 (75th %ile)',
-          data: subjs.map(s=>A.subjectStats[s].box?.q3??null),
+          data: subjs.map(s=>A.subjectStats?.[s]?.box?.q3??null),
           backgroundColor:isDarkTheme()?'rgba(74,222,128,.25)':'rgba(21,128,61,.25)',
           borderColor:'transparent',
           borderRadius:3,
         },
         {
           label:'Mean',
-          data: subjs.map(s=>A.subjectStats[s].mean),
+          data: subjs.map(s=>A.subjectStats?.[s]?.mean ?? null),
           backgroundColor: subjs.map((_,i)=>palette[i%palette.length]+'cc'),
           borderColor: subjs.map((_,i)=>palette[i%palette.length]),
           borderWidth:1.5,
@@ -6022,7 +6916,7 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
         },
         {
           label:'Q1 (25th %ile)',
-          data: subjs.map(s=>A.subjectStats[s].box?.q1??null),
+          data: subjs.map(s=>A.subjectStats?.[s]?.box?.q1??null),
           backgroundColor:isDarkTheme()?'rgba(248,113,113,.15)':'rgba(185,28,28,.15)',
           borderColor:'transparent',
           borderRadius:3,
@@ -6031,10 +6925,10 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
     },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
-      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,color:colors.text}} },
+      plugins:{ legend:{position:'bottom',labels:{font:{size:small?10:11},boxWidth:12,color:colors.text}} },
       scales:{
-        x:{ ticks:{maxRotation:30,color:colors.textFaint}, grid:{color:colors.gridColor} },
-        y:{ title:{display:true,text:'Score',font:{size:11}}, min:0, max:100, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} }
+        x:{ ticks:{font:{size:small?10:11},maxRotation:30,color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'Score',font:{size:small?10:11}}, min:0, max:100, ticks:{font:{size:small?10:11},color:colors.textFaint}, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -6043,12 +6937,18 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
 function buildBestFitChart(A, canvasId='chart-bestfit') {
   const chartKey = canvasId === 'chart-bestfit' ? 'bestfit' : canvasId;
   destroyChart(chartKey);
-  const sorted = [...A.sorted];
-  const pts = sorted.map((s,i)=>({x:i+1,y:s.mean,name:s.name}));
+  const sorted = Array.isArray(A.sorted) ? [...A.sorted] : [];
+  const canvas = $(canvasId);
+  if (!canvas || !sorted.length) return;
+  const pts = sorted
+    .map((s,i)=>({x:i+1,y:Number(s.mean),name:s.name}))
+    .filter(p=>Number.isFinite(p.y));
+  if (!pts.length) return;
   const reg = Stat.linReg(pts);
-  const ctx = $(canvasId).getContext('2d');
+  const ctx = canvas.getContext('2d');
   const colors = getChartColors();
   const palette = getChartPaletteColors();
+  const small = window.innerWidth < 640;
 
   const datasets = [{
     label:'Student Means',
@@ -6079,80 +6979,12 @@ function buildBestFitChart(A, canvasId='chart-bestfit') {
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{
-        legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,color:colors.text}},
+        legend:{position:'bottom',labels:{font:{size:small?10:11},boxWidth:12,color:colors.text}},
         tooltip:{callbacks:{label:ctx=>ctx.raw.name ? `${ctx.raw.name}: ${fmtNum(ctx.raw.y)}` : fmtNum(ctx.raw.y)}}
       },
       scales:{
-        x:{ title:{display:true,text:'Rank (1 = highest)',font:{size:11}}, ticks:{stepSize:1,color:colors.textFaint}, grid:{color:colors.gridColor} },
-        y:{ title:{display:true,text:'Mean Score',font:{size:11}}, min:0, max:100, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} }
-      }
-    }
-  });
-}
-
-function buildBoxChart(A, canvasId='chart-box') {
-  const chartKey = canvasId === 'chart-box' ? 'box' : canvasId;
-  destroyChart(chartKey);
-  const subjs = state.subjects;
-  const ctx = $(canvasId).getContext('2d');
-  const colors = getChartColors();
-  const palette = getChartPaletteColors();
-
-  const q1s = subjs.map(s=>A.subjectStats[s].box?.q1??0);
-  const q3s = subjs.map(s=>A.subjectStats[s].box?.q3??0);
-  const medians = subjs.map(s=>A.subjectStats[s].box?.q2??null);
-  const mins = subjs.map(s=>A.subjectStats[s].box?.min??0);
-  const maxs = subjs.map(s=>A.subjectStats[s].box?.max??0);
-
-  state.chartInstances[chartKey] = new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels:subjs,
-      datasets:[
-        {
-          label:'IQR Box (Q1–Q3)',
-          data: q1s.map((q1,i)=>[q1,q3s[i]]),
-          backgroundColor: palette.map(c=>c+'55'),
-          borderColor: palette,
-          borderWidth:2,
-          borderRadius:2,
-          borderSkipped:false
-        },
-        {
-          label:'Min',
-          data: mins,
-          type:'scatter',
-          backgroundColor:isDarkTheme()?'#e5ecf6':'#000000',
-          pointStyle:'dash',
-          pointRadius:8,
-          showLine:false
-        },
-        {
-          label:'Max',
-          data: maxs,
-          type:'scatter',
-          backgroundColor:isDarkTheme()?'#c4d1e3':'#111827',
-          pointStyle:'dash',
-          pointRadius:8,
-          showLine:false
-        },
-        {
-          label:'Median',
-          data: medians,
-          type:'scatter',
-          backgroundColor:isDarkTheme()?'#f87171':'#7f1d1d',
-          pointStyle:'crossRot',
-          pointRadius:8,
-          showLine:false
-        }
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false, animation:false,
-      plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,color:colors.text}} },
-      scales:{
-        x:{ ticks:{maxRotation:30,color:colors.textFaint}, grid:{color:colors.gridColor} },
-        y:{ title:{display:true,text:'Score',font:{size:11}}, min:0, max:100, ticks:{color:colors.textFaint}, grid:{color:colors.gridColor} }
+        x:{ title:{display:true,text:'Rank (1 = highest)',font:{size:small?10:11}}, ticks:{font:{size:small?10:11},stepSize:1,color:colors.textFaint}, grid:{color:colors.gridColor} },
+        y:{ title:{display:true,text:'Mean Score',font:{size:small?10:11}}, min:0, max:100, ticks:{font:{size:small?10:11},color:colors.textFaint}, grid:{color:colors.gridColor} }
       }
     }
   });
@@ -6161,14 +6993,16 @@ function buildBoxChart(A, canvasId='chart-box') {
 function buildRadarChart(A, canvasId='chart-radar') {
   const chartKey = canvasId === 'chart-radar' ? 'radar' : canvasId;
   destroyChart(chartKey);
-  const subjs = state.subjects;
+  const subjs = Array.isArray(state.subjects) ? state.subjects : [];
   const canvas = $(canvasId);
   if (!canvas || !subjs.length) return;
-  const top = A.sorted[0];
-  const bot = A.sorted[A.sorted.length-1];
-  const classMeans = subjs.map(s=>A.subjectStats[s].mean||0);
+  const sorted = Array.isArray(A.sorted) ? A.sorted : [];
+  const top = sorted[0];
+  const bot = sorted[sorted.length-1];
+  const classMeans = subjs.map(s=>A.subjectStats?.[s]?.mean ?? 0);
   const toPct = (score, subject) => {
     const maxMark = getSubjectMaxMark(subject);
+    if (!Number.isFinite(maxMark) || maxMark <= 0) return null;
     const num = parseFloat(score);
     if (isNaN(num)) return null;
     return (num / maxMark) * 100;
@@ -6231,7 +7065,7 @@ function buildRadarChart(A, canvasId='chart-radar') {
 
 function ensureChartsBuilt(A) {
   // Ensure all necessary display containers exist for charts
-  const requiredCharts = ['chart-dist', 'chart-cumfreq', 'chart-subjects', 'chart-box', 'chart-bestfit'];
+  const requiredCharts = ['chart-dist', 'chart-cumfreq', 'chart-subjects', 'chart-bestfit', 'chart-radar'];
   
   requiredCharts.forEach(chartId => {
     let canvas = $(chartId);
@@ -6249,8 +7083,8 @@ function ensureChartsBuilt(A) {
   if(!state.chartInstances['dist']) buildDistChart(A, 'chart-dist');
   if(!state.chartInstances['cumfreq']) buildCumFreqChart(A, 'chart-cumfreq');
   if(!state.chartInstances['subjects']) buildSubjectsChart(A, 'chart-subjects');
-  if(!state.chartInstances['box']) buildBoxChart(A, 'chart-box');
   if(!state.chartInstances['bestfit']) buildBestFitChart(A, 'chart-bestfit');
+  if(!state.chartInstances['radar']) buildRadarChart(A, 'chart-radar');
 }
 
 /* ╔═══════════════════════════════════════════════════╗
@@ -6265,7 +7099,7 @@ function renderReportsTab() {
   $('reports-content').innerHTML = `
   <div class="report-options-grid">
     <div class="rpt-card">
-      <span class="rpt-icon">📄</span>
+      <span class="rpt-icon"><img class="ui-icon" src="icons/edu-outline/document.svg" alt="" aria-hidden="true"></span>
       <h3>Individual Student Report</h3>
       <p>A personalised report for one student — marks, ranking, subject analysis, and performance summary.</p>
       <ul class="rpt-features">
@@ -6282,31 +7116,31 @@ function renderReportsTab() {
         </select>
       </div>
       <button id="btn-student-report" class="btn btn-primary btn-block" onclick="generateStudentPDF()">
-        ⬇ Download Student Report
+        Download Student Report
       </button>
     </div>
 
     <div class="rpt-card">
-      <span class="rpt-icon">📊</span>
+      <span class="rpt-icon"><img class="ui-icon" src="icons/edu-outline/chart.svg" alt="" aria-hidden="true"></span>
       <h3>Whole Class Report</h3>
       <p>A complete class overview with all students, statistics, graphs, and flagged students.</p>
       <ul class="rpt-features">
         <li>Full student ranking table</li>
         <li>Per-subject statistics</li>
         <li>Score distribution chart</li>
-        <li>Cumulative frequency curve</li>
+        <li>Running total score chart</li>
         <li>Flagged students summary</li>
         <li>Outlier analysis</li>
       </ul>
       <div style="margin-bottom:36px"></div>
       <button id="btn-class-report" class="btn btn-success btn-block" onclick="generateClassPDF()">
-        ⬇ Download Class Report
+        Download Class Report
       </button>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title" style="margin-bottom:8px"><span class="icon">💡</span> How to use the reports</div>
+    <div class="card-title" style="margin-bottom:8px"><span class="icon"><img class="ui-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true"></span> How to use the reports</div>
     <div class="text-sm" style="color:var(--ink-light);line-height:1.8">
       Reports are saved as <strong>PDF files</strong> that you can print or share.<br>
       The <strong>student report</strong> is suitable for sharing with students and parents.<br>
@@ -6342,7 +7176,8 @@ function pdfHeader(doc, info, title) {
 
 function pdfSection(doc, y, title, W) {
   doc.setFillColor(240,245,255);
-  doc.rect(14, y, W-28, 10, 'F');
+  doc.setDrawColor(200,220,240);
+  doc.rect(14, y, W-28, 10, 'FD');
   doc.setFont('helvetica','bold'); doc.setFontSize(11);
   doc.setTextColor(30,75,143);
   doc.text(title, 17, y+7);
@@ -6365,7 +7200,6 @@ async function canvasToImg(chartId) {
       'chart-dist': 'dist',
       'chart-cumfreq': 'cumfreq',
       'chart-subjects': 'subjects',
-      'chart-box': 'box',
       'chart-bestfit': 'bestfit',
       'chart-radar': 'radar'
     };
@@ -6474,6 +7308,21 @@ function pdfImageDimensions(pdfWidth, aspectRatio, maxHeight=85) {
 
 function getClassPdfChartConfig(kind, A) {
   const subjs = state.subjects;
+  const subjectCount = subjs.length;
+  const studentCount = A?.studentStats?.length || A?.sorted?.length || 0;
+  const dense = subjectCount >= 9 || studentCount >= 40;
+  const veryDense = subjectCount >= 12 || studentCount >= 60;
+  const axisTitleSize = veryDense ? 11 : dense ? 12 : 13;
+  const tickSize = veryDense ? 9 : dense ? 10 : 11;
+  const legendSize = veryDense ? 10 : dense ? 11 : 12;
+  const xRotation = subjectCount >= 12 ? 52 : subjectCount >= 9 ? 40 : 30;
+  const pointRadius = veryDense ? 3 : dense ? 4 : 5;
+  const pointHoverRadius = veryDense ? 5 : dense ? 6 : 7;
+  const chartPadding = veryDense
+    ? { left: 4, right: 6, top: 6, bottom: 6 }
+    : dense
+      ? { left: 5, right: 7, top: 7, bottom: 5 }
+      : { left: 6, right: 8, top: 8, bottom: 4 };
   const theme = {
     text: '#0f172a',
     textFaint: '#334155',
@@ -6497,11 +7346,11 @@ function getClassPdfChartConfig(kind, A) {
         }]
       },
       options: {
-        layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
+        layout: { padding: chartPadding },
         plugins: { legend: { display: false } },
         scales: {
-          x: { title: { display: true, text: 'Score Range', color: theme.text, font: { size: 13, weight: '600' } }, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
-          y: { title: { display: true, text: 'No. of Students', color: theme.text, font: { size: 13, weight: '600' } }, beginAtZero: true, ticks: { color: theme.textFaint, stepSize: 1, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+          x: { title: { display: true, text: 'Score Range', color: theme.text, font: { size: axisTitleSize, weight: '600' } }, ticks: { color: theme.textFaint, font: { size: tickSize, weight: '500' } }, grid: { color: theme.grid } },
+          y: { title: { display: true, text: 'No. of Students', color: theme.text, font: { size: axisTitleSize, weight: '600' } }, beginAtZero: true, ticks: { color: theme.textFaint, stepSize: 1, font: { size: tickSize, weight: '500' } }, grid: { color: theme.grid } }
         }
       }
     };
@@ -6513,7 +7362,7 @@ function getClassPdfChartConfig(kind, A) {
       type: 'line',
       data: {
         datasets: [{
-          label: 'Cumulative Students',
+          label: 'Running Total Students',
           data: pts.map(p => ({ x: parseFloat(p.x.toFixed(1)), y: p.y })),
           fill: true,
           backgroundColor: 'rgba(61,52,139,.12)',
@@ -6524,11 +7373,11 @@ function getClassPdfChartConfig(kind, A) {
         }]
       },
       options: {
-        layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
+        layout: { padding: chartPadding },
         plugins: { legend: { display: false } },
         scales: {
-          x: { type: 'linear', title: { display: true, text: 'Score (Mean)', color: theme.text, font: { size: 13, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
-          y: { title: { display: true, text: 'Cumulative Students', color: theme.text, font: { size: 13, weight: '600' } }, beginAtZero: true, ticks: { color: theme.textFaint, stepSize: 1, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+          x: { type: 'linear', title: { display: true, text: 'Score (Mean)', color: theme.text, font: { size: axisTitleSize, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: tickSize, weight: '500' } }, grid: { color: theme.grid } },
+          y: { title: { display: true, text: 'Running Total Students', color: theme.text, font: { size: axisTitleSize, weight: '600' } }, beginAtZero: true, ticks: { color: theme.textFaint, stepSize: 1, font: { size: tickSize, weight: '500' } }, grid: { color: theme.grid } }
         }
       }
     };
@@ -6566,48 +7415,11 @@ function getClassPdfChartConfig(kind, A) {
         ]
       },
       options: {
-        layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: '600' }, boxWidth: 12, color: theme.text } } },
+        layout: { padding: chartPadding },
+        plugins: { legend: { position: 'bottom', labels: { font: { size: legendSize, weight: '600' }, boxWidth: veryDense ? 10 : 12, color: theme.text } } },
         scales: {
-          x: { ticks: { maxRotation: 30, color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
-          y: { title: { display: true, text: 'Score', color: theme.text, font: { size: 13, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
-        }
-      }
-    };
-  }
-
-  if (kind === 'box') {
-    const q1s = subjs.map(s => A.subjectStats[s].box?.q1 ?? 0);
-    const q3s = subjs.map(s => A.subjectStats[s].box?.q3 ?? 0);
-    const medians = subjs.map(s => A.subjectStats[s].box?.q2 ?? null);
-    const mins = subjs.map(s => A.subjectStats[s].box?.min ?? 0);
-    const maxs = subjs.map(s => A.subjectStats[s].box?.max ?? 0);
-
-    return {
-      type: 'bar',
-      data: {
-        labels: subjs,
-        datasets: [
-          {
-            label: 'IQR Box (Q1-Q3)',
-            data: q1s.map((q1, i) => [q1, q3s[i]]),
-            backgroundColor: subjs.map((_, i) => `${palette[i % palette.length]}55`),
-            borderColor: subjs.map((_, i) => palette[i % palette.length]),
-            borderWidth: 2,
-            borderRadius: 2,
-            borderSkipped: false
-          },
-          { label: 'Min', data: mins, type: 'scatter', backgroundColor: '#111827', pointStyle: 'dash', pointRadius: 7, showLine: false },
-          { label: 'Max', data: maxs, type: 'scatter', backgroundColor: '#374151', pointStyle: 'dash', pointRadius: 7, showLine: false },
-          { label: 'Median', data: medians, type: 'scatter', backgroundColor: '#7f1d1d', pointStyle: 'crossRot', pointRadius: 7, showLine: false }
-        ]
-      },
-      options: {
-        layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: '600' }, boxWidth: 12, color: theme.text } } },
-        scales: {
-          x: { ticks: { maxRotation: 30, color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
-          y: { title: { display: true, text: 'Score', color: theme.text, font: { size: 13, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+          x: { ticks: { maxRotation: xRotation, minRotation: Math.min(20, xRotation), color: theme.textFaint, font: { size: tickSize, weight: '500' } }, grid: { color: theme.grid } },
+          y: { title: { display: true, text: 'Score', color: theme.text, font: { size: axisTitleSize, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: tickSize, weight: '500' } }, grid: { color: theme.grid } }
         }
       }
     };
@@ -6622,8 +7434,8 @@ function getClassPdfChartConfig(kind, A) {
     type: 'scatter',
     backgroundColor: 'rgba(61,52,139,.65)',
     borderColor: '#3d348b',
-    pointRadius: 5,
-    pointHoverRadius: 7,
+    pointRadius,
+    pointHoverRadius,
     showLine: false
   }];
   if (reg) {
@@ -6642,11 +7454,11 @@ function getClassPdfChartConfig(kind, A) {
     type: 'scatter',
     data: { datasets },
     options: {
-      layout: { padding: { left: 6, right: 8, top: 8, bottom: 4 } },
-      plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: '600' }, boxWidth: 12, color: theme.text } } },
+      layout: { padding: chartPadding },
+      plugins: { legend: { position: 'bottom', labels: { font: { size: legendSize, weight: '600' }, boxWidth: veryDense ? 10 : 12, color: theme.text } } },
       scales: {
-        x: { title: { display: true, text: 'Rank (1 = highest)', color: theme.text, font: { size: 13, weight: '600' } }, ticks: { color: theme.textFaint, stepSize: 1, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } },
-        y: { title: { display: true, text: 'Mean Score', color: theme.text, font: { size: 13, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: 11, weight: '500' } }, grid: { color: theme.grid } }
+        x: { title: { display: true, text: 'Rank (1 = highest)', color: theme.text, font: { size: axisTitleSize, weight: '600' } }, ticks: { color: theme.textFaint, stepSize: 1, font: { size: tickSize, weight: '500' } }, grid: { color: theme.grid } },
+        y: { title: { display: true, text: 'Mean Score', color: theme.text, font: { size: axisTitleSize, weight: '600' } }, min: 0, max: 100, ticks: { color: theme.textFaint, font: { size: tickSize, weight: '500' } }, grid: { color: theme.grid } }
       }
     }
   };
@@ -6655,36 +7467,34 @@ function getClassPdfChartConfig(kind, A) {
 function getClassPdfGraphProfile(A) {
   const studentCount = A?.studentStats?.length || A?.sorted?.length || 0;
   const subjectCount = state.subjects?.length || 0;
-  // Practical bands centered around typical class sizes: 20 / 40 / 60+ students.
-  // Subject count nudges the class into a higher tier when many subjects are present.
-  const subjectBoost = Math.max(0, subjectCount - 6) * 2;
-  const scaledStudents = studentCount + subjectBoost;
+  const dense = subjectCount >= 9 || studentCount >= 40;
+  const veryDense = subjectCount >= 12 || studentCount >= 60;
 
-  if (scaledStudents >= 60) {
+  if (veryDense) {
     return {
       tier: 'very-large',
-      render: { w: 1500, h: 860, trendW: 1700, trendH: 960 },
-      display: { pairMaxHeight: 90, trendMaxHeight: 112 }
+      render: { w: 1680, h: 920 },
+      display: { pairMaxHeight: 96 }
     };
   }
-  if (scaledStudents >= 40) {
+  if (dense) {
     return {
       tier: 'large',
-      render: { w: 1320, h: 760, trendW: 1500, trendH: 860 },
-      display: { pairMaxHeight: 86, trendMaxHeight: 106 }
+      render: { w: 1480, h: 820 },
+      display: { pairMaxHeight: 88 }
     };
   }
-  if (scaledStudents >= 20) {
+  if (studentCount >= 20) {
     return {
       tier: 'medium',
-      render: { w: 1160, h: 680, trendW: 1320, trendH: 760 },
-      display: { pairMaxHeight: 80, trendMaxHeight: 98 }
+      render: { w: 1320, h: 740 },
+      display: { pairMaxHeight: 82 }
     };
   }
   return {
     tier: 'small',
-    render: { w: 980, h: 580, trendW: 1160, trendH: 680 },
-    display: { pairMaxHeight: 72, trendMaxHeight: 90 }
+    render: { w: 1180, h: 660 },
+    display: { pairMaxHeight: 76 }
   };
 }
 
@@ -6692,31 +7502,27 @@ function getStudentPdfGraphProfile(subjectCount = 0) {
   if (subjectCount >= 10) {
     return {
       render: { w: 1200, h: 700 },
-      display: { maxHeight: 84 }
+      display: { maxHeight: 74 }
     };
   }
   if (subjectCount >= 6) {
     return {
       render: { w: 1050, h: 620 },
-      display: { maxHeight: 78 }
+      display: { maxHeight: 68 }
     };
   }
   return {
     render: { w: 900, h: 540 },
-    display: { maxHeight: 70 }
+    display: { maxHeight: 62 }
   };
 }
 
 async function buildClassPdfChartImages(A) {
   const profile = getClassPdfGraphProfile(A);
-  const { w, h, trendW, trendH } = profile.render;
+  const { w, h } = profile.render;
   const jpegQuality = profile.tier === 'very-large' ? 0.56 : profile.tier === 'large' ? 0.60 : profile.tier === 'medium' ? 0.66 : 0.72;
-  const distImg = await makeOffscreenChart(getClassPdfChartConfig('dist', A), w, h, 'image/jpeg', jpegQuality);
-  const cumImg = await makeOffscreenChart(getClassPdfChartConfig('cumfreq', A), w, h, 'image/jpeg', jpegQuality);
   const subjImg = await makeOffscreenChart(getClassPdfChartConfig('subjects', A), w, h, 'image/jpeg', jpegQuality);
-  const boxImg = await makeOffscreenChart(getClassPdfChartConfig('box', A), w, h, 'image/jpeg', jpegQuality);
-  const bfImg = await makeOffscreenChart(getClassPdfChartConfig('bestfit', A), trendW, trendH, 'image/jpeg', Math.max(0.5, jpegQuality - 0.04));
-  return { distImg, cumImg, subjImg, boxImg, bfImg, profile };
+  return { subjImg, profile };
 }
 
 /* ── INDIVIDUAL STUDENT PDF ── */
@@ -6729,10 +7535,11 @@ async function generateStudentPDF() {
 
   setTaskBusy('student-pdf', true);
   setButtonBusy('btn-student-report', true, 'Building...');
-  showLoader('Building student report…');
+  showLoader('Building student report…', 700, true);
   await new Promise(r=>setTimeout(r,60));
 
   try {
+    setLoaderPhase(1, 'Building student report…', 'Collecting student metrics and thresholds…', 24);
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'p', unit:'mm', format:'a4', compress:true, putOnlyUsedFonts:true, precision:2 });
     const W = doc.internal.pageSize.getWidth();
@@ -6762,8 +7569,8 @@ async function generateStudentPDF() {
     doc.setTextColor(0,0,0);
     y += 36;
 
-    // Marks table
-    y = pdfSection(doc, y, '1. Mark Breakdown', W);
+    // Marks table with progress bars
+    y = pdfSection(doc, y, '1. Mark Breakdown with Progress', W);
     const subjRows = state.subjects.map(subj=>{
       const v=student.marks[subj]; const num=parseFloat(v);
       const maxMark = getSubjectMaxMark(subj);
@@ -6771,6 +7578,7 @@ async function generateStudentPDF() {
       const cm=A.subjectStats[subj].rawMean;
       const diff=(!isNaN(num)&&cm)?num-cm:null;
       const status = isNaN(num) ? 'Missing' : (num < failMark ? 'Fail' : 'Pass');
+      const pct = !isNaN(num) ? Math.min(100, (num/maxMark)*100) : 0;
       return [
         subj,
         !isNaN(num)?fmtNum(num):'—',
@@ -6778,40 +7586,60 @@ async function generateStudentPDF() {
         fmtNum(failMark),
         cm?fmtNum(cm):'—',
         diff!==null?(diff>=0?'+':'')+fmtNum(diff):'—',
-        status
+        status,
+        pct // Progress percentage
       ];
     });
     doc.autoTable({
-      head:[['Subject','Student Score','Max Mark','Fail Mark','Class Mean','Difference','Status']],
-      body:subjRows,
+      head:[['Subject','Score/Max','Achievement']],
+      body:subjRows.map(row=>[row[0],`${row[1]}/${row[2]}`,'']),
       startY:y,
-      styles:{fontSize:9,cellPadding:3.5,halign:'center'},
-      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:10},
-      columnStyles:{0:{halign:'left',fontStyle:'bold'},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center'},5:{halign:'center'},6:{halign:'center'}},
-      margin:{top:2,right:2,bottom:2,left:2},
+      tableWidth:W-28,
+      styles:{fontSize:10,cellPadding:4.5,halign:'center',valign:'middle'},
+      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:11},
+      columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:64},1:{halign:'center',cellWidth:44},2:{halign:'center',cellWidth:74}},
+      margin:{top:2,right:14,bottom:2,left:14},
       didParseCell:data=>{
-        if(data.section==='body'&&data.column.index===5){
-          const v=parseFloat(data.cell.raw);
-          if(!isNaN(v)){ data.cell.styles.textColor=v>=0?[21,128,61]:[185,28,28]; data.cell.styles.fontStyle='bold'; }
+        if(data.section==='body'&&data.column.index===2){
+          data.cell.text='';
         }
-        if(data.section==='body'&&data.column.index===6){
-          if(data.cell.raw==='Fail') {
-            data.cell.styles.textColor=[185,28,28];
-            data.cell.styles.fontStyle='bold';
-          } else if(data.cell.raw==='Pass') {
-            data.cell.styles.textColor=[21,128,61];
-            data.cell.styles.fontStyle='bold';
+      },
+      didDrawCell:data=>{
+        if(data.section==='body'&&data.column.index===2){
+          const pct=parseFloat(subjRows[data.row.index][7]);
+          if(!isNaN(pct)&&pct>0){
+            const cellPadding=4;
+            const barX=data.cell.x+cellPadding;
+            const barY=data.cell.y+data.cell.height/2-3.5;
+            const barW=data.cell.width-cellPadding*2;
+            const barH=7;
+            const fillW=(barW*pct)/100;
+            const failThresh=parseFloat(subjRows[data.row.index][3])/parseFloat(subjRows[data.row.index][2])*100;
+            const barColor=pct>=failThresh?[21,128,61]:[185,28,28];
+            doc.setDrawColor(180,180,180);
+            doc.setFillColor(235,235,235);
+            doc.rect(barX,barY,barW,barH,'FD');
+            doc.setFillColor(...barColor);
+            doc.rect(barX,barY,fillW,barH,'F');
+            doc.setFontSize(8.5);doc.setTextColor(30,30,30);doc.setFont('helvetica','bold');
+            doc.text(Math.round(pct)+'%',barX+barW+3,barY+5);
           }
         }
       }
     });
     y = doc.lastAutoTable.finalY + 12;
-    y = checkNewPage(doc,y);
+    y = checkNewPage(doc,y,82);
 
     // Bar chart image
+    setLoaderPhase(2, 'Building student report…', 'Drawing comparison chart and layout spacing…', 68);
     y = pdfSection(doc, y, '2. Score Comparison Chart', W);
     const subjs = state.subjects;
     const studentGraphProfile = getStudentPdfGraphProfile(subjs.length);
+    const denseStudentChart = subjs.length >= 9;
+    const studentLegendSize = denseStudentChart ? 10 : 12;
+    const studentTickSize = denseStudentChart ? 10 : 11;
+    const studentAxisSize = denseStudentChart ? 12 : 13;
+    const studentXRotation = subjs.length >= 12 ? 50 : subjs.length >= 9 ? 38 : 0;
     const chartImg = await makeOffscreenChart({
       type:'bar',
       data:{
@@ -6829,16 +7657,21 @@ async function generateStudentPDF() {
       options:{
         responsive:false,
         animation:false,
-        layout:{ padding:{ left:6, right:8, top:8, bottom:4 } },
-        plugins:{ legend:{ position:'bottom', labels:{ font:{ size:12, weight:'600' }, color:'#0f172a' } } },
+        layout:{ padding:{ left: denseStudentChart ? 5 : 6, right: denseStudentChart ? 7 : 8, top: denseStudentChart ? 7 : 8, bottom:5 } },
+        plugins:{ legend:{ position:'bottom', labels:{ font:{ size:studentLegendSize, weight:'600' }, color:'#0f172a' } } },
         scales:{
-          y:{ min:0,max:100, title:{ display:true, text:'Score', color:'#0f172a', font:{ size:13, weight:'600' } }, ticks:{ color:'#334155', font:{ size:11, weight:'500' } }, grid:{ color:'rgba(148,163,184,.18)' } },
-          x:{ ticks:{ color:'#334155', font:{ size:11, weight:'500' } }, grid:{ color:'rgba(148,163,184,.14)' } }
+          y:{ min:0,max:100, title:{ display:true, text:'Score', color:'#0f172a', font:{ size:studentAxisSize, weight:'600' } }, ticks:{ color:'#334155', font:{ size:studentTickSize, weight:'500' } }, grid:{ color:'rgba(148,163,184,.18)' } },
+          x:{ ticks:{ color:'#334155', font:{ size:studentTickSize, weight:'500' }, maxRotation:studentXRotation, minRotation:Math.min(18, studentXRotation) }, grid:{ color:'rgba(148,163,184,.14)' } }
         }
       }
     },studentGraphProfile.render.w,studentGraphProfile.render.h,'image/jpeg',0.68);
     if(chartImg){
       const dims = pdfImageDimensions(W, studentGraphProfile.render.w/studentGraphProfile.render.h, studentGraphProfile.display.maxHeight);
+      const pageH = doc.internal.pageSize.getHeight();
+      if (y + dims.h > pageH - 20) {
+        doc.addPage();
+        y = 16;
+      }
       doc.addImage(chartImg,'JPEG',(W-dims.w)/2,y,dims.w,dims.h, undefined, 'FAST');
       y+=dims.h+8;
     }
@@ -6872,6 +7705,53 @@ async function generateStudentPDF() {
 
     y += 8;
 
+    // Next Steps / Actionable Recommendations
+    y = checkNewPage(doc, y, 35);
+    y = pdfSection(doc, y, '4. Recommended Next Steps', W);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(30,40,60);
+    
+    let nextStepsText = '';
+    if(student.mean < 40) {
+      nextStepsText = 'Performance is critically low. Immediate intervention recommended: (1) Schedule parent/guardian meeting to discuss support plan, (2) Identify specific learning gaps through diagnostic assessment, (3) Arrange intensive tutoring or specialized support.';
+    } else if(student.mean < 50) {
+      nextStepsText = 'Performance is below average. Intervention pathway available: (1) Speak with student about learning challenges, (2) Consider peer tutoring or study group participation, (3) Review study strategies and time management.';
+    } else if(student.mean < 65) {
+      nextStepsText = 'Performance is satisfactory with room for growth. Consolidation recommended: (1) Focus practice on weaker subjects, (2) Leverage strengths to build confidence, (3) Target specific skill gaps identified in failed subjects.';
+    } else if(student.mean < 80) {
+      nextStepsText = 'Performance is good. Continue current trajectory: (1) Maintain study consistency, (2) Set subject-specific improvement targets, (3) Explore extension materials in strong subjects.';
+    } else {
+      nextStepsText = 'Performance is excellent. Extension pathway recommended: (1) Challenge materials and enrichment activities available, (2) Consider peer mentoring or tutoring others, (3) Explore advanced topics or cross-curricular projects.';
+    }
+    
+    const wrappedSteps = doc.splitTextToSize(nextStepsText, W-28);
+    doc.text(wrappedSteps, 14, y);
+    y += wrappedSteps.length * lineHeight + 6;
+    
+    // Subject-specific guidance for at-risk subjects
+    if(failedSubjects.length > 0) {
+      y = checkNewPage(doc, y, 20);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(185,28,28);
+      doc.text('⚠ Subjects Requiring Immediate Attention:', 14, y);
+      y += 6;
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(51,65,85);
+      failedSubjects.forEach(subj => {
+        const score = parseFloat(student.marks[subj]);
+        const maxMark = getSubjectMaxMark(subj);
+        const failMark = getSubjectFailMark(subj);
+        const pointsNeeded = failMark - score;
+        const guidance = pointsNeeded <= 5 ? 'Targeted practice in key topics' : 
+                         pointsNeeded <= 15 ? 'Comprehensive review and tutoring' : 
+                         'Intensive intervention program recommended';
+        const line = `${subj}: ${fmtNum(score)}/${fmtNum(maxMark)} — ${guidance} (+${fmtNum(pointsNeeded)} pts to pass)`;
+        doc.text(line, 17, y);
+        y += 5;
+      });
+    }
+
+    y += 6;
+
+    setLoaderPhase(3, 'Building student report…', 'Finalizing PDF pages and export…', 100);
+
     // Footer
     const H=doc.internal.pageSize.getHeight();
     doc.setFontSize(8); doc.setTextColor(156,163,175);
@@ -6892,15 +7772,13 @@ async function generateClassPDF() {
   const A = state.analysis; if(!A) return;
   setTaskBusy('class-pdf', true);
   setButtonBusy('btn-class-report', true, 'Building...');
-  showLoader('Building class report…');
+  showLoader('Building class report…', 700, true);
   await new Promise(r=>setTimeout(r,60));
 
   try {
-    updateLoaderStep(1);
-    setAnimatedStatusText($('loader-sub'), 'Preparing analysis data…');
+    setLoaderPhase(1, 'Building class report…', 'Preparing analysis data…', 26);
     await new Promise(r=>setTimeout(r,120));
-    updateLoaderStep(2);
-    setAnimatedStatusText($('loader-sub'), 'Rendering high-quality chart images…');
+    setLoaderPhase(2, 'Building class report…', 'Rendering the comparison chart…', 68);
     const pdfCharts = await buildClassPdfChartImages(A);
 
     const { jsPDF } = window.jspdf;
@@ -6908,6 +7786,31 @@ async function generateClassPDF() {
     const W = doc.internal.pageSize.getWidth();
     const info = getClassInfo();
     let y = pdfHeader(doc, info, 'Class Report');
+
+    // Quick Navigation Guide
+    y = checkNewPage(doc, y, 20);
+    doc.setFillColor(245,250,255);
+    doc.rect(14, y, W-28, 38, 'F');
+    doc.setDrawColor(200,220,240);
+    doc.rect(14, y, W-28, 38, 'S');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(30,75,143);
+    doc.text('Report Contents Guide', 17, y+5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(51,65,85);
+    const navItems = [
+      '1. Class Overview — Summary statistics & performance cards',
+      '2a. Summary Statistics — Pass/fail rates & central tendency',
+      '2b. Distribution & Outliers — Quartiles, range, outlier identification',
+      '3. Subject Comparison — Relative subject performance',
+      '4. Performance Flags — Top performers & at-risk students',
+      '5. Full Results — Complete student scores by subject'
+    ];
+    let navY = y + 10;
+    navItems.forEach(item => {
+      if (navY > y + 33) return; // Skip if space runs out
+      doc.text(item, 17, navY);
+      navY += 3.5;
+    });
+    y += 42;
 
     // Summary cards row
     y = pdfSection(doc, y, '1. Class Overview', W);
@@ -6934,148 +7837,63 @@ async function generateClassPDF() {
     });
     y+=26;
 
-    // Per-subject stats
-    y = pdfSection(doc, y, '2. Per-Subject Statistics', W);
-    const subjHead=[['Subject','N','Max Mark','Fail Mark','Pass %','Fail %','Mean','Median','Mode','StdDev','Min','Q1','Med','Q3','Max','IQR','Outliers']];
-    const subjBody = state.subjects.map(subj=>{
-      const ss=A.subjectStats[subj]; const b=ss.box;
+    // Per-subject stats - Split into two tables for readability
+    y = pdfSection(doc, y, '2a. Per-Subject Summary Statistics', W);
+    const subjSummaryHead=[['Subject','N','Max','Fail','Pass %','Fail %','Mean','Median','StdDev']];
+    const subjSummaryBody = state.subjects.map(subj=>{
+      const ss=A.subjectStats[subj];
       return [subj,ss.count,fmtNum(getSubjectMaxMark(subj)),fmtNum(ss.failMark),
               ss.passRate==null?'—':fmtNum(ss.passRate,1)+'%',ss.failRate==null?'—':fmtNum(ss.failRate,1)+'%',
-              fmtNum(ss.mean),fmtNum(ss.median),ss.mode?ss.mode.join(', '):'—',
-              fmtNum(ss.stdDev),b?fmtNum(b.min):'—',b?fmtNum(b.q1):'—',b?fmtNum(b.q2):'—',
+              fmtNum(ss.mean),fmtNum(ss.median),fmtNum(ss.stdDev)];
+    });
+    doc.autoTable({
+      head:subjSummaryHead, body:subjSummaryBody, startY:y,
+      styles:{fontSize:9,cellPadding:3,halign:'center',valign:'middle'},
+      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:10},
+      columnStyles:{
+        0:{fontStyle:'bold',fontSize:9,halign:'left',cellWidth:35},
+        1:{halign:'center',cellWidth:18},2:{halign:'center',cellWidth:18},3:{halign:'center',cellWidth:18},4:{halign:'center',cellWidth:22},5:{halign:'center',cellWidth:22},
+        6:{halign:'center',cellWidth:22},7:{halign:'center',cellWidth:22},8:{halign:'center',cellWidth:22}
+      }
+    });
+    y=doc.lastAutoTable.finalY+10;
+
+    // Distribution table
+    y = pdfSection(doc, y, '2b. Per-Subject Distribution & Outliers', W);
+    const subjDistribHead=[['Subject','Mode','Min','Q1','Med','Q3','Max','IQR','Out']];
+    const subjDistribBody = state.subjects.map(subj=>{
+      const ss=A.subjectStats[subj]; const b=ss.box;
+      return [subj,ss.mode?ss.mode.join(', '):'—',b?fmtNum(b.min):'—',b?fmtNum(b.q1):'—',b?fmtNum(b.q2):'—',
               b?fmtNum(b.q3):'—',b?fmtNum(b.max):'—',b?fmtNum(b.iqr):'—',ss.outliers.length];
     });
     doc.autoTable({
-      head:subjHead, body:subjBody, startY:y,
-      styles:{fontSize:9,cellPadding:2.5},
-      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:9},
+      head:subjDistribHead, body:subjDistribBody, startY:y,
+      styles:{fontSize:9,cellPadding:3,halign:'center',valign:'middle'},
+      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:10},
       columnStyles:{
-        0:{fontStyle:'bold',fontSize:9},
-        1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center'},5:{halign:'center'},
-        6:{halign:'center'},7:{halign:'center'},8:{halign:'center',fontSize:8},9:{halign:'center'},10:{halign:'center'},
-        11:{halign:'center'},12:{halign:'center'},13:{halign:'center'},14:{halign:'center'},15:{halign:'center'},16:{halign:'center'}
+        0:{fontStyle:'bold',fontSize:9,halign:'left',cellWidth:35},
+        1:{halign:'center',fontSize:8,cellWidth:22},2:{halign:'center',cellWidth:18},3:{halign:'center',cellWidth:18},4:{halign:'center',cellWidth:18},5:{halign:'center',cellWidth:18},
+        6:{halign:'center',cellWidth:18},7:{halign:'center',cellWidth:18},8:{halign:'center',fontStyle:'bold',textColor:[185,28,28],cellWidth:18}
       }
     });
     y=doc.lastAutoTable.finalY+12;
 
-    // Charts page
-    doc.addPage();
-    y=12;
-    y = pdfSection(doc, y, '3. Score Distribution & Cumulative Frequency', W);
-
-    const distImg = pdfCharts.distImg;
-    const cumImg  = pdfCharts.cumImg;
-    const pairAspect = pdfCharts.profile.render.w / pdfCharts.profile.render.h;
-    const chartColW = (W-42)/2;
-    const chartH = pdfCharts.profile.display.pairMaxHeight;
-    if(distImg){
-      const dimsD = pdfImageDimensions(chartColW, pairAspect, chartH);
-      doc.addImage(distImg,'JPEG',14+(chartColW-dimsD.w)/2,y,dimsD.w,dimsD.h, undefined, 'FAST');
-    }
-    if(cumImg){
-      const dimsC = pdfImageDimensions(chartColW, pairAspect, chartH);
-      doc.addImage(cumImg,'JPEG',14+chartColW+14+(chartColW-dimsC.w)/2,y,dimsC.w,dimsC.h, undefined, 'FAST');
-    }
-    y+=chartH+16;
-
-    y = pdfSection(doc, y, '4. Subject Comparison & Box Plot', W);
-    const subjImg = pdfCharts.subjImg;
-    const boxImg  = pdfCharts.boxImg;
-    if(subjImg){
-      const dimsS = pdfImageDimensions(chartColW, pairAspect, chartH);
-      doc.addImage(subjImg,'JPEG',14+(chartColW-dimsS.w)/2,y,dimsS.w,dimsS.h, undefined, 'FAST');
-    }
-    if(boxImg){
-      const dimsB = pdfImageDimensions(chartColW, pairAspect, chartH);
-      doc.addImage(boxImg,'JPEG',14+chartColW+14+(chartColW-dimsB.w)/2,y,dimsB.w,dimsB.h, undefined, 'FAST');
-    }
-    y+=chartH+16;
-
-    // Best fit - place on a dedicated page for better readability and spacing
+    // Single chart page (only subject comparison)
     doc.addPage();
     y = 12;
-    y = pdfSection(doc, y, '5. Trend Analysis', W);
-
-    const bfImg = pdfCharts.bfImg;
-    const trendPoints = A.sorted
-      .map((s, i) => ({ x: i + 1, y: parseFloat(s.mean) }))
-      .filter(p => !isNaN(p.y));
-    const trend = Stat.linReg(trendPoints);
-
-    if (bfImg) {
-      const trendAspect = pdfCharts.profile.render.trendW / pdfCharts.profile.render.trendH;
-      const dimsBF = pdfImageDimensions(W, trendAspect, pdfCharts.profile.display.trendMaxHeight);
-      doc.addImage(bfImg, 'JPEG', (W-dimsBF.w)/2, y, dimsBF.w, dimsBF.h, undefined, 'FAST');
-      y += dimsBF.h + 12;
-    } else {
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139);
-      doc.text('Trend chart image was not available.', 14, y + 6);
-      doc.setTextColor(0, 0, 0);
-      y += 14;
+    y = pdfSection(doc, y, '3. Subject Comparison', W);
+    const subjImg = pdfCharts.subjImg;
+    const subjAspect = pdfCharts.profile.render.w / pdfCharts.profile.render.h;
+    const maxChartHeight = Math.min(pdfCharts.profile.display.pairMaxHeight + 6, 88);
+    if(subjImg){
+      const dimsS = pdfImageDimensions(W-28, subjAspect, maxChartHeight);
+      doc.addImage(subjImg,'JPEG',(W-dimsS.w)/2,y,dimsS.w,dimsS.h, undefined, 'FAST');
+      y += dimsS.h + 10;
     }
-
-    y = checkNewPage(doc, y, 40);
-    const panelW = (W - 36) / 2;
-
-    // Left panel: model metrics
-    doc.setFillColor(248, 250, 252);
-    doc.setDrawColor(226, 232, 240);
-    doc.roundedRect(14, y, panelW, 42, 2, 2, 'FD');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(30, 75, 143);
-    doc.text('Trend Model Summary', 17, y + 7);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(51, 65, 85);
-    const eq = trend
-      ? `y = ${fmtNum(trend.m, 3)}x ${trend.b >= 0 ? '+' : '-'} ${fmtNum(Math.abs(trend.b), 3)}`
-      : 'Best-fit equation: not available';
-    const r2Text = trend ? `R² = ${fmtNum(trend.r2, 2)} (${fmtNum(trend.r2 * 100, 0)}% explained)` : 'R² not available';
-    const slopeText = trend
-      ? `Slope: ${trend.m > 0 ? 'upward' : trend.m < 0 ? 'downward' : 'flat'} (${fmtNum(trend.m, 3)})`
-      : 'Slope not available';
-    doc.text('Equation:', 17, y + 15);
-    doc.text(eq, 17, y + 21);
-    doc.text(r2Text, 17, y + 27);
-    doc.text(slopeText, 17, y + 33);
-
-    // Right panel: interpretation and action note
-    doc.setFillColor(240, 245, 255);
-    doc.setDrawColor(226, 232, 240);
-    doc.roundedRect(18 + panelW, y, panelW, 42, 2, 2, 'FD');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(30, 75, 143);
-    doc.text('Interpretation', 21 + panelW, y + 7);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    doc.setTextColor(51, 65, 85);
-    let interpretation = 'Insufficient data for reliable trend interpretation.';
-    if (trend) {
-      if (Math.abs(trend.m) < 0.02) {
-        interpretation = 'Trend is nearly flat: performance fairly uniform across ranking.';
-      } else if (trend.m > 0) {
-        interpretation = 'Positive slope: scores tend to rise with rank ordering.';
-      } else {
-        interpretation = 'Negative slope: scores decline as rank position increases.';
-      }
-      interpretation += ` Strength: ${trend.r2 >= 0.6 ? 'high' : trend.r2 >= 0.3 ? 'moderate' : 'low'}.`;
-    }
-    const wrapped = doc.splitTextToSize(interpretation, panelW - 8);
-    doc.text(wrapped, 21 + panelW, y + 15);
-    doc.setTextColor(0, 0, 0);
-
-    y += 48;
-    y += 48;
 
     // Performance flags page
     doc.addPage(); y=12;
-    y = pdfSection(doc, y, '6. Performance Flags', W);
+    y = pdfSection(doc, y, '4. Performance Flags', W);
 
     const flagTable=(title,students,cols)=>{
       if(!students.length) return y;
@@ -7092,45 +7910,197 @@ async function generateClassPDF() {
       return y;
     };
 
-    y=flagTable('🌟 Top Scorers (Above Q3)',A.topQ,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Rank',s=>A.sorted.findIndex(x=>x.id===s.id)+1]]);
-    y=flagTable('⚠️ Students Needing Support (Below Q1)',A.botQ,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Rank',s=>A.sorted.findIndex(x=>x.id===s.id)+1]]);
-    y=flagTable('🔬 Statistical Outliers (IQR Method)',A.meanOutliers,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Type',s=>s.mean<(A.classBox?.fence_lo||0)?'Low Outlier':'High Outlier']]);
+    y=flagTable('Top Scorers (Above Q3)',A.topQ,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Rank',s=>A.sorted.findIndex(x=>x.id===s.id)+1]]);
+    y=flagTable('Students Needing Support (Below Q1)',A.botQ,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Rank',s=>A.sorted.findIndex(x=>x.id===s.id)+1]]);
+    y=flagTable('Statistical Outliers (IQR Method)',A.meanOutliers,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Type',s=>s.mean<(A.classBox?.fence_lo||0)?'Low Outlier':'High Outlier']]);
 
-    // Full class table
-    doc.addPage(); y=12;
-    y = pdfSection(doc, y, '7. Full Student Results', W);
-    const fullHead=[['Rank','ID','Name',...state.subjects,'Mean','Quartile']];
-    const fullBody=A.sorted.map((s,i)=>{
-      const qLabel=A.classBox?(s.mean>A.classBox.q3?'Top 25%':s.mean>=A.classBox.q2?'Upper Mid':s.mean>=A.classBox.q1?'Lower Mid':'Bottom 25%'):'—';
-      return [i+1,s.id,s.name,...state.subjects.map(subj=>{const v=s.marks[subj];return !isNaN(parseFloat(v))?fmtNum(parseFloat(v)):'—';}),fmtNum(s.mean),qLabel];
-    });
-    doc.autoTable({
-      head:fullHead, body:fullBody, startY:y,
-      styles:{fontSize:8,cellPadding:2},
-      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold'},
-      columnStyles:{0:{halign:'center',cellWidth:10},1:{cellWidth:16},2:{cellWidth:28},
-        ...Object.fromEntries(state.subjects.map((_,i)=>[i+3,{halign:'center',cellWidth:16}])),
-        [state.subjects.length+3]:{halign:'center',fontStyle:'bold',textColor:[30,75,143],cellWidth:14},
-        [state.subjects.length+4]:{halign:'center',cellWidth:14}
-      },
-      didParseCell:d=>{
-        if(d.section==='body'){
-          const colIdx=d.column.index;
-          if(colIdx>=3&&colIdx<3+state.subjects.length){
-            const v=parseFloat(d.cell.raw);
-            const subj=state.subjects[colIdx-3];
-            const b=A.subjectStats[subj]?.box;
-            const failMark = getSubjectFailMark(subj);
-            if(!isNaN(v)&&b){
-              const normalized = (v / getSubjectMaxMark(subj)) * 100;
-              if(v < failMark){ d.cell.styles.fillColor=[254,226,226]; d.cell.styles.fontStyle='bold'; d.cell.styles.textColor=[153,27,27]; }
-              else if(normalized<b.fence_lo||normalized>b.fence_hi){d.cell.styles.fillColor=[254,243,199];d.cell.styles.fontStyle='bold';}
-              else if(normalized>b.q3){d.cell.styles.fillColor=[220,252,231];}
-              else if(normalized<b.q1){d.cell.styles.fillColor=[254,226,226];}
+    // Full class table - responsive chunks for many subjects
+    const allSubjects = [...state.subjects];
+    const totalSubjects = allSubjects.length;
+    const subjectsPerPage = totalSubjects >= 16 ? 8 : totalSubjects >= 12 ? 9 : totalSubjects >= 9 ? 10 : totalSubjects;
+    const subjectChunks = [];
+    for (let i = 0; i < totalSubjects; i += subjectsPerPage) {
+      subjectChunks.push(allSubjects.slice(i, i + subjectsPerPage));
+    }
+
+    subjectChunks.forEach((subjectSlice, chunkIdx) => {
+      doc.addPage();
+      y = 12;
+      const title = subjectChunks.length > 1
+        ? `5. Full Student Results (${chunkIdx + 1}/${subjectChunks.length})`
+        : '5. Full Student Results';
+      y = pdfSection(doc, y, title, W);
+
+      const localSubjCount = subjectSlice.length;
+      const totalStudents = A.sorted.length;
+      
+      // Intelligent responsive sizing based on content volume
+      // More subjects → smaller fonts and widths; fewer subjects → larger and more comfortable
+      let fontSize, headerFontSize, cellPadding, rowHeight;
+      let rankColWidth, idColWidth, subjColWidth, meanColWidth, quartileColWidth;
+      
+      if (localSubjCount <= 3) {
+        // Few subjects: maximize comfort and readability
+        fontSize = 9.2;
+        headerFontSize = 9.8;
+        cellPadding = 3.2;
+        rowHeight = 7.5;
+        rankColWidth = 11;
+        idColWidth = 16;
+        subjColWidth = 16;
+        meanColWidth = 14;
+        quartileColWidth = 14;
+      } else if (localSubjCount <= 5) {
+        // Moderate subjects: balance comfort and fit
+        fontSize = 8.5;
+        headerFontSize = 9.2;
+        cellPadding = 2.8;
+        rowHeight = 6.8;
+        rankColWidth = 10.5;
+        idColWidth = 15;
+        subjColWidth = 14;
+        meanColWidth = 13;
+        quartileColWidth = 13;
+      } else if (localSubjCount <= 8) {
+        // Many subjects: compact but readable
+        fontSize = 8;
+        headerFontSize = 8.6;
+        cellPadding = 2.4;
+        rowHeight = 6.2;
+        rankColWidth = 9.5;
+        idColWidth = 13.5;
+        subjColWidth = 12;
+        meanColWidth = 11.5;
+        quartileColWidth = 11.5;
+      } else {
+        // Very many subjects: optimize fit while maintaining legibility
+        fontSize = 7.5;
+        headerFontSize = 8;
+        cellPadding = 2;
+        rowHeight = 5.8;
+        rankColWidth = 9;
+        idColWidth = 12.5;
+        subjColWidth = 10.5;
+        meanColWidth = 10.5;
+        quartileColWidth = 10.5;
+      }
+
+      // Build table with responsive sizing
+      const fullHead=[['Rk','ID',...subjectSlice,'Mn','Q']];
+      const fullBody=A.sorted.map((s,i)=>{
+        const qLabel=A.classBox?(s.mean>A.classBox.q3?'T25':s.mean>=A.classBox.q2?'UM':s.mean>=A.classBox.q1?'LM':'B25'):'—';
+        return [
+          i+1,
+          s.id,
+          ...subjectSlice.map(subj=>{
+            const v=s.marks[subj];
+            return !isNaN(parseFloat(v))?fmtNum(parseFloat(v)):'—';
+          }),
+          fmtNum(s.mean),
+          qLabel
+        ];
+      });
+
+      // Calculate available table width and column widths
+      const tableMargin = 28;
+      const availableWidth = W - tableMargin;
+      const fixedColsWidth = rankColWidth + idColWidth + meanColWidth + quartileColWidth;
+      const remainingWidth = availableWidth - fixedColsWidth;
+      const adjustedSubjColWidth = Math.max(9, remainingWidth / localSubjCount);
+
+      doc.autoTable({
+        head:fullHead,
+        body:fullBody,
+        startY:y,
+        tableWidth:availableWidth,
+        styles:{
+          fontSize:fontSize,
+          cellPadding:cellPadding,
+          halign:'center',
+          valign:'middle',
+          lineColor:[226,232,240],
+          lineWidth:0.3,
+          minCellHeight:rowHeight
+        },
+        headStyles:{
+          fillColor:[30,75,143],
+          textColor:255,
+          fontStyle:'bold',
+          fontSize:headerFontSize,
+          lineColor:[20,60,130],
+          lineWidth:0.5
+        },
+        margin:{top:2,right:14,bottom:2,left:14},
+        columnStyles:{
+          0:{halign:'center',cellWidth:rankColWidth},
+          1:{halign:'center',cellWidth:idColWidth},
+          ...Object.fromEntries(subjectSlice.map((_,i)=>[i+2,{halign:'center',cellWidth:adjustedSubjColWidth}])),
+          [localSubjCount+2]:{halign:'center',fontStyle:'bold',textColor:[30,75,143],cellWidth:meanColWidth},
+          [localSubjCount+3]:{halign:'center',cellWidth:quartileColWidth}
+        },
+        alternateRowStyles:{
+          fillColor:[248,250,252]
+        },
+        didParseCell:d=>{
+          if(d.section==='body'){
+            const colIdx=d.column.index;
+            // Style subject score columns
+            if(colIdx>=2&&colIdx<2+localSubjCount){
+              const v=parseFloat(d.cell.raw);
+              const subj=subjectSlice[colIdx-2];
+              const b=A.subjectStats[subj]?.box;
+              const failMark = getSubjectFailMark(subj);
+              if(!isNaN(v)&&b){
+                const normalized = (v / getSubjectMaxMark(subj)) * 100;
+                if(v < failMark){
+                  d.cell.styles.fillColor=[254,226,226];
+                  d.cell.styles.fontStyle='bold';
+                  d.cell.styles.textColor=[153,27,27];
+                }
+                else if(normalized<b.fence_lo||normalized>b.fence_hi){
+                  d.cell.styles.fillColor=[254,243,199];
+                  d.cell.styles.fontStyle='bold';
+                }
+                else if(normalized>b.q3){
+                  d.cell.styles.fillColor=[220,252,231];
+                }
+                else if(normalized<b.q1){
+                  d.cell.styles.fillColor=[254,226,226];
+                }
+              }
+            }
+            // Add subtle alternating row highlight (skip if already colored by performance)
+            else if(colIdx===0||colIdx===1){
+              const rowIdx = d.rowIndex;
+              if(rowIdx % 2 === 0 && !d.cell.styles.fillColor){
+                d.cell.styles.fillColor=[248,250,252];
+              }
             }
           }
         }
+      });
+
+      // Compact quartile legend under each chunked table
+      let legendY = doc.lastAutoTable.finalY + 5;
+      const pageH = doc.internal.pageSize.getHeight();
+      if (legendY > pageH - 12) {
+        doc.addPage();
+        legendY = 16;
       }
+      const legendX = 14;
+      const legendW = W - 28;
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(legendX, legendY, legendW, 8, 1.6, 1.6, 'FD');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(51, 65, 85);
+      doc.text('Quartile Key:', legendX + 3, legendY + 5.3);
+      doc.setFont('helvetica', 'normal');
+      doc.text('T25 = Top 25%', legendX + 24, legendY + 5.3);
+      doc.text('UM = Upper Middle', legendX + 53, legendY + 5.3);
+      doc.text('LM = Lower Middle', legendX + 92, legendY + 5.3);
+      doc.text('B25 = Bottom 25%', legendX + 130, legendY + 5.3);
     });
 
     // Footer on all pages
@@ -7144,7 +8114,7 @@ async function generateClassPDF() {
     }
 
     const fname=`ClassReport_${info.className.replace(/\s+/g,'_')}_${info.term.replace(/\s+/g,'_')}.pdf`;
-    updateLoaderStep(3);
+    setLoaderPhase(3, 'Building class report…', 'Finalizing pages and export…', 100);
     warnIfPdfLarge(doc, 'Class report');
     doc.save(fname);
     toast('Class report downloaded ✓','ok');
@@ -7158,21 +8128,32 @@ async function generateClassPDF() {
    ║                 NAVIGATION                        ║
    ╚═══════════════════════════════════════════════════╝ */
 function switchTab(name) {
+  if (!canOpenTab(name)) {
+    toast('Complete the previous step first.', 'warn');
+    return;
+  }
   const panel = $('panel-'+name);
   const tabBtn = $('tab-'+name);
   if (!panel || !tabBtn) {
     console.warn('Unknown tab requested:', name);
     return;
   }
+  const alreadyActive = panel.classList.contains('active');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.remove('active');
+    b.removeAttribute('aria-current');
+  });
   panel.classList.add('active');
   tabBtn.classList.add('active');
+  tabBtn.setAttribute('aria-current', 'page');
   updateTabProgress(name);
   updateTabCompletion();
   syncSectionDropdown(name);
-  if(name === 'guide' && state.analysis) renderInterpretationTab();
-  window.scrollTo({top:0,behavior:'smooth'});
+  tabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  if (!alreadyActive) {
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
 }
 
 /* ╔═══════════════════════════════════════════════════╗
@@ -7192,6 +8173,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   initEntryKeyboardFlow();
   initRefreshWarning();
   initDensityPreference();
+  initAnalysisDetailPreference();
   updateTabProgress('setup');
   updateTabCompletion();
   enhanceTransitions();
