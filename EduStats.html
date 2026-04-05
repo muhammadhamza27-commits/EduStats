@@ -4766,6 +4766,7 @@ function hideLiveLoader() {
 }
 
 let reviewPostSubmitResetTimer = null;
+let reviewSubmitInProgress = false;
 
 function clearReviewPostSubmitReset() {
   if (!reviewPostSubmitResetTimer) return;
@@ -4962,7 +4963,14 @@ function resetReviewForm() {
   const form = $('review-form');
   if (!form) return;
   clearReviewPostSubmitReset();
+  reviewSubmitInProgress = false;
   form.reset();
+  const sendBtn = $('review-send-btn');
+  if (sendBtn) {
+    sendBtn.textContent = 'Submit Response';
+    sendBtn.disabled = false;
+  }
+  setActiveReviewChannel('google');
   syncQuickRatingChips();
   initReviewRatingKeyboardNav();
   updateReviewCharCount();
@@ -5017,6 +5025,7 @@ function initRefreshWarning() {
 
 function openReviewComposer(event) {
   if (event) event.preventDefault();
+  if (reviewSubmitInProgress) return;
   clearReviewPostSubmitReset();
 
   const hp = $('review-website')?.value.trim();
@@ -5100,6 +5109,7 @@ function openReviewComposer(event) {
 
   // Move visual focus to Gmail channel only after validation passes.
   setActiveReviewChannel('gmail');
+  reviewSubmitInProgress = true;
 
   if (sendBtn) {
     sendBtn.disabled = true;
@@ -5107,6 +5117,7 @@ function openReviewComposer(event) {
   }
 
   let opened = false;
+  let fallbackAttempted = false;
   try {
     const popup = window.open(composeUrl, '_blank');
     if (popup) {
@@ -5118,6 +5129,7 @@ function openReviewComposer(event) {
 
   if (!opened) {
     try {
+      fallbackAttempted = true;
       const link = document.createElement('a');
       link.href = composeUrl;
       link.target = '_blank';
@@ -5126,7 +5138,6 @@ function openReviewComposer(event) {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      opened = true;
     } catch (_) {}
   }
 
@@ -5134,24 +5145,33 @@ function openReviewComposer(event) {
     setReviewStatus('Gmail opened with your review draft. Next: review the message and click Send in Gmail. This form will reset in 10 seconds.', 'ok');
     toast('Gmail composer opened ✓', 'ok');
 
+    if (sendBtn) {
+      sendBtn.textContent = 'Draft Opened ✓';
+      sendBtn.disabled = true;
+    }
+
     reviewPostSubmitResetTimer = setTimeout(() => {
       resetReviewForm();
-      setActiveReviewChannel('google');
       setReviewStatus('Ready for another response. You can submit a new review now.', 'ok');
     }, 10000);
+    return;
+  }
+
+  reviewSubmitInProgress = false;
+
+  if (fallbackAttempted) {
+    setReviewStatus('Attempted to open Gmail draft. If no new tab appeared, allow popups and click Submit Response again.', 'warn');
+    toast('If Gmail did not open, allow popups and retry.', 'warn');
   } else {
     setActiveReviewChannel('google');
     setReviewStatus('Unable to open Gmail automatically. Please allow popups and try again.', 'warn');
     toast('Could not open Gmail. Check popup settings.', 'warn');
   }
 
-  setTimeout(() => {
-    if (sendBtn) {
-      sendBtn.disabled = false;
-      sendBtn.textContent = 'Submit Response';
-      updateReviewFormState();
-    }
-  }, 900);
+  if (sendBtn) {
+    sendBtn.textContent = 'Submit Response';
+  }
+  updateReviewFormState();
 }
 
 function genStudentId() {
@@ -5233,24 +5253,22 @@ function initTabKeyboardNav() {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
         target = tabs[nextEnabledIndex(index, 1)];
-        target.focus();
-        target.click();
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
         target = tabs[nextEnabledIndex(index, -1)];
-        target.focus();
-        target.click();
       } else if (e.key === 'Home') {
         e.preventDefault();
         const homeIdx = nextEnabledIndex(tabs.length - 1, 1);
-        tabs[homeIdx].focus();
-        tabs[homeIdx].click();
+        target = tabs[homeIdx];
       } else if (e.key === 'End') {
         e.preventDefault();
         const endIdx = nextEnabledIndex(0, -1);
-        tabs[endIdx].focus();
-        tabs[endIdx].click();
+        target = tabs[endIdx];
       }
+
+      if (!target) return;
+      target.focus();
+      target.click();
     });
   });
 }
@@ -5258,7 +5276,9 @@ function initTabKeyboardNav() {
 function syncSectionDropdown(name) {
   const sectionSelect = $('section-select');
   if (!sectionSelect) return;
-  sectionSelect.value = name;
+  if (sectionSelect.value !== name) {
+    sectionSelect.value = name;
+  }
 }
 
 function initSectionDropdown() {
