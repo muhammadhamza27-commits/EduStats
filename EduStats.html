@@ -67,6 +67,14 @@
   --fs-h2:      2.25rem;
   --fs-h1:      2.8rem;
 
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
   --r:         8px;
   --r-lg:      14px;
   --shadow-sm: 0 1px 2px color-mix(in oklab, var(--primary) 12%, transparent), 0 6px 14px color-mix(in oklab, var(--ink) 10%, transparent);
@@ -714,7 +722,7 @@ html[data-theme='dark'] .tab-select-icon .ui-icon {
 .main { padding: 12px; max-width: 1180px; margin: 0 auto; }
 .main {
   max-width: 1260px;
-  padding: 14px;
+  padding: 16px;
 }
 .panel { display: none; }
 .panel.active { display: block; }
@@ -794,8 +802,8 @@ body.motion-enhanced .landing-motion.is-visible {
 .onboarding-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
+  gap: 10px;
+  padding: 9px 14px;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
   background: color-mix(in srgb, var(--white) 78%, var(--primary-tint));
@@ -869,7 +877,7 @@ body.motion-enhanced .landing-motion.is-visible {
 }
 
 .landing-trust-pill {
-  padding: 7px 10px;
+  padding: 9px 14px;
   border-radius: 999px;
   border: 1px solid var(--primary-pale);
   background: var(--white);
@@ -913,7 +921,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 14px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--primary-pale) 70%, var(--white)), color-mix(in srgb, var(--teal-pale) 45%, var(--white)));
   min-height: 210px;
-  padding: 14px;
+  padding: 16px;
   display: grid;
   gap: 10px;
   position: relative;
@@ -942,7 +950,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
   border-radius: 10px;
   background: color-mix(in srgb, var(--white) 90%, var(--primary-tint));
-  padding: 8px;
+  padding: 10px;
   transition: transform .26s cubic-bezier(.19, 1, .22, 1), border-color .2s ease, box-shadow .26s cubic-bezier(.19, 1, .22, 1);
 }
 
@@ -1000,7 +1008,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 12px;
   background: color-mix(in srgb, var(--white) 90%, var(--primary-tint));
   box-shadow: var(--shadow-sm);
-  padding: 8px 10px;
+  padding: 10px 14px;
   min-width: 118px;
   animation: landing-chip-float 4.8s ease-in-out infinite;
   transform: translate3d(0, 0, 0);
@@ -1141,7 +1149,7 @@ body.motion-enhanced .landing-motion.is-visible {
 }
 
 .illustration-badge {
-  padding: 5px 9px;
+  padding: 7px 12px;
   border-radius: 999px;
   border: 1px solid var(--primary-pale);
   background: var(--white);
@@ -1247,7 +1255,7 @@ body.motion-enhanced .landing-motion.is-visible {
     radial-gradient(circle at 14% 14%, color-mix(in srgb, var(--primary-light) 24%, transparent), transparent 52%),
     radial-gradient(circle at 86% 78%, color-mix(in srgb, var(--teal) 24%, transparent), transparent 50%),
     linear-gradient(180deg, color-mix(in srgb, var(--primary-tint) 62%, var(--white)), var(--white));
-  padding: 12px;
+  padding: 14px;
   display: grid;
   align-content: space-between;
   gap: 10px;
@@ -1280,7 +1288,7 @@ body.motion-enhanced .landing-motion.is-visible {
   background: var(--white);
   border: 1px solid var(--primary-pale);
   border-radius: 999px;
-  padding: 5px 9px;
+  padding: 7px 12px;
 }
 
 .feature-illustration-metric {
@@ -1434,7 +1442,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border: 1px solid color-mix(in srgb, var(--how-accent) 30%, transparent);
   background: linear-gradient(180deg, color-mix(in srgb, var(--how-accent-soft) 62%, var(--white)), color-mix(in srgb, var(--how-accent-soft) 24%, var(--white)));
   min-height: 140px;
-  padding: 13px;
+  padding: 15px;
   display: grid;
   gap: 11px;
   overflow: hidden;
@@ -1477,7 +1485,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--how-accent) 24%, transparent);
   background: color-mix(in srgb, var(--white) 88%, var(--how-accent-soft));
-  padding: 4px 9px;
+  padding: 6px 12px;
 }
 
 .how-illustration-icon {
@@ -1501,7 +1509,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border: 1px solid color-mix(in srgb, var(--how-accent) 28%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--white) 88%, var(--how-accent-soft));
-  padding: 10px;
+  padding: 12px;
   display: grid;
   gap: 8px;
   overflow: hidden;
@@ -1537,7 +1545,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 8px;
   background: color-mix(in srgb, var(--white) 88%, var(--how-accent-soft));
   text-align: center;
-  padding: 4px 4px;
+  padding: 6px 8px;
   animation: ctx-node-float 5.2s ease-in-out infinite;
 }
 
@@ -1554,7 +1562,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 9px;
   background: color-mix(in srgb, var(--how-accent) 15%, var(--white));
   text-align: center;
-  padding: 5px 8px;
+  padding: 7px 10px;
   animation: ctx-policy-pulse 4.8s ease-in-out infinite;
 }
 
@@ -1574,7 +1582,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 999px;
   background: color-mix(in srgb, var(--white) 92%, var(--how-accent-soft));
   text-align: center;
-  padding: 4px 6px;
+  padding: 6px 10px;
   animation: ctx-threshold-bob 5.6s ease-in-out infinite;
 }
 
@@ -1605,7 +1613,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border: 1px solid color-mix(in srgb, var(--how-accent) 28%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--white) 90%, var(--how-accent-soft));
-  padding: 10px;
+  padding: 12px;
   display: grid;
   gap: 8px;
   overflow: hidden;
@@ -1658,7 +1666,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 10px;
   background: color-mix(in srgb, var(--white) 88%, var(--how-accent-soft));
   text-align: center;
-  padding: 7px 8px;
+  padding: 8px 10px;
   animation: exp-summary-pulse 5.4s ease-in-out infinite;
 }
 
@@ -1704,7 +1712,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--how-accent) 28%, transparent);
   background: color-mix(in srgb, var(--white) 90%, var(--how-accent-soft));
-  padding: 4px 6px;
+  padding: 6px 10px;
   animation: exp-target-flicker 5.1s ease-in-out infinite;
 }
 
@@ -1740,7 +1748,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
   background: color-mix(in srgb, var(--primary-tint) 72%, var(--white));
-  padding: 5px 6px;
+  padding: 7px 10px;
   transition: background-color .2s ease, border-color .2s ease;
 }
 
@@ -1772,7 +1780,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 999px;
   background: var(--white);
   text-align: center;
-  padding: 4px 6px;
+  padding: 6px 10px;
   animation: how-context-chip-drift 5.8s ease-in-out infinite;
 }
 
@@ -1794,7 +1802,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--primary) 26%, transparent);
   background: var(--white);
-  padding: 4px 5px;
+  padding: 6px 8px;
   animation: how-entry-lane-pulse 6.4s ease-in-out infinite;
 }
 
@@ -1828,7 +1836,7 @@ body.motion-enhanced .landing-motion.is-visible {
   align-items: center;
   gap: 6px;
   min-height: 19px;
-  padding: 0 8px;
+  padding: 2px 10px;
   border-top: 1px solid color-mix(in srgb, var(--rule) 86%, transparent);
 }
 
@@ -1879,7 +1887,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 999px;
   border: 1px solid var(--primary-pale);
   background: var(--white);
-  padding: 4px 8px;
+  padding: 6px 10px;
   animation: how-analysis-tag-pulse 4.9s ease-in-out infinite;
 }
 
@@ -2000,7 +2008,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border: 1px dashed color-mix(in srgb, var(--primary) 30%, transparent);
   background: var(--white);
   border-radius: 10px;
-  padding: 7px 8px;
+  padding: 8px 10px;
   text-align: center;
   animation: how-export-stamp-pulse 6.1s ease-in-out infinite;
 }
@@ -2019,7 +2027,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 999px;
   border: 1px solid var(--primary-pale);
   background: var(--white);
-  padding: 4px 6px;
+  padding: 6px 10px;
   transition: background-color .2s ease, border-color .2s ease;
   animation: how-export-audience-bob 5.7s ease-in-out infinite;
 }
@@ -2044,7 +2052,7 @@ body.motion-enhanced .landing-motion.is-visible {
   border-radius: 999px;
   min-width: 88px;
   min-height: 34px;
-  padding: 5px 12px;
+  padding: 7px 14px;
   font-size: 12px;
   font-weight: 700;
   color: color-mix(in srgb, var(--how-accent) 80%, var(--ink));
@@ -2504,7 +2512,7 @@ body.motion-enhanced .landing-motion.is-visible {
 
 .role-card .badge {
   margin-bottom: 14px;
-  padding: 5px 12px;
+  padding: 7px 14px;
   border-radius: 999px;
   font-size: 12.5px;
   font-weight: 700;
@@ -2527,7 +2535,7 @@ body.motion-enhanced .landing-motion.is-visible {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
@@ -2686,10 +2694,10 @@ body.motion-enhanced .landing-motion.is-visible {
 }
 
 @media (max-width: 820px) {
-  .onboarding-grid { grid-template-columns: 1fr; padding: 20px; }
+  .onboarding-grid { grid-template-columns: 1fr; padding: 22px; }
   .onboarding-compare,
   .onboarding-features,
-  .onboarding-qa { padding: 18px 18px 20px; }
+  .onboarding-qa { padding: 20px 20px 22px; }
   .landing-hero-visual { margin-top: 6px; min-height: 260px; }
   .hero-chip-a { top: -8px; right: 8px; }
   .hero-chip-b { right: 8px; bottom: 8px; }
@@ -2719,11 +2727,11 @@ body.motion-enhanced .landing-motion.is-visible {
 
 @media (max-width: 560px) {
   .onboarding-shell { border-radius: 16px; }
-  .onboarding-grid { padding: 14px; gap: 14px; }
+  .onboarding-grid { padding: 18px; gap: 16px; }
   .onboarding-compare,
   .onboarding-features,
-  .onboarding-qa { padding: 14px 14px 16px; }
-  .onboarding-kicker { font-size: 11px; padding: 5px 9px; }
+  .onboarding-qa { padding: 18px 18px 20px; }
+  .onboarding-kicker { font-size: 11px; padding: 7px 11px; }
   .onboarding-title { margin-top: 12px; font-size: clamp(24px, 8.5vw, 32px); line-height: 1.12; letter-spacing: -.02em; }
   .onboarding-copy { margin-top: 12px; font-size: 13px; }
   .onboarding-cta-row { margin-top: 16px; }
@@ -2753,12 +2761,12 @@ body.motion-enhanced .landing-motion.is-visible {
   .hero-screen-row { grid-template-columns: 1fr 1fr; }
   .role-card-row { margin-top: 16px; gap: 10px; }
   .role-card { padding: 16px; border-radius: 14px; }
-  .role-card .badge { margin-bottom: 12px; padding: 4px 11px; font-size: 12px; }
+  .role-card .badge { margin-bottom: 12px; padding: 6px 12px; font-size: 12px; }
   .role-card h3 { font-size: 15px; margin-bottom: 6px; }
   .role-card p { font-size: 12px; }
   .role-note { margin-top: 10px; font-size: 11px; }
-  .onboarding-qa { padding: 14px 14px 16px; gap: 10px; }
-  .onboarding-qa-item { padding: 14px; }
+  .onboarding-qa { padding: 18px 18px 20px; gap: 12px; }
+  .onboarding-qa-item { padding: 16px; }
   .onboarding-qa-item h4 { font-size: 14px; margin-bottom: 6px; }
   .onboarding-qa-item p { font-size: 13px; }
 }
@@ -3392,7 +3400,7 @@ html[data-theme='dark'] .alert-icon {
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 12px 18px;
   min-height: 44px;
   border-radius: var(--r);
@@ -3460,12 +3468,12 @@ html[data-theme='dark'] .alert-icon {
 .btn-danger-ghost:hover { background: var(--red-pale); border-color: #fca5a5; transform: translateY(-1px); }
 .btn-danger-ghost:active { background: var(--red-pale); transform: translateY(0) scale(.98); }
 .btn-sm {
-  padding: 8px 12px;
+  padding: 9px 14px;
   min-height: 36px;
   font-size: 12px;
 }
 .btn-xs {
-  padding: 6px 10px;
+  padding: 7px 12px;
   min-height: 28px;
   font-size: 11px;
   border-radius: 4px;
@@ -3624,11 +3632,11 @@ html[data-theme='dark'] .btn-danger-ghost:active {
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
   background: var(--primary-tint);
   border: 1px solid var(--primary-pale);
   color: var(--primary);
-  padding: 5px 10px;
+  padding: 7px 12px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
@@ -4878,7 +4886,7 @@ html[data-theme='dark'] .stats-tbl tbody td .detail-tip {
 .insight-pill {
   border: 1px solid var(--rule);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--primary-tint);
 }
 
@@ -5606,8 +5614,8 @@ body.entry-ready .main {
 .text-muted { color: var(--ink-faint); }
 .text-sm { font-size: 13px; }
 .badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 9px; border-radius: 12px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: 12px;
   font-size: 11.5px; font-weight: 600;
 }
 .badge-blue { background: var(--primary-pale); color: var(--primary); }
@@ -5659,14 +5667,14 @@ body.entry-ready .main {
 .review-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   border: 1px solid var(--rule);
   border-radius: 999px;
   background: #fff;
   color: var(--ink-light);
   font-size: 11.5px;
   font-weight: 600;
-  padding: 6px 11px;
+  padding: 8px 12px;
 }
 .review-cta-row {
   margin-top: 14px;
@@ -6565,21 +6573,23 @@ html[data-theme='dark'] .review-rating-hint.negative {
       <div class="setup-context-grid">
         <div class="field">
           <label for="school-name">School / Institution</label>
-          <input type="text" id="school-name" maxlength="100" placeholder="e.g. Green Hills Academy" oninput="updateBarInfo()">
+          <input type="text" id="school-name" list="setup-institution-suggestions" maxlength="100" placeholder="e.g. Green Hills Academy" oninput="updateBarInfo()" onchange="syncHierarchyFromSetup()" onblur="syncHierarchyFromSetup()">
         </div>
         <div class="field">
           <label for="teacher-name">Teacher Name</label>
-          <input type="text" id="teacher-name" maxlength="100" placeholder="e.g. Ms. Amina" oninput="updateBarInfo()">
+          <input type="text" id="teacher-name" maxlength="100" placeholder="e.g. Ms. Amina" oninput="updateBarInfo()" onchange="syncHierarchyFromSetup()" onblur="syncHierarchyFromSetup()">
         </div>
         <div class="field">
           <label for="class-name">Class Name</label>
-          <input type="text" id="class-name" maxlength="100" placeholder="e.g. Grade 8 West" oninput="updateBarInfo()">
+          <input type="text" id="class-name" list="setup-class-suggestions" maxlength="100" placeholder="e.g. Grade 8 West" oninput="updateBarInfo()" onchange="syncHierarchyFromSetup()" onblur="syncHierarchyFromSetup()">
         </div>
         <div class="field">
           <label for="term-name">Term / Assessment Window</label>
           <input type="text" id="term-name" maxlength="100" placeholder="e.g. Term 2 Midterm" oninput="updateBarInfo()">
         </div>
       </div>
+      <datalist id="setup-institution-suggestions"></datalist>
+      <datalist id="setup-class-suggestions"></datalist>
       <div class="setup-context-note">This context is saved per class workspace and appears in analysis summaries and report exports.</div>
     </div>
 
@@ -6614,8 +6624,8 @@ html[data-theme='dark'] .review-rating-hint.negative {
             <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Science')">Science</button>
             <button class="btn btn-outline btn-sm" onclick="addSubjectByName('History')">History</button>
             <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Geography')">Geography</button>
-            <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Kiswahili')">Kiswahili</button>
-            <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Religious Studies')">R.E.</button>
+            <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Urdu')">Urdu</button>
+            <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Islamiyat')">Islamiyat</button>
             <button class="btn btn-outline btn-sm" onclick="addSubjectByName('Art')">Art</button>
           </div>
         </div>
@@ -6634,9 +6644,14 @@ html[data-theme='dark'] .review-rating-hint.negative {
     <div class="card">
       <div class="card-head">
         <div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/pencil.svg" alt="" aria-hidden="true"></span> Student Marks
-          <span class="tip" data-tip="Enter marks from 0 to 100. Leave a cell blank if a student was absent for that subject — blank marks are not counted in averages.">?</span>
+          <span class="tip" data-tip="Enter marks from 0 to 100. Leave a cell blank if a student missed an exam. Use the missing-mark mode control to choose how blanks affect statistics.">?</span>
         </div>
         <div class="gap-row">
+          <label for="missing-mark-mode" class="text-sm text-muted">Missing marks:</label>
+          <select id="missing-mark-mode" onchange="onMissingMarkModeChange(this.value)">
+            <option value="exclude">Exclude blanks from stats</option>
+            <option value="zero">Treat blanks as zero</option>
+          </select>
           <button class="btn btn-primary btn-sm" onclick="addStudentRow()">+ Add Student</button>
         </div>
       </div>
@@ -6647,7 +6662,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
           <tbody id="marks-tbody"></tbody>
         </table>
       </div>
-      <div class="entry-grid-help">Tip: scroll sideways on small screens to view all subjects. Values save while you type.</div>
+      <div class="entry-grid-help">Tip: scroll sideways on small screens to view all subjects. Values save while you type. <span id="save-status" class="text-muted">Local autosave is on.</span></div>
       <div class="entry-mobile-meta" id="entry-mobile-meta" aria-live="polite">Tap a mark cell to start guided entry.</div>
 
       <div class="alert alert-info" style="margin-top:14px; margin-bottom:14px; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -6659,9 +6674,9 @@ html[data-theme='dark'] .review-rating-hint.negative {
           <div class="field" style="margin:0;">
             <label for="entry-sample-pack-select">Test Dataset</label>
             <select id="entry-sample-pack-select">
-              <option value="urban-day-midterm">Urban day school - mid-term spread</option>
-              <option value="boarding-endterm-science">Boarding school - end-term science heavy</option>
-              <option value="county-continuous-assessment">County school - continuous assessment mix</option>
+              <option value="karachi-day-midterm">Karachi day school - mid-term spread</option>
+              <option value="science-stream-term-assessment">Science stream - term assessment focus</option>
+              <option value="city-campus-continuous-assessment">City campus - continuous assessment mix</option>
             </select>
           </div>
           <button class="btn btn-ghost btn-sm" onclick="loadSampleData()"><img class="ui-icon" src="icons/edu-outline/folder.svg" alt="" aria-hidden="true"> Load Test Data</button>
@@ -6674,6 +6689,8 @@ html[data-theme='dark'] .review-rating-hint.negative {
           <div class="gap-row" style="margin-bottom:12px">
             <button id="btn-import-csv" class="btn btn-outline btn-sm" onclick="importCSV()" title="Import a CSV file"><img class="ui-icon" src="icons/edu-outline/import.svg" alt="" aria-hidden="true"> Import CSV</button>
             <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Save your data as CSV"><img class="ui-icon" src="icons/edu-outline/export.svg" alt="" aria-hidden="true"> Export CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="exportWorkspaceBackup()" title="Export a full local backup"><img class="ui-icon" src="icons/edu-outline/export.svg" alt="" aria-hidden="true"> Export Backup</button>
+            <button class="btn btn-outline btn-sm" onclick="importWorkspaceBackup()" title="Restore a full local backup"><img class="ui-icon" src="icons/edu-outline/import.svg" alt="" aria-hidden="true"> Restore Backup</button>
             <button class="btn btn-outline btn-sm" onclick="toggleTableDensity()" id="btn-density-toggle" data-density-toggle="true">Compact View</button>
           </div>
           <div id="history-panel" style="min-height: 40px;"></div>
@@ -6698,6 +6715,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
     <div id="entry-context-cta" class="context-cta" aria-live="polite"></div>
 
     <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="handleCSVImport(event)">
+    <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none" onchange="handleBackupImport(event)">
   </div>
 
   <!-- ══════════════════ ANALYSIS ══════════════════ -->
@@ -6922,6 +6940,7 @@ const state = {
   userRole: null,
   subjects: [],
   students: [],   // [{id, name, marks:{subject: value}}]
+  missingMarkMode: 'exclude',
   analysis: null,
   analysisDetailView: false,
   analysisRankSort: 'weighted-total',
@@ -6943,7 +6962,15 @@ const PORTFOLIO_KEY = 'eduStats_portfolio_v1';
 const PORTFOLIO_VERSION = 1;
 const INSTITUTIONS_KEY = 'eduStats_institutions_v1';
 const ROLE_KEY = 'eduStats_userRole_v1';
+const BACKUP_VERSION = 1;
+const MISSING_MARK_MODE_EXCLUDE = 'exclude';
+const MISSING_MARK_MODE_ZERO = 'zero';
+const AUTO_SAVE_DEBOUNCE_MS = 450;
+const AUTO_SAVE_BACKUP_MS = 12000;
 let portfolioAutoSaveTimer = null;
+let autoSaveDebounceTimer = null;
+let saveStatusPulseTimer = null;
+let lastSavedAt = 0;
 let defaultPanelMarkup = null;
 
 function deepClone(value) {
@@ -6952,6 +6979,212 @@ function deepClone(value) {
 
 function makeClassContextId() {
   return `cls_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeMissingMarkMode(value) {
+  return value === MISSING_MARK_MODE_ZERO ? MISSING_MARK_MODE_ZERO : MISSING_MARK_MODE_EXCLUDE;
+}
+
+function getMissingMarkModeLabel(mode = state.missingMarkMode) {
+  return normalizeMissingMarkMode(mode) === MISSING_MARK_MODE_ZERO
+    ? 'Treat blanks as zero'
+    : 'Exclude blanks from stats';
+}
+
+function isBlankMarkValue(raw) {
+  return raw === '' || raw === null || raw === undefined;
+}
+
+function resolveMarkForStats(raw, subject, mode = state.missingMarkMode) {
+  const normalizedMode = normalizeMissingMarkMode(mode);
+  if (isBlankMarkValue(raw)) {
+    return normalizedMode === MISSING_MARK_MODE_ZERO ? 0 : null;
+  }
+  const parsed = parseFloat(raw);
+  if (Number.isNaN(parsed)) return null;
+  const max = getSubjectMaxMark(subject);
+  return Math.min(max, Math.max(0, parsed));
+}
+
+function getStudentMissingCount(student) {
+  return state.subjects.filter(subj => isBlankMarkValue(student?.marks?.[subj])).length;
+}
+
+function updateSaveStatus(message = '') {
+  const statusEl = $('save-status');
+  if (!statusEl) return;
+
+  if (message) {
+    statusEl.textContent = message;
+    return;
+  }
+
+  if (!lastSavedAt) {
+    statusEl.textContent = 'Local autosave is on.';
+    return;
+  }
+
+  const secondsAgo = Math.max(0, Math.round((Date.now() - lastSavedAt) / 1000));
+  if (secondsAgo < 2) {
+    statusEl.textContent = 'Saved locally just now.';
+  } else if (secondsAgo < 60) {
+    statusEl.textContent = `Saved locally ${secondsAgo}s ago.`;
+  } else {
+    const minsAgo = Math.round(secondsAgo / 60);
+    statusEl.textContent = `Saved locally ${minsAgo}m ago.`;
+  }
+}
+
+function scheduleAutoSave() {
+  updateSaveStatus('Saving locally...');
+  if (autoSaveDebounceTimer) clearTimeout(autoSaveDebounceTimer);
+  autoSaveDebounceTimer = setTimeout(() => {
+    syncActiveClassFromState();
+  }, AUTO_SAVE_DEBOUNCE_MS);
+}
+
+function updateMissingMarkModeUI() {
+  const select = $('missing-mark-mode');
+  if (select) select.value = normalizeMissingMarkMode(state.missingMarkMode);
+}
+
+function findInstitutionByName(name) {
+  const needle = String(name || '').trim().toLowerCase();
+  if (!needle) return null;
+  return getOrInitInstitutions().find(inst => (inst.name || '').trim().toLowerCase() === needle) || null;
+}
+
+function findClassByName(institution, className) {
+  if (!institution || !Array.isArray(institution.classes)) return null;
+  const needle = String(className || '').trim().toLowerCase();
+  if (!needle) return null;
+  return institution.classes.find(cls => (cls.name || '').trim().toLowerCase() === needle) || null;
+}
+
+function resolveSetupSuggestionInstitution() {
+  const schoolName = $('school-name')?.value.trim() || '';
+  if (schoolName) {
+    const fromName = findInstitutionByName(schoolName);
+    if (fromName) return fromName;
+  }
+
+  const active = getActiveClassContext();
+  if (active?.institutionId) {
+    const linked = getOrInitInstitutions().find(inst => inst.id === active.institutionId) || null;
+    if (linked) return linked;
+  }
+
+  if (state.selectedInstitutionId) {
+    return getOrInitInstitutions().find(inst => inst.id === state.selectedInstitutionId) || null;
+  }
+
+  return null;
+}
+
+function updateSetupHierarchySuggestions() {
+  const instList = $('setup-institution-suggestions');
+  const classList = $('setup-class-suggestions');
+  if (!instList || !classList) return;
+
+  const institutions = getOrInitInstitutions();
+  instList.innerHTML = institutions
+    .map(inst => `<option value="${esc(inst.name)}"></option>`)
+    .join('');
+
+  const scopedInstitution = resolveSetupSuggestionInstitution();
+  const classes = scopedInstitution && Array.isArray(scopedInstitution.classes) ? scopedInstitution.classes : [];
+  classList.innerHTML = classes
+    .map(cls => `<option value="${esc(cls.name)}"></option>`)
+    .join('');
+}
+
+function syncHierarchyFromSetup() {
+  try {
+    const active = getActiveClassContext();
+    if (!active) return;
+
+    const schoolNameInput = $('school-name');
+    const classNameInput = $('class-name');
+    const teacherNameInput = $('teacher-name');
+    if (!schoolNameInput || !classNameInput) return;
+
+    const schoolName = schoolNameInput.value.trim();
+    const className = classNameInput.value.trim();
+    const teacherName = teacherNameInput?.value.trim() || '';
+    let changed = false;
+
+    let institution = null;
+    if (schoolName && !validateInstitutionName(schoolName)) {
+      institution = findInstitutionByName(schoolName);
+      if (!institution) {
+        institution = {
+          id: 'inst_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          name: schoolName,
+          classes: []
+        };
+        getOrInitInstitutions().push(institution);
+        changed = true;
+      }
+
+      if (schoolNameInput.value !== institution.name) schoolNameInput.value = institution.name;
+      if (active.schoolName !== institution.name) {
+        active.schoolName = institution.name;
+        changed = true;
+      }
+      if (active.institutionId !== institution.id) {
+        active.institutionId = institution.id;
+        changed = true;
+      }
+
+      if (state.selectedInstitutionId !== institution.id) {
+        state.selectedInstitutionId = institution.id;
+      }
+    }
+
+    if (institution && className && !validateClassName(className)) {
+      if (!Array.isArray(institution.classes)) institution.classes = [];
+
+      let linkedClass = findClassByName(institution, className);
+      if (!linkedClass) {
+        linkedClass = {
+          id: 'class_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          name: className,
+          teacherName: teacherName,
+          students: [],
+          subjects: []
+        };
+        institution.classes.push(linkedClass);
+        changed = true;
+      } else if (teacherName && teacherName !== linkedClass.teacherName) {
+        linkedClass.teacherName = teacherName;
+        changed = true;
+      }
+
+      if (classNameInput.value !== linkedClass.name) classNameInput.value = linkedClass.name;
+      if (active.className !== linkedClass.name) {
+        active.className = linkedClass.name;
+        changed = true;
+      }
+      if (active.institutionClassId !== linkedClass.id) {
+        active.institutionClassId = linkedClass.id;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      active.updatedAt = Date.now();
+      persistPortfolioData();
+      persistPortfolio();
+      renderInstitutionsDashboard();
+      renderInstitutionSelect();
+      renderClassSwitcher();
+      renderScopeStrip();
+    }
+
+    updateSetupHierarchySuggestions();
+  } catch (err) {
+    console.warn('Failed to sync setup hierarchy.', err);
+  }
 }
 
 function getClassContextLabel(ctx, fallbackIndex = 1) {
@@ -6974,6 +7207,7 @@ function createClassContext(partial = {}) {
     className: partial.className || '',
     termName: partial.termName || '',
     role: partial.role || state.userRole || null,
+    missingMarkMode: normalizeMissingMarkMode(partial.missingMarkMode ?? state.missingMarkMode),
     subjects: Array.isArray(partial.subjects) ? [...partial.subjects] : [],
     students: Array.isArray(partial.students) ? deepClone(partial.students) : [],
     subjectMaxMarks: partial.subjectMaxMarks ? { ...partial.subjectMaxMarks } : {},
@@ -6993,7 +7227,14 @@ function persistPortfolio() {
     activeClassId: state.activeClassId,
     classes: state.classContexts
   };
-  localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(payload));
+  try {
+    localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(payload));
+    lastSavedAt = Date.now();
+    updateSaveStatus();
+  } catch (err) {
+    updateSaveStatus('Autosave failed. Export backup now.');
+    console.warn('Portfolio save failed.', err);
+  }
 }
 
 function restoreEmptyDataPanels() {
@@ -7011,6 +7252,7 @@ function syncActiveClassFromState(persist = true) {
   active.teacherName = $('teacher-name')?.value.trim() || '';
   active.className = $('class-name')?.value.trim() || '';
   active.termName = $('term-name')?.value.trim() || '';
+  active.missingMarkMode = normalizeMissingMarkMode(state.missingMarkMode);
   active.subjects = [...state.subjects];
   active.students = deepClone(state.students);
   active.subjectMaxMarks = { ...state.subjectMaxMarks };
@@ -7026,6 +7268,7 @@ function syncActiveClassFromState(persist = true) {
 function applyClassContextToState(ctx) {
   state.subjects = [...(ctx.subjects || [])];
   state.students = deepClone(ctx.students || []);
+  state.missingMarkMode = normalizeMissingMarkMode(ctx.missingMarkMode);
   state.subjectMaxMarks = { ...(ctx.subjectMaxMarks || {}) };
   state.subjectFailMarks = { ...(ctx.subjectFailMarks || {}) };
   state.analysis = ctx.analysis ? deepClone(ctx.analysis) : null;
@@ -7036,6 +7279,7 @@ function applyClassContextToState(ctx) {
   $('teacher-name').value = ctx.teacherName || '';
   $('class-name').value = ctx.className || '';
   $('term-name').value = ctx.termName || '';
+  updateMissingMarkModeUI();
 
   ensureSubjectThresholds();
   renderSubjectChips();
@@ -7084,6 +7328,7 @@ function switchInstitution(institutionId) {
   state.selectedInstitutionId = institutionId || '';
   renderInstitutionSelect();
   renderClassSwitcher();
+  updateSetupHierarchySuggestions();
   
   // Auto-switch to first class in selected institution if available
   const select = $('class-switcher-select');
@@ -7742,7 +7987,8 @@ function computeAnalysisInWorker() {
         students: state.students,
         subjects: state.subjects,
         subjectMaxMarks: state.subjectMaxMarks,
-        subjectFailMarks: state.subjectFailMarks
+        subjectFailMarks: state.subjectFailMarks,
+        missingMarkMode: normalizeMissingMarkMode(state.missingMarkMode)
       };
       const timeoutId = setTimeout(() => {
         worker.terminate();
@@ -8596,7 +8842,7 @@ function hasAnyUserData() {
 function initRefreshWarning() {
   window.addEventListener('beforeunload', (e) => {
     if (!hasAnyUserData()) return;
-    const warning = 'If you refresh this page, all entered data will be lost. Do you want to continue?';
+    const warning = 'Your workspace is saved locally. Recent keystrokes from the last moment may still be syncing. Leave this page anyway?';
     e.preventDefault();
     e.returnValue = warning;
     return warning;
@@ -9093,35 +9339,40 @@ const Stat = {
     const { students, subjects } = state;
     if(!students.length||!subjects.length) return null;
     ensureSubjectThresholds();
+    const missingMarkMode = normalizeMissingMarkMode(state.missingMarkMode);
 
     // Per-student means
-    const studentStats = students.map(s=>{
-      const vals = subjects.map(subj=>{
-        const v=s.marks[subj];
-        return (v!==''&&v!==undefined&&v!==null) ? parseFloat(v) : NaN;
-      }).filter(v=>!isNaN(v));
-      const normalizedVals = subjects.map(subj => {
-        const v = s.marks[subj];
-        const num = (v!==''&&v!==undefined&&v!==null) ? parseFloat(v) : NaN;
-        if (isNaN(num)) return NaN;
-        return (num / getSubjectMaxMark(subj)) * 100;
+    const studentStats = students.map(s => {
+      let missingCount = 0;
+      const vals = subjects.map(subj => {
+        const raw = s.marks[subj];
+        if (isBlankMarkValue(raw)) missingCount += 1;
+        const resolved = resolveMarkForStats(raw, subj, missingMarkMode);
+        return resolved === null ? NaN : resolved;
       }).filter(v => !isNaN(v));
+
+      const normalizedVals = subjects.map(subj => {
+        const resolved = resolveMarkForStats(s.marks[subj], subj, missingMarkMode);
+        if (resolved === null) return NaN;
+        return (resolved / getSubjectMaxMark(subj)) * 100;
+      }).filter(v => !isNaN(v));
+
       return {
         ...s,
         validMarks: vals,
         normalizedMarks: normalizedVals,
+        missingCount,
         mean: normalizedVals.length ? Stat.mean(normalizedVals) : null
       };
     });
 
     // Per-subject stats
     const subjectStats = {};
-    subjects.forEach(subj=>{
-      const entries = studentStats.map(s=>{
-        const v = s.marks[subj];
-        const num = (v!==''&&v!==undefined&&v!==null) ? parseFloat(v) : NaN;
-        return { id:s.id, name:s.name, value:num };
-      }).filter(e=>!isNaN(e.value));
+    subjects.forEach(subj => {
+      const entries = studentStats.map(s => {
+        const resolved = resolveMarkForStats(s.marks[subj], subj, missingMarkMode);
+        return { id: s.id, name: s.name, value: resolved };
+      }).filter(e => e.value !== null && !isNaN(e.value));
 
       const vals = entries.map(e=>e.value);
       const normalizedVals = Stat.normalizeMarks(vals, subj);
@@ -9178,12 +9429,17 @@ const Stat = {
 
     const overallPassRate = totals.totalAssessments ? (100 * totals.totalPasses) / totals.totalAssessments : null;
     const overallFailRate = totals.totalAssessments ? (100 * totals.totalFails) / totals.totalAssessments : null;
+    const studentsWithMissingMarks = studentStats.filter(s => s.missingCount > 0).length;
+    const totalMissingMarks = studentStats.reduce((sum, s) => sum + (s.missingCount || 0), 0);
 
     return { studentStats, subjectStats, classBox, sorted,
              lowerQ, topQ, botQ, meanOutliers,
              classMean: Stat.mean(means),
              classMedian: Stat.median(means),
              classMeans: means,
+         missingMarkMode,
+         studentsWithMissingMarks,
+         totalMissingMarks,
              totalAssessments: totals.totalAssessments,
              totalPasses: totals.totalPasses,
              totalFails: totals.totalFails,
@@ -9213,7 +9469,9 @@ function updateBarInfo() {
   if(teacher) parts.push(teacher);
   $('bar-class-info').textContent = parts.join(' · ');
   renderScopeStrip();
-  syncActiveClassFromState();
+  updateSetupHierarchySuggestions();
+  syncActiveClassFromState(false);
+  scheduleAutoSave();
   renderClassSwitcher();
 }
 
@@ -9397,6 +9655,7 @@ function updateSubjectMaxMark(subject, value) {
   state.subjectFailMarks[subject] = defaultFailMarkForMax(safeMax);
   renderMaxMarksInputs();
   rebuildMarksTable();
+  scheduleAutoSave();
   updateContextualCTAs();
 }
 
@@ -9406,10 +9665,12 @@ function updateSubjectFailMark(subject, value) {
   const fail = isNaN(numeric) ? defaultFailMarkForMax(maxMark) : numeric;
   state.subjectFailMarks[subject] = Math.min(maxMark, Math.max(0, fail));
   renderMaxMarksInputs();
+  scheduleAutoSave();
   updateContextualCTAs();
 }
 
 function proceedToEntry() {
+  syncHierarchyFromSetup();
   rebuildMarksTable();
   switchTab('entry');
   requestAnimationFrame(() => {
@@ -9424,118 +9685,119 @@ function proceedToEntry() {
 }
 
 const SAMPLE_DATASETS = {
-  'urban-day-midterm': {
-    schoolName: 'Riverside Mixed Day Secondary School',
-    teacherName: 'Ms. Ruth Ndlovu',
+  'karachi-day-midterm': {
+    schoolName: 'Karachi Model Secondary School',
+    teacherName: 'Ms. Ayesha Khan',
     className: 'Grade 9B',
     termName: 'Term 1 2026 - Mid-Term Assessment',
-    subjects: ['Mathematics','English','Integrated Science','Kiswahili','Social Studies','Computer Studies','Agriculture'],
+    subjects: ['Mathematics','English','Urdu','General Science','Pakistan Studies','Computer Science','Islamiyat'],
     subjectMaxMarks: {
       Mathematics: 100,
       English: 100,
-      'Integrated Science': 80,
-      Kiswahili: 100,
-      'Social Studies': 60,
-      'Computer Studies': 50,
-      Agriculture: 40
+      Urdu: 100,
+      'General Science': 80,
+      'Pakistan Studies': 75,
+      'Computer Science': 75,
+      Islamiyat: 50
     },
     records: [
-      { id: 'G9B001', name: 'Aisha Mwangi', marks: [91, 84, 72, 88, 53, 45, 34] },
-      { id: 'G9B002', name: 'Brian Otieno', marks: [67, 58, 49, 62, 37, 31, 24] },
-      { id: 'G9B003', name: 'Carol Njeri', marks: [78, 81, 66, 74, 44, 39, 30] },
-      { id: 'G9B004', name: 'David Kiptoo', marks: [42, 46, 31, 39, 24, 18, 14] },
-      { id: 'G9B005', name: 'Esther Wanjiku', marks: [95, 93, 78, 90, 57, 49, 38] },
-      { id: 'G9B006', name: 'Farid Yusuf', marks: [55, 61, 44, 58, 34, 26, 20] },
-      { id: 'G9B007', name: 'Grace Muthoni', marks: [83, 76, 63, 80, 48, 41, 32] },
-      { id: 'G9B008', name: 'Henry Maina', marks: [36, 40, 28, 35, 20, 15, 11] },
-      { id: 'G9B009', name: 'Irene Chebet', marks: [88, 86, 70, 84, 51, 44, 35] },
-      { id: 'G9B010', name: 'Joel Musyoka', marks: [73, 69, 54, 71, 40, 34, 27] },
-      { id: 'G9B011', name: 'Kevin Simiyu', marks: [64, 72, 57, 68, 42, 36, 29] },
-      { id: 'G9B012', name: 'Lillian Akinyi', marks: [49, 53, 37, 47, 28, 22, 17] },
-      { id: 'G9B013', name: 'Mercy Atieno', marks: [92, 89, 75, 91, 55, 47, 36] },
-      { id: 'G9B014', name: 'Noah Wekesa', marks: [58, 62, 46, 60, 35, 29, 22] },
-      { id: 'G9B015', name: 'Olivia Wambui', marks: [81, 79, 68, 77, 46, 40, 31] },
-      { id: 'G9B016', name: 'Peter Ochieng', marks: [27, 34, 19, 30, 16, 12, 8] },
-      { id: 'G9B017', name: 'Queen Naliaka', marks: [70, '', 52, 66, 39, 33, 25] },
-      { id: 'G9B018', name: 'Samuel Kariuki', marks: [85, 88, 71, 83, '', 46, 34] },
-      { id: 'G9B019', name: 'Tabitha Mumo', marks: [59, 87, 35, 90, 56, 21, 18] },
-      { id: 'G9B020', name: 'Victor Mwale', marks: [89, 52, 74, 48, 29, 43, 33] }
+      { id: 'G9B001', name: 'Ali Raza', marks: [91, 84, 80, 72, 58, 62, 41] },
+      { id: 'G9B002', name: 'Fatima Ahmed', marks: [67, 58, 64, 49, 37, 43, 29] },
+      { id: 'G9B003', name: 'Hamza Malik', marks: [78, 81, 76, 66, 44, 55, 34] },
+      { id: 'G9B004', name: 'Areeba Siddiqui', marks: [42, 46, 39, 31, 24, 29, 19] },
+      { id: 'G9B005', name: 'Usman Iqbal', marks: [95, 93, 89, 78, 63, 69, 47] },
+      { id: 'G9B006', name: 'Zainab Noor', marks: [55, 61, 59, 44, 34, 38, 25] },
+      { id: 'G9B007', name: 'Bilal Hussain', marks: [83, 76, 73, 63, 48, 58, 39] },
+      { id: 'G9B008', name: 'Hira Khan', marks: [36, 40, 33, 28, 20, 22, 15] },
+      { id: 'G9B009', name: 'Muneeb Saleem', marks: [88, 86, 79, 70, 57, 63, 42] },
+      { id: 'G9B010', name: 'Sana Tariq', marks: [73, 69, 71, 54, 40, 46, 31] },
+      { id: 'G9B011', name: 'Talha Javed', marks: [64, 72, 68, 57, 42, 50, 32] },
+      { id: 'G9B012', name: 'Iqra Aslam', marks: [49, 53, 51, 37, 28, 34, 22] },
+      { id: 'G9B013', name: 'Saad Qureshi', marks: [92, 89, 86, 75, 61, 68, 45] },
+      { id: 'G9B014', name: 'Maham Rahman', marks: [58, 62, 60, 46, 35, 41, 28] },
+      { id: 'G9B015', name: 'Ayan Shah', marks: [81, 79, 77, 68, 52, 57, 37] },
+      { id: 'G9B016', name: 'Mehwish Ali', marks: [27, 34, 29, 19, 16, 18, 11] },
+      { id: 'G9B017', name: 'Nimra Waheed', marks: [70, '', 66, 52, 39, 45, 30] },
+      { id: 'G9B018', name: 'Daniyal Khan', marks: [85, 88, 84, 71, '', 64, 43] },
+      { id: 'G9B019', name: 'Laiba Imran', marks: [59, 57, 63, 35, 56, 31, 21] },
+      { id: 'G9B020', name: 'Rayan Butt', marks: [89, 82, 74, 74, 49, 61, 40] }
     ],
-    toastMessage: 'Urban day-school dataset loaded. You can now test entry, analysis, graphs, and reports.'
+    toastMessage: 'Karachi day-school dataset loaded. You can now test entry, analysis, graphs, and reports.'
   },
-  'boarding-endterm-science': {
-    schoolName: 'Hillcrest Boarding Academy',
-    teacherName: 'Mr. Peter Maseko',
+  'science-stream-term-assessment': {
+    schoolName: 'North Karachi Science College',
+    teacherName: 'Mr. Hassan Ahmed',
     className: 'Grade 10A',
     termName: 'Term 1 2026 - End-Term Exams',
-    subjects: ['Mathematics','English','Biology','Chemistry','Physics','History','ICT'],
+    subjects: ['Mathematics','English','Physics','Chemistry','Biology','Computer Science','Urdu'],
     subjectMaxMarks: {
       Mathematics: 100,
       English: 100,
-      Biology: 80,
-      Chemistry: 80,
       Physics: 80,
-      History: 60,
-      ICT: 50
+      Chemistry: 80,
+      Biology: 80,
+      'Computer Science': 75,
+      Urdu: 100
     },
     records: [
-      { id: 'G10A001', name: 'Amara Ndlovu', marks: [94, 88, 74, 72, 70, 51, 46] },
-      { id: 'G10A002', name: 'Beth Atieno', marks: [89, 91, 76, 75, 73, 55, 47] },
-      { id: 'G10A003', name: 'Chioma Maina', marks: [92, 86, 71, 74, 68, 49, 44] },
-      { id: 'G10A004', name: 'Diana Wanjiru', marks: [87, 90, 70, 69, 67, 53, 45] },
-      { id: 'G10A005', name: 'Evelyn Sifa', marks: [96, 93, 79, 77, 76, 58, 49] },
-      { id: 'G10A006', name: 'Faith Musonda', marks: [85, 84, 68, 66, 65, 47, 42] },
-      { id: 'G10A007', name: 'Gloria Njeri', marks: [90, 87, 73, 72, 71, 52, 46] },
-      { id: 'G10A008', name: 'Hilda Otieno', marks: [88, 85, 69, 68, 66, 48, 43] },
-      { id: 'G10A009', name: 'Imani Wekesa', marks: [93, 89, 75, 74, 72, 54, 48] },
-      { id: 'G10A010', name: 'Janet Moyo', marks: [86, 83, 67, 65, 64, 46, 41] },
-      { id: 'G10A011', name: 'Keisha Kamau', marks: [91, 90, 74, 73, 71, 55, 47] },
-      { id: 'G10A012', name: 'Lydia Chebet', marks: [95, 92, 78, 76, 75, 57, 49] },
-      { id: 'G10A013', name: 'Miriam Mwikali', marks: [84, 82, 66, 64, 62, 45, 40] },
-      { id: 'G10A014', name: 'Nadia Akinyi', marks: [90, '', 72, 71, 69, 50, 45] },
-      { id: 'G10A015', name: 'Olive Tendo', marks: [97, 94, 80, 78, 77, 59, 50] }
+      { id: 'G10A001', name: 'Ahmed Rauf', marks: [94, 88, 74, 72, 70, 63, 76] },
+      { id: 'G10A002', name: 'Hiba Sohail', marks: [89, 91, 76, 75, 73, 67, 81] },
+      { id: 'G10A003', name: 'Arham Nadeem', marks: [92, 86, 71, 74, 68, 59, 74] },
+      { id: 'G10A004', name: 'Maryam Zaidi', marks: [87, 90, 70, 69, 67, 61, 79] },
+      { id: 'G10A005', name: 'Rehan Ali', marks: [96, 93, 79, 77, 76, 71, 83] },
+      { id: 'G10A006', name: 'Noor Fatima', marks: [85, 84, 68, 66, 65, 54, 69] },
+      { id: 'G10A007', name: 'Khizar Anwar', marks: [90, 87, 73, 72, 71, 66, 78] },
+      { id: 'G10A008', name: 'Abeer Khan', marks: [88, 85, 69, 68, 66, 58, 73] },
+      { id: 'G10A009', name: 'Yousuf Ilyas', marks: [93, 89, 75, 74, 72, 70, 82] },
+      { id: 'G10A010', name: 'Emaan Faisal', marks: [86, 83, 67, 65, 64, 55, 70] },
+      { id: 'G10A011', name: 'Shayan Qadir', marks: [91, 90, 74, 73, 71, 65, 80] },
+      { id: 'G10A012', name: 'Anaya Tariq', marks: [95, 92, 78, 76, 75, 72, 84] },
+      { id: 'G10A013', name: 'Omer Saeed', marks: [84, 82, 66, 64, 62, 53, 68] },
+      { id: 'G10A014', name: 'Mishal Ahsan', marks: [90, '', 72, 71, 69, 60, 77] },
+      { id: 'G10A015', name: 'Dua Rehman', marks: [97, 94, 80, 78, 77, 74, 86] }
     ],
-    toastMessage: 'Boarding school end-term dataset loaded. This one is ideal for ranking and distinction tests.'
+    toastMessage: 'Science-stream term assessment dataset loaded. This one is ideal for ranking and distinction tests.'
   },
-  'county-continuous-assessment': {
-    schoolName: 'Lakeview County School',
-    teacherName: 'Ms. Hellen Banda',
+  'city-campus-continuous-assessment': {
+    schoolName: 'City Campus Public School, Karachi',
+    teacherName: 'Ms. Sana Khalid',
     className: 'Grade 8C',
     termName: 'Term 2 2026 - Continuous Assessment',
-    subjects: ['Mathematics','English','General Science','Kiswahili','Social Studies','Creative Arts'],
+    subjects: ['Mathematics','English','Urdu','General Science','Social Studies','Islamiyat','Creative Arts'],
     subjectMaxMarks: {
       Mathematics: 100,
       English: 100,
+      Urdu: 100,
       'General Science': 80,
-      Kiswahili: 100,
       'Social Studies': 60,
+      Islamiyat: 50,
       'Creative Arts': 40
     },
     records: [
-      { id: 'G8C001', name: 'Abel Karanja', marks: [34, 41, 29, 46, 24, 17] },
-      { id: 'G8C002', name: 'Brenda Limo', marks: [48, 52, 37, 58, 31, 22] },
-      { id: 'G8C003', name: 'Caleb Muli', marks: [27, 36, 22, 40, 19, 14] },
-      { id: 'G8C004', name: 'Doris Achieng', marks: [55, 60, 45, 64, 35, 25] },
-      { id: 'G8C005', name: 'Elly Waweru', marks: [31, 38, 25, 42, 21, 16] },
-      { id: 'G8C006', name: 'Frida Mumbi', marks: [46, 50, 34, 57, 30, 21] },
-      { id: 'G8C007', name: 'George Njoroge', marks: [22, 29, 16, 33, 14, 11] },
-      { id: 'G8C008', name: 'Hassan Ali', marks: [61, 67, 52, 71, 41, 29] },
-      { id: 'G8C009', name: 'Ivy Chepkemoi', marks: [39, 44, 31, 49, 27, 19] },
-      { id: 'G8C010', name: 'Juma Said', marks: [18, 25, 13, 28, 11, 9] },
-      { id: 'G8C011', name: 'Khadija Noor', marks: [43, '', 30, 52, 26, 20] },
-      { id: 'G8C012', name: 'Lazarus Omari', marks: [52, 58, '', 61, 34, 24] },
-      { id: 'G8C013', name: 'Mary Atieno', marks: [29, 35, 24, 39, 18, 15] },
-      { id: 'G8C014', name: 'Nixon Okoth', marks: [37, 43, 28, 47, 23, 18] },
-      { id: 'G8C015', name: 'Prisca Wanjiru', marks: [57, 62, 46, 66, 36, 26] }
+      { id: 'G8C001', name: 'Abdullah Khan', marks: [34, 41, 38, 29, 24, 19, 17] },
+      { id: 'G8C002', name: 'Arooba Ahmed', marks: [48, 52, 49, 37, 31, 25, 22] },
+      { id: 'G8C003', name: 'Hamdan Irfan', marks: [27, 36, 31, 22, 19, 14, 14] },
+      { id: 'G8C004', name: 'Kainat Ali', marks: [55, 60, 58, 45, 35, 29, 25] },
+      { id: 'G8C005', name: 'Subhan Tariq', marks: [31, 38, 34, 25, 21, 16, 16] },
+      { id: 'G8C006', name: 'Eshal Noor', marks: [46, 50, 47, 34, 30, 24, 21] },
+      { id: 'G8C007', name: 'Awais Malik', marks: [22, 29, 25, 16, 14, 12, 11] },
+      { id: 'G8C008', name: 'Hassan Ali', marks: [61, 67, 63, 52, 41, 32, 29] },
+      { id: 'G8C009', name: 'Mahnoor Javed', marks: [39, 44, 40, 31, 27, 21, 19] },
+      { id: 'G8C010', name: 'Rafay Qasim', marks: [18, 25, 21, 13, 11, 10, 9] },
+      { id: 'G8C011', name: 'Zoya Siddiq', marks: [43, '', 39, 30, 26, 18, 20] },
+      { id: 'G8C012', name: 'Samiullah Khan', marks: [52, 58, '', 41, 34, 27, 24] },
+      { id: 'G8C013', name: 'Minahil Asif', marks: [29, 35, 33, 24, 18, 14, 15] },
+      { id: 'G8C014', name: 'Huzaifa Shah', marks: [37, 43, 36, 28, 23, 17, 18] },
+      { id: 'G8C015', name: 'Laiba Rauf', marks: [57, 62, 60, 46, 36, 28, 26] }
     ],
-    toastMessage: 'County school continuous-assessment dataset loaded. Useful for intervention and recovery tracking.'
+    toastMessage: 'City campus continuous-assessment dataset loaded. Useful for intervention and recovery tracking.'
   }
 };
 
 function loadSampleData(selectedKey) {
   const picker = $('entry-sample-pack-select');
-  const chosen = selectedKey || (picker ? picker.value : 'urban-day-midterm');
-  const sample = SAMPLE_DATASETS[chosen] || SAMPLE_DATASETS['urban-day-midterm'];
+  const chosen = selectedKey || (picker ? picker.value : 'karachi-day-midterm');
+  const sample = SAMPLE_DATASETS[chosen] || SAMPLE_DATASETS['karachi-day-midterm'];
 
   $('school-name').value = sample.schoolName;
   $('teacher-name').value = sample.teacherName;
@@ -9560,6 +9822,7 @@ function loadSampleData(selectedKey) {
   updateBarInfo();
   rebuildMarksTable();
   updateContextualCTAs();
+  scheduleAutoSave();
   toast(sample.toastMessage,'ok');
   switchTab('entry');
 }
@@ -9610,10 +9873,7 @@ function renderMarksRows() {
   }
   tbody.innerHTML = state.students.map((s,i)=>{
     const mean = computeStudentMean(s);
-    const entered = state.subjects.filter(subj => {
-      const v = s.marks[subj];
-      return v !== '' && v !== null && v !== undefined && !isNaN(parseFloat(v));
-    }).length;
+    const entered = state.subjects.length - getStudentMissingCount(s);
     const isComplete = state.subjects.length > 0 && entered === state.subjects.length;
     let row = `<tr data-idx="${i}" class="${isComplete ? 'is-complete' : ''}">
       <td>${i+1}</td>
@@ -9667,13 +9927,28 @@ function initMarkCellDelegates() {
 }
 
 function computeStudentMean(student) {
-  const vals = state.subjects.map(subj=>{
-    const v=student.marks[subj];
-    const num = (v!==''&&v!==undefined&&v!==null) ? parseFloat(v) : NaN;
-    if (isNaN(num)) return NaN;
-    return (num / getSubjectMaxMark(subj)) * 100;
-  }).filter(v=>!isNaN(v));
+  const mode = normalizeMissingMarkMode(state.missingMarkMode);
+  const vals = state.subjects.map(subj => {
+    const resolved = resolveMarkForStats(student?.marks?.[subj], subj, mode);
+    if (resolved === null) return NaN;
+    return (resolved / getSubjectMaxMark(subj)) * 100;
+  }).filter(v => !isNaN(v));
   return vals.length ? Stat.mean(vals) : null;
+}
+
+function onMissingMarkModeChange(value) {
+  const nextMode = normalizeMissingMarkMode(value);
+  if (nextMode === state.missingMarkMode) return;
+  state.missingMarkMode = nextMode;
+  updateMissingMarkModeUI();
+  rebuildMarksTable();
+  scheduleAutoSave();
+  if (state.analysis) {
+    setInlineValidation(`Missing-mark mode set to "${getMissingMarkModeLabel(nextMode)}". Recomputing analysis...`, 'warn');
+    runAnalysis();
+    return;
+  }
+  updateContextualCTAs();
 }
 
 function formatMarkValue(value) {
@@ -9722,6 +9997,7 @@ function addStudentRow() {
   state.students.push({ id:genStudentId(), name:'', marks:{} });
   renderMarksRows();
   updateEntryCount();
+  scheduleAutoSave();
   // Focus the new name field
   const rows = $('marks-tbody').querySelectorAll('tr');
   const last = rows[rows.length-1];
@@ -9733,6 +10009,7 @@ function deleteStudent(idx) {
   state.students.splice(idx,1);
   renderMarksRows();
   updateEntryCount();
+  scheduleAutoSave();
   updateContextualCTAs();
 }
 
@@ -9740,6 +10017,7 @@ function updateStudentId(idx,val) {
   const s = state.students[idx];
   if(!s) return;
   s.id = val;
+  scheduleAutoSave();
   updateContextualCTAs();
 }
 
@@ -9747,6 +10025,7 @@ function updateStudentName(idx,val) {
   const s = state.students[idx];
   if(!s) return;
   s.name = val;
+  scheduleAutoSave();
   updateContextualCTAs();
 }
 
@@ -9803,6 +10082,7 @@ function updateMark(idx, subj, val, commit=false, inputEl=null) {
       meanCell.textContent = m !== null ? fmtNum(m) : '—';
     }
   }
+  scheduleAutoSave();
   updateContextualCTAs();
 }
 
@@ -9938,6 +10218,79 @@ function updateEntryCount() {
   updateEntryMobileMetaSummary();
 }
 
+function exportWorkspaceBackup() {
+  try {
+    syncActiveClassFromState(false);
+    const payload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      activeClassId: state.activeClassId,
+      classes: deepClone(state.classContexts),
+      userRole: state.userRole || null,
+      institutions: deepClone(state.institutions || [])
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const classLabel = ($('class-name')?.value || 'workspace').replace(/\s+/g, '_');
+    a.download = `EduStats_Backup_${classLabel}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Backup exported successfully.', 'ok');
+  } catch (err) {
+    toast('Backup export failed. Please try again.', 'err');
+  }
+}
+
+function importWorkspaceBackup() {
+  $('backup-file-input')?.click();
+}
+
+function handleBackupImport(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const parsed = JSON.parse(String(evt?.target?.result || '{}'));
+      if (!Array.isArray(parsed?.classes) || !parsed.classes.length) {
+        throw new Error('Backup file has no class data.');
+      }
+
+      state.classContexts = parsed.classes.map((ctx, i) => createClassContext({ ...ctx, label: getClassContextLabel(ctx, i + 1) }));
+      state.activeClassId = parsed.activeClassId && state.classContexts.some(ctx => ctx.id === parsed.activeClassId)
+        ? parsed.activeClassId
+        : state.classContexts[0].id;
+      state.userRole = parsed.userRole === 'class-teacher' || parsed.userRole === 'subject-teacher' ? parsed.userRole : state.userRole;
+      if (Array.isArray(parsed.institutions)) {
+        state.institutions = deepClone(parsed.institutions);
+      }
+
+      persistPortfolio();
+      persistPortfolioData();
+      if (state.userRole) persistUserRole(state.userRole);
+
+      const active = getActiveClassContext();
+      if (active) applyClassContextToState(active);
+      renderClassSwitcher();
+      updateBarInfo();
+      toast('Backup restored successfully.', 'ok');
+    } catch (err) {
+      toast(`Backup restore failed: ${err?.message || 'Invalid JSON backup.'}`, 'err');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  reader.onerror = () => {
+    toast('Backup restore failed: could not read file.', 'err');
+    event.target.value = '';
+  };
+
+  reader.readAsText(file);
+}
+
 /* ── CSV ── */
 function exportCSV() {
   if(!state.students.length) { toast('No data to export','warn'); return; }
@@ -10028,6 +10381,7 @@ function handleCSVImport(event) {
       renderSubjectChips();
       rebuildMarksTable();
       updateContextualCTAs();
+      scheduleAutoSave();
       setLiveLoaderProgress(100, 'Import complete. Reports are ready.');
       toast(`Imported ${state.students.length} students`,'ok');
     } catch(err){ toast('CSV import failed: '+err.message,'err'); }
@@ -10081,6 +10435,7 @@ function parseCsvLine(line){
    ║              ANALYSIS                             ║
    ╚═══════════════════════════════════════════════════╝ */
 async function runAnalysis() {
+  syncHierarchyFromSetup();
   if (isTaskBusy('analysis')) return;
   ensureSubjectThresholds();
   const validationMsg = validateEntryForAnalysis();
@@ -10140,6 +10495,9 @@ function renderAnalysisTab() {
   const rankingTableMinWidth = Math.max(showDetailed ? 860 : 760, (showDetailed ? 350 : 260) + state.subjects.length * 84);
   const nextTipId = () => `detail-tip-${++tipCounter}`;
   const n = A.studentStats.length;
+  const missingStudents = Number(A.studentsWithMissingMarks ?? 0);
+  const totalMissingMarks = Number(A.totalMissingMarks ?? 0);
+  const analysisMode = getMissingMarkModeLabel(A.missingMarkMode || state.missingMarkMode);
   const top = A.sorted[0], bot = A.sorted[A.sorted.length-1];
   const fmtOne = (v) => (v == null || isNaN(v)) ? '—' : Number(v).toFixed(1);
   const normalizeToPercent = (score, subject) => {
@@ -10164,8 +10522,9 @@ function renderAnalysisTab() {
   let html = `
   <div class="card" style="margin-bottom:14px;">
     <div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/school.svg" alt="" aria-hidden="true"></span> Analysis Scope</div>
-    <div class="text-sm" style="margin-top:8px;color:var(--ink-light);line-height:1.7;">Current scope: <strong>${esc(scopeLabel)}</strong>. All statistics and flags below are computed for this active class workspace.</div>
+    <div class="text-sm" style="margin-top:8px;color:var(--ink-light);line-height:1.7;">Current scope: <strong>${esc(scopeLabel)}</strong>. Missing-mark mode: <strong>${esc(analysisMode)}</strong>.</div>
   </div>
+  ${totalMissingMarks > 0 ? `<div class="alert alert-info" style="margin-bottom:12px;"><img class="alert-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true"><div><strong>Missing data detected:</strong> ${missingStudents} student${missingStudents===1?'':'s'} with ${totalMissingMarks} blank mark${totalMissingMarks===1?'':'s'}. Interpretation follows the current missing-mark mode.</div></div>` : ''}
 
   <!-- Summary cards -->
   <div class="stat-row">
@@ -10193,6 +10552,11 @@ function renderAnalysisTab() {
       <div class="lbl">Fail Records</div>
       <div class="val">${A.totalFails ?? 0}</div>
       <div class="sub">below subject fail marks</div>
+    </div>
+    <div class="stat-card blue-card">
+      <div class="lbl">Missing Marks</div>
+      <div class="val">${totalMissingMarks}</div>
+      <div class="sub">blank entries in class data</div>
     </div>`;
 
   if(A.classBox && showDetailed) html += `
@@ -10290,15 +10654,19 @@ function renderAnalysisTab() {
 
     state.subjects.forEach((subj) => {
       const raw = s.marks[subj];
-      const num = (raw !== '' && raw !== undefined && raw !== null) ? parseFloat(raw) : NaN;
+      const isMissing = isBlankMarkValue(raw);
+      const num = resolveMarkForStats(raw, subj, state.missingMarkMode);
       const maxMark = getSubjectMaxMark(subj);
       const failMark = getSubjectFailMark(subj);
       const safeMax = maxMark > 0 ? maxMark : 100;
-      const normalized = !isNaN(num) ? (num / safeMax) * 100 : null;
+      const normalized = num !== null ? (num / safeMax) * 100 : null;
       subjectScores[subj] = normalized;
 
-      if (normalized === null) {
+      if (isMissing) {
         missingCount += 1;
+      }
+
+      if (normalized === null) {
         return;
       }
 
@@ -12232,6 +12600,7 @@ function renderInstitutionsDashboard() {
     if (!institutions.length) {
       container.innerHTML = '';
       if (emptyState) emptyState.style.display = 'block';
+      updateSetupHierarchySuggestions();
       return;
     }
 
@@ -12279,6 +12648,8 @@ function renderInstitutionsDashboard() {
         '</div>' +
       '</div>';
     }).join('');
+
+    updateSetupHierarchySuggestions();
   } catch (err) {
     console.error('Failed to render institutions dashboard:', err);
     toast('Failed to load institutions. Please refresh the page.', 'err');
@@ -13257,6 +13628,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   initThemeToggle();
   initClassPortfolio();
   renderInstitutionsDashboard();
+  updateSetupHierarchySuggestions();
   initInstitutionActionDelegates();
   renderInstitutionSelect();
   applyRoleRoute();
@@ -13313,7 +13685,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   if (portfolioAutoSaveTimer) clearInterval(portfolioAutoSaveTimer);
   portfolioAutoSaveTimer = setInterval(() => {
     syncActiveClassFromState();
-  }, 2000);
+  }, AUTO_SAVE_BACKUP_MS);
+
+  if (saveStatusPulseTimer) clearInterval(saveStatusPulseTimer);
+  saveStatusPulseTimer = setInterval(() => {
+    updateSaveStatus();
+  }, 10000);
+
+  updateMissingMarkModeUI();
+  updateSaveStatus();
 
   window.addEventListener('beforeunload', () => {
     syncActiveClassFromState();
