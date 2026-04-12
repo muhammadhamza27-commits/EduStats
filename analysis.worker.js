@@ -86,25 +86,47 @@ function resolveSubjectFail(subjectFailMarks, subjectMaxMarks, subject) {
   return Math.min(maxMark, Math.max(0, fail));
 }
 
-function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks }) {
+function normalizeMissingMarkMode(mode) {
+  return mode === 'zero' ? 'zero' : 'exclude';
+}
+
+function isBlankMark(value) {
+  return value === '' || value === undefined || value === null;
+}
+
+function resolveMarkValue(raw, subject, subjectMaxMarks, missingMarkMode) {
+  if (isBlankMark(raw)) {
+    return missingMarkMode === 'zero' ? 0 : null;
+  }
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return null;
+  const max = resolveSubjectMax(subjectMaxMarks, subject);
+  return Math.min(max, Math.max(0, parsed));
+}
+
+function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks, missingMarkMode }) {
   if (!Array.isArray(students) || !Array.isArray(subjects) || !students.length || !subjects.length) {
     return null;
   }
+  const activeMissingMode = normalizeMissingMarkMode(missingMarkMode);
 
   const studentStats = students.map(student => {
+    let missingCount = 0;
+
     const vals = subjects
       .map(subj => {
-        const v = student?.marks?.[subj];
-        return v !== '' && v !== undefined && v !== null ? parseFloat(v) : NaN;
+        const raw = student?.marks?.[subj];
+        if (isBlankMark(raw)) missingCount += 1;
+        const resolved = resolveMarkValue(raw, subj, subjectMaxMarks, activeMissingMode);
+        return resolved === null ? NaN : resolved;
       })
       .filter(v => !Number.isNaN(v));
 
     const normalizedVals = subjects
       .map(subj => {
-        const v = student?.marks?.[subj];
-        const num = v !== '' && v !== undefined && v !== null ? parseFloat(v) : NaN;
-        if (Number.isNaN(num)) return NaN;
-        return (num / resolveSubjectMax(subjectMaxMarks, subj)) * 100;
+        const resolved = resolveMarkValue(student?.marks?.[subj], subj, subjectMaxMarks, activeMissingMode);
+        if (resolved === null) return NaN;
+        return (resolved / resolveSubjectMax(subjectMaxMarks, subj)) * 100;
       })
       .filter(v => !Number.isNaN(v));
 
@@ -112,6 +134,7 @@ function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks
       ...student,
       validMarks: vals,
       normalizedMarks: normalizedVals,
+      missingCount,
       mean: normalizedVals.length ? mean(normalizedVals) : null
     };
   });
@@ -120,11 +143,10 @@ function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks
   subjects.forEach(subj => {
     const entries = studentStats
       .map(s => {
-        const v = s?.marks?.[subj];
-        const num = v !== '' && v !== undefined && v !== null ? parseFloat(v) : NaN;
-        return { id: s.id, name: s.name, value: num };
+        const resolved = resolveMarkValue(s?.marks?.[subj], subj, subjectMaxMarks, activeMissingMode);
+        return { id: s.id, name: s.name, value: resolved };
       })
-      .filter(e => !Number.isNaN(e.value));
+      .filter(e => e.value !== null && !Number.isNaN(e.value));
 
     const vals = entries.map(e => e.value);
     const normalizedVals = normalizeMarks(vals, subjectMaxMarks?.[subj]);
@@ -189,6 +211,8 @@ function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks
 
   const overallPassRate = totals.totalAssessments ? (100 * totals.totalPasses) / totals.totalAssessments : null;
   const overallFailRate = totals.totalAssessments ? (100 * totals.totalFails) / totals.totalAssessments : null;
+  const studentsWithMissingMarks = studentStats.filter(s => s.missingCount > 0).length;
+  const totalMissingMarks = studentStats.reduce((sum, s) => sum + (s.missingCount || 0), 0);
 
   return {
     studentStats,
@@ -202,6 +226,9 @@ function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks
     classMean: mean(means),
     classMedian: median(means),
     classMeans: means,
+    missingMarkMode: activeMissingMode,
+    studentsWithMissingMarks,
+    totalMissingMarks,
     totalAssessments: totals.totalAssessments,
     totalPasses: totals.totalPasses,
     totalFails: totals.totalFails,
