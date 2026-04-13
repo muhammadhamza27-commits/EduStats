@@ -285,6 +285,16 @@ body {
   .app-bar-logo {
     font-size: 20px;
   }
+
+  .app-bar-info {
+    max-width: 54vw;
+    font-size: 10.5px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: .82;
+  }
 }
 
 .app-bar-spacer { flex: 1; }
@@ -3214,6 +3224,20 @@ body.motion-enhanced .landing-motion.is-visible {
   border-top: 1px solid var(--rule);
 }
 
+.sample-loader-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  min-width: min(100%, 540px);
+  width: 100%;
+  max-width: 760px;
+}
+
+.sample-loader-btn {
+  min-height: 44px;
+}
+
 @media (max-width: 768px) {
   .card {
     padding: 16px;
@@ -3258,6 +3282,16 @@ body.motion-enhanced .landing-motion.is-visible {
   }
 
   .tools-content .gap-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sample-loader-grid {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .sample-loader-btn {
     width: 100%;
     justify-content: center;
   }
@@ -6670,7 +6704,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
         <div style="flex:1; min-width:220px;">
           <strong>Load realistic test data:</strong> Pick a dataset below to populate marks, subjects, and student lists for full software testing.
         </div>
-        <div style="display:grid;grid-template-columns:minmax(240px,1fr) auto;gap:10px;align-items:end;min-width:min(100%,540px);width:100%;max-width:760px;">
+        <div class="sample-loader-grid">
           <div class="field" style="margin:0;">
             <label for="entry-sample-pack-select">Test Dataset</label>
             <select id="entry-sample-pack-select">
@@ -6679,7 +6713,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
               <option value="city-campus-continuous-assessment">City campus - continuous assessment mix</option>
             </select>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="loadSampleData()"><img class="ui-icon" src="icons/edu-outline/folder.svg" alt="" aria-hidden="true"> Load Test Data</button>
+          <button class="btn btn-ghost btn-sm sample-loader-btn" onclick="loadSampleData()"><img class="ui-icon" src="icons/edu-outline/folder.svg" alt="" aria-hidden="true"> Load Test Data</button>
         </div>
       </div>
 
@@ -6952,6 +6986,8 @@ const state = {
   },
   classContexts: [], // [{ id, label, schoolName, teacherName, className, termName, subjects, students, subjectMaxMarks, subjectFailMarks, analysis }]
   activeClassId: null,
+  institutions: [],
+  selectedInstitutionId: '',
   subjectMaxMarks: {},  // {subject: maxMark}
   subjectFailMarks: {}, // {subject: failMark}
   currentCacheId: null  // Track if viewing a cached entry
@@ -6965,6 +7001,10 @@ const ROLE_KEY = 'eduStats_userRole_v1';
 const BACKUP_VERSION = 1;
 const MISSING_MARK_MODE_EXCLUDE = 'exclude';
 const MISSING_MARK_MODE_ZERO = 'zero';
+const DURABLE_DB_NAME = 'eduStats_durable_v2';
+const DURABLE_DB_VERSION = 1;
+const DURABLE_META_ID = 'meta';
+const DURABLE_SNAPSHOT_INTERVAL = 20;
 const AUTO_SAVE_DEBOUNCE_MS = 450;
 const AUTO_SAVE_BACKUP_MS = 12000;
 let portfolioAutoSaveTimer = null;
@@ -6976,6 +7016,496 @@ let defaultPanelMarkup = null;
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
+
+const DurableStorage = {
+  dbPromise: null,
+  saveTimer: null,
+  writeQueue: Promise.resolve(),
+  commitCount: 0,
+  hasRestored: false,
+  channel: null,
+  opfsFileName: 'edustats-journal.v1.jsonl',
+
+  initChannel() {
+    if (this.channel || typeof BroadcastChannel === 'undefined') return;
+    try {
+      this.channel = new BroadcastChannel('edustats-durable-sync');
+      this.channel.onmessage = (evt) => {
+        if (!evt?.data || evt.data.type !== 'commit') return;
+        if (!state.classContexts.length) return;
+        updateSaveStatus('Updated in another tab.');
+      };
+    } catch (err) {
+      console.warn('Broadcast channel is unavailable.', err);
+    }
+  },
+
+  async open() {
+    if (this.dbPromise) return this.dbPromise;
+    this.dbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(DURABLE_DB_NAME, DURABLE_DB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('institutions')) db.createObjectStore('institutions', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('classes')) {
+          const classes = db.createObjectStore('classes', { keyPath: 'id' });
+          classes.createIndex('byInstitution', 'institutionId', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('workspaces')) {
+          const workspaces = db.createObjectStore('workspaces', { keyPath: 'id' });
+          workspaces.createIndex('byClass', 'institutionClassId', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains('journal')) {
+          const journal = db.createObjectStore('journal', { keyPath: 'id', autoIncrement: true });
+          journal.createIndex('byTimestamp', 'timestamp', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('snapshots')) {
+          const snapshots = db.createObjectStore('snapshots', { keyPath: 'id', autoIncrement: true });
+          snapshots.createIndex('byTimestamp', 'timestamp', { unique: false });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('Failed to open durable storage'));
+    });
+    this.initChannel();
+    return this.dbPromise;
+  },
+
+  requestToPromise(request) {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('IndexedDB request failed'));
+    });
+  },
+
+  txDone(tx) {
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error('IndexedDB transaction failed'));
+      tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted'));
+    });
+  },
+
+  async readAll(storeName, tx = null) {
+    const db = await this.open();
+    const ownTx = tx || db.transaction(storeName, 'readonly');
+    const result = await this.requestToPromise(ownTx.objectStore(storeName).getAll());
+    if (!tx) await this.txDone(ownTx);
+    return result;
+  },
+
+  async getKv(key, fallback = null) {
+    try {
+      const db = await this.open();
+      const tx = db.transaction('kv', 'readonly');
+      const row = await this.requestToPromise(tx.objectStore('kv').get(key));
+      await this.txDone(tx);
+      return row?.value ?? fallback;
+    } catch {
+      return fallback;
+    }
+  },
+
+  supportsOPFS() {
+    return !!(navigator?.storage && typeof navigator.storage.getDirectory === 'function');
+  },
+
+  async getOPFSFileHandle(create = true) {
+    if (!this.supportsOPFS()) return null;
+    try {
+      const root = await navigator.storage.getDirectory();
+      return await root.getFileHandle(this.opfsFileName, { create });
+    } catch (err) {
+      console.warn('OPFS file handle unavailable.', err);
+      return null;
+    }
+  },
+
+  async appendOPFSJournalEntry(entry) {
+    const handle = await this.getOPFSFileHandle(true);
+    if (!handle) return false;
+    try {
+      const file = await handle.getFile();
+      const writable = await handle.createWritable({ keepExistingData: true });
+      await writable.seek(file.size);
+      await writable.write(JSON.stringify(entry) + '\n');
+      await writable.close();
+      return true;
+    } catch (err) {
+      console.warn('Failed to append OPFS journal entry.', err);
+      return false;
+    }
+  },
+
+  async readOPFSJournalEntries() {
+    const handle = await this.getOPFSFileHandle(false);
+    if (!handle) return [];
+    try {
+      const file = await handle.getFile();
+      const text = await file.text();
+      if (!text.trim()) return [];
+      return text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+          try {
+            return JSON.parse(line);
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean);
+    } catch (err) {
+      console.warn('Failed to read OPFS journal entries.', err);
+      return [];
+    }
+  },
+
+  async trimOPFSJournal(maxEntries = 300) {
+    const entries = await this.readOPFSJournalEntries();
+    if (entries.length <= maxEntries) return;
+    const handle = await this.getOPFSFileHandle(true);
+    if (!handle) return;
+    try {
+      const tail = entries.slice(-maxEntries);
+      const writable = await handle.createWritable();
+      await writable.write(tail.map(entry => JSON.stringify(entry)).join('\n') + '\n');
+      await writable.close();
+    } catch (err) {
+      console.warn('Failed to trim OPFS journal.', err);
+    }
+  },
+
+  applyPayloadToRuntime(payload) {
+    state.institutions = deepClone(payload.institutions || []);
+    state.classContexts = (payload.workspaces || []).map((ctx, i) => createClassContext({ ...ctx, label: getClassContextLabel(ctx, i + 1) }));
+    state.activeClassId = payload.activeClassId && state.classContexts.some(ctx => ctx.id === payload.activeClassId)
+      ? payload.activeClassId
+      : state.classContexts[0]?.id || null;
+    state.selectedInstitutionId = payload.activeInstitutionId || '';
+    state.userRole = payload.userRole || state.userRole || null;
+
+    if (Array.isArray(payload.history)) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(payload.history));
+      } catch {}
+    }
+    if (payload.preferences) {
+      try {
+        localStorage.setItem('eduStats_density', payload.preferences.density === 'compact' ? 'compact' : 'comfortable');
+        localStorage.setItem('eduStats_analysis_detail', payload.preferences.analysisDetailView === '1' ? '1' : '0');
+      } catch {}
+    }
+  },
+
+  async restoreFromOPFSJournal() {
+    const entries = await this.readOPFSJournalEntries();
+    if (!entries.length) return false;
+
+    for (let i = entries.length - 1; i >= 0; i -= 1) {
+      const payload = entries[i]?.payload;
+      if (!this.isCanonicalPayloadValid(payload)) continue;
+      this.applyPayloadToRuntime(payload);
+      this.hasRestored = true;
+      return true;
+    }
+    return false;
+  },
+
+  buildCanonicalPayload() {
+    const institutions = deepClone(getOrInitInstitutions());
+    const classContexts = deepClone(state.classContexts || []);
+    const activeClassId = state.activeClassId || classContexts[0]?.id || null;
+    return {
+      schemaVersion: 2,
+      savedAt: Date.now(),
+      activeClassId,
+      activeInstitutionId: state.selectedInstitutionId || null,
+      userRole: state.userRole || null,
+      institutions,
+      workspaces: classContexts,
+      history: Cache.getAllEntries(),
+      preferences: {
+        density: localStorage.getItem('eduStats_density') || 'comfortable',
+        analysisDetailView: state.analysisDetailView ? '1' : '0'
+      }
+    };
+  },
+
+  isCanonicalPayloadValid(payload) {
+    if (!payload || !Array.isArray(payload.workspaces) || !Array.isArray(payload.institutions)) return false;
+    if (!payload.workspaces.length) return false;
+
+    const institutionIds = new Set(payload.institutions.map(i => i.id));
+    const classPairs = new Set();
+    payload.institutions.forEach(inst => {
+      const classes = Array.isArray(inst.classes) ? inst.classes : [];
+      classes.forEach(cls => classPairs.add(`${inst.id}::${cls.id}`));
+    });
+
+    for (const ctx of payload.workspaces) {
+      if (!ctx?.id) return false;
+      if (ctx.institutionId && !institutionIds.has(ctx.institutionId)) return false;
+      if (ctx.institutionId && ctx.institutionClassId && !classPairs.has(`${ctx.institutionId}::${ctx.institutionClassId}`)) return false;
+    }
+
+    if (payload.activeClassId && !payload.workspaces.some(w => w.id === payload.activeClassId)) return false;
+    return true;
+  },
+
+  async persistSnapshot(tx, payload) {
+    this.commitCount += 1;
+    if (this.commitCount % DURABLE_SNAPSHOT_INTERVAL !== 0) return;
+    const snapshotStore = tx.objectStore('snapshots');
+    snapshotStore.add({ timestamp: Date.now(), payload });
+  },
+
+  async saveNow(reason = 'autosave') {
+    const payload = this.buildCanonicalPayload();
+    if (!this.isCanonicalPayloadValid(payload)) {
+      console.warn('Durable save skipped because canonical payload failed validation.');
+      return;
+    }
+
+    const execute = async () => {
+      const db = await this.open();
+      const tx = db.transaction(['meta', 'institutions', 'classes', 'workspaces', 'kv', 'journal', 'snapshots'], 'readwrite');
+      const metaStore = tx.objectStore('meta');
+      const institutionsStore = tx.objectStore('institutions');
+      const classesStore = tx.objectStore('classes');
+      const workspacesStore = tx.objectStore('workspaces');
+      const kvStore = tx.objectStore('kv');
+      const journalStore = tx.objectStore('journal');
+
+      institutionsStore.clear();
+      classesStore.clear();
+      workspacesStore.clear();
+
+      payload.institutions.forEach(inst => {
+        institutionsStore.put({
+          id: inst.id,
+          name: inst.name || 'Unnamed Institution',
+          createdAt: inst.createdAt || Date.now(),
+          updatedAt: Date.now(),
+          version: Number(inst.version || 0) + 1
+        });
+
+        const classes = Array.isArray(inst.classes) ? inst.classes : [];
+        classes.forEach(cls => {
+          classesStore.put({
+            id: cls.id,
+            institutionId: inst.id,
+            name: cls.name || 'Unnamed Class',
+            teacherName: cls.teacherName || '',
+            createdAt: cls.createdAt || Date.now(),
+            updatedAt: Date.now(),
+            version: Number(cls.version || 0) + 1
+          });
+        });
+      });
+
+      payload.workspaces.forEach(ctx => {
+        workspacesStore.put({
+          ...ctx,
+          id: ctx.id,
+          updatedAt: Date.now(),
+          version: Number(ctx.version || 0) + 1,
+          contentHash: btoa(unescape(encodeURIComponent(JSON.stringify({
+            subjects: ctx.subjects || [],
+            students: ctx.students || [],
+            analysis: ctx.analysis || null,
+            termName: ctx.termName || ''
+          })))).slice(0, 120)
+        });
+      });
+
+      const commitStamp = Date.now();
+      metaStore.put({
+        id: DURABLE_META_ID,
+        schemaVersion: 2,
+        activeClassId: payload.activeClassId,
+        activeInstitutionId: payload.activeInstitutionId,
+        userRole: payload.userRole,
+        lastCommitAt: commitStamp,
+        lastReason: reason,
+        lastHealthySnapshotAt: commitStamp
+      });
+
+      kvStore.put({ key: 'history', value: payload.history || [] });
+      kvStore.put({ key: 'preferences', value: payload.preferences || {} });
+
+      journalStore.add({
+        timestamp: commitStamp,
+        reason,
+        activeClassId: payload.activeClassId,
+        institutions: payload.institutions.length,
+        workspaces: payload.workspaces.length
+      });
+
+      await this.persistSnapshot(tx, payload);
+      await this.txDone(tx);
+
+      try {
+        localStorage.setItem('eduStats_durable_bootstrap', JSON.stringify({
+          schemaVersion: 2,
+          lastCommitAt: commitStamp,
+          activeClassId: payload.activeClassId
+        }));
+      } catch (err) {
+        console.warn('Failed to write durable bootstrap pointer.', err);
+      }
+
+      if (this.channel) {
+        this.channel.postMessage({ type: 'commit', at: commitStamp, reason });
+      }
+
+      await this.appendOPFSJournalEntry({
+        timestamp: commitStamp,
+        reason,
+        payload
+      });
+      if (this.commitCount % 40 === 0) {
+        await this.trimOPFSJournal();
+      }
+    };
+
+    this.writeQueue = this.writeQueue
+      .then(execute)
+      .catch((err) => {
+        console.warn('Durable commit failed.', err);
+      });
+
+    await this.writeQueue;
+  },
+
+  scheduleSave(reason = 'autosave') {
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => {
+      this.saveNow(reason);
+    }, 700);
+  },
+
+  async restoreLatest() {
+    try {
+      const db = await this.open();
+      const tx = db.transaction(['meta', 'institutions', 'classes', 'workspaces', 'kv'], 'readonly');
+      const meta = await this.requestToPromise(tx.objectStore('meta').get(DURABLE_META_ID));
+      const institutionsRows = await this.requestToPromise(tx.objectStore('institutions').getAll());
+      const classesRows = await this.requestToPromise(tx.objectStore('classes').getAll());
+      const workspacesRows = await this.requestToPromise(tx.objectStore('workspaces').getAll());
+      const historyRow = await this.requestToPromise(tx.objectStore('kv').get('history'));
+      const prefsRow = await this.requestToPromise(tx.objectStore('kv').get('preferences'));
+      await this.txDone(tx);
+
+      if (!meta || !Array.isArray(workspacesRows) || !workspacesRows.length) return false;
+
+      const institutionsMap = new Map();
+      institutionsRows.forEach(inst => {
+        institutionsMap.set(inst.id, { id: inst.id, name: inst.name, classes: [] });
+      });
+      classesRows.forEach(cls => {
+        if (!institutionsMap.has(cls.institutionId)) return;
+        institutionsMap.get(cls.institutionId).classes.push({
+          id: cls.id,
+          name: cls.name,
+          teacherName: cls.teacherName || '',
+          students: [],
+          subjects: []
+        });
+      });
+
+      const payload = {
+        activeClassId: meta.activeClassId,
+        activeInstitutionId: meta.activeInstitutionId,
+        userRole: meta.userRole,
+        institutions: Array.from(institutionsMap.values()),
+        workspaces: workspacesRows,
+        history: Array.isArray(historyRow?.value) ? historyRow.value : [],
+        preferences: prefsRow?.value || {}
+      };
+
+      if (!this.isCanonicalPayloadValid(payload)) {
+        const recovered = await this.restoreFromSnapshot();
+        return !!recovered;
+      }
+
+      this.applyPayloadToRuntime(payload);
+
+      this.hasRestored = true;
+      return true;
+    } catch (err) {
+      console.warn('Durable restore failed.', err);
+      return false;
+    }
+  },
+
+  async restoreFromSnapshot() {
+    try {
+      const db = await this.open();
+      const tx = db.transaction('snapshots', 'readonly');
+      const snapshots = await this.requestToPromise(tx.objectStore('snapshots').getAll());
+      await this.txDone(tx);
+      if (!Array.isArray(snapshots) || !snapshots.length) return false;
+
+      snapshots.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      const latest = snapshots[0]?.payload;
+      if (!this.isCanonicalPayloadValid(latest)) return false;
+
+      this.applyPayloadToRuntime(latest);
+      this.hasRestored = true;
+      return true;
+    } catch (err) {
+      console.warn('Snapshot restore failed.', err);
+      return false;
+    }
+  },
+
+  async migrateLegacyIfNeeded() {
+    const migrated = await this.getKv('legacyMigrated', false);
+    if (migrated) return;
+
+    const hasLegacyData = !!(localStorage.getItem(PORTFOLIO_KEY) || localStorage.getItem(INSTITUTIONS_KEY));
+    if (!hasLegacyData) {
+      await this.markLegacyMigrated();
+      return;
+    }
+
+    if (!Array.isArray(state.classContexts) || !state.classContexts.length) {
+      return;
+    }
+
+    await this.saveNow('legacy-migration');
+    await this.markLegacyMigrated();
+  },
+
+  async markLegacyMigrated() {
+    try {
+      const db = await this.open();
+      const tx = db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').put({ key: 'legacyMigrated', value: true });
+      await this.txDone(tx);
+    } catch (err) {
+      console.warn('Unable to mark legacy migration status.', err);
+    }
+  },
+
+  async restoreOrMigrate() {
+    const restored = await this.restoreLatest();
+    if (restored) return true;
+
+    const restoredFromOpfs = await this.restoreFromOPFSJournal();
+    if (restoredFromOpfs) {
+      await this.saveNow('opfs-repair');
+      return true;
+    }
+
+    await this.migrateLegacyIfNeeded();
+    return false;
+  }
+};
 
 function makeClassContextId() {
   return `cls_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -7229,6 +7759,7 @@ function persistPortfolio() {
   };
   try {
     localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(payload));
+    DurableStorage.scheduleSave('portfolio');
     lastSavedAt = Date.now();
     updateSaveStatus();
   } catch (err) {
@@ -7431,6 +7962,16 @@ function createNewClassContext() {
 }
 
 function initClassPortfolio() {
+  if (state.classContexts.length) {
+    state.activeClassId = state.activeClassId && state.classContexts.some(ctx => ctx.id === state.activeClassId)
+      ? state.activeClassId
+      : state.classContexts[0].id;
+    const activeRestored = getActiveClassContext();
+    if (activeRestored) applyClassContextToState(activeRestored);
+    renderClassSwitcher();
+    return;
+  }
+
   let restored = false;
   try {
     const raw = localStorage.getItem(PORTFOLIO_KEY);
@@ -7472,6 +8013,9 @@ function initClassPortfolio() {
 }
 
 function getSavedUserRole() {
+  if (state.userRole === 'class-teacher' || state.userRole === 'subject-teacher') {
+    return state.userRole;
+  }
   try {
     const saved = localStorage.getItem(ROLE_KEY);
     return saved === 'class-teacher' || saved === 'subject-teacher' ? saved : null;
@@ -7590,6 +8134,7 @@ function persistUserRole(role) {
     active.role = normalized;
     persistPortfolio();
   }
+  DurableStorage.scheduleSave('role');
   updateRoleDrivenUI();
 }
 
@@ -7962,6 +8507,7 @@ function setTableDensity(mode) {
   const compact = mode === 'compact';
   document.body.classList.toggle('compact-density', compact);
   localStorage.setItem('eduStats_density', compact ? 'compact' : 'comfortable');
+  DurableStorage.scheduleSave('pref-density');
 
   document.querySelectorAll('[data-density-toggle="true"]').forEach(btn => {
     btn.textContent = compact ? 'Comfortable View' : 'Compact View';
@@ -8090,6 +8636,7 @@ const Cache = {
     }
 
     localStorage.setItem(CACHE_KEY, JSON.stringify(entries));
+    DurableStorage.scheduleSave('history-save');
     return newEntry.id;
   },
 
@@ -8131,6 +8678,7 @@ const Cache = {
   deleteEntry(id) {
     const entries = this.getAllEntries().filter(e => e.id !== id);
     localStorage.setItem(CACHE_KEY, JSON.stringify(entries));
+    DurableStorage.scheduleSave('history-delete');
     return entries.length;
   },
 
@@ -8138,6 +8686,7 @@ const Cache = {
   clearAll() {
     localStorage.removeItem(CACHE_KEY);
     state.currentCacheId = null;
+    DurableStorage.scheduleSave('history-clear');
   }
 };
 
@@ -9457,6 +10006,9 @@ function updateBarInfo() {
   const teacher= $('teacher-name').value.trim();
   const active = getActiveClassContext();
   const { institution } = getActiveHierarchyScope();
+  const barInfo = $('bar-class-info');
+  if (!barInfo) return;
+
   let parts = [];
   if (active) {
     parts.push(`Workspace: ${getClassContextLabel(active)}`);
@@ -9467,7 +10019,24 @@ function updateBarInfo() {
   if(school) parts.push(school);
   if(cls) parts.push('Class: '+cls);
   if(teacher) parts.push(teacher);
-  $('bar-class-info').textContent = parts.join(' · ');
+
+  const isMobile = window.matchMedia('(max-width: 640px)').matches;
+  if (isMobile) {
+    const compact = [];
+    if (active) compact.push(getClassContextLabel(active));
+    else if (cls) compact.push(cls);
+
+    if (institution?.name) compact.push(institution.name);
+    else if (school) compact.push(school);
+
+    if (teacher) compact.push(teacher);
+
+    barInfo.textContent = compact.filter(Boolean).join(' • ') || 'Class workspace active';
+  } else {
+    barInfo.textContent = parts.join(' · ');
+  }
+
+  barInfo.title = parts.join(' · ');
   renderScopeStrip();
   updateSetupHierarchySuggestions();
   syncActiveClassFromState(false);
@@ -10871,6 +11440,7 @@ function toggleAnalysisDetailView() {
   } catch (err) {
     // Ignore storage errors and continue with in-memory preference.
   }
+  DurableStorage.scheduleSave('pref-analysis-detail');
   if (state.analysis) renderAnalysisTab();
 }
 
@@ -12529,6 +13099,10 @@ function switchTab(name) {
   const normalizedName = name === 'home' ? 'onboarding' : name;
   const tabName = name === 'onboarding' ? 'home' : name;
 
+  if (tabName === 'classes') {
+    renderInstitutionsDashboard();
+  }
+
   if (!canOpenTab(tabName)) {
     toast('Complete class setup and enter marks first to unlock this section.', 'warn');
     return;
@@ -12567,6 +13141,49 @@ function getOrInitInstitutions() {
     state.institutions = [];
   }
   return state.institutions;
+}
+
+function countMeaningfulStudents(students) {
+  if (!Array.isArray(students)) return 0;
+  return students.filter(student => {
+    if (!student) return false;
+    if (String(student.name || '').trim()) return true;
+    if (String(student.id || '').trim()) return true;
+    const marks = student.marks && typeof student.marks === 'object' ? Object.values(student.marks) : [];
+    return marks.some(mark => String(mark ?? '').trim() !== '');
+  }).length;
+}
+
+function getLinkedClassContext(instId, classId, className = '', institutionName = '') {
+  const contexts = Array.isArray(state.classContexts) ? [...state.classContexts] : [];
+  if (!contexts.length) return null;
+
+  // Prefer explicit canonical linkage first.
+  const byId = contexts.find(ctx => ctx.institutionId === instId && ctx.institutionClassId === classId);
+  if (byId) return byId;
+
+  // Backward-compatible fallback for older contexts that were linked by names only.
+  const normClassName = String(className || '').trim().toLowerCase();
+  const normInstitutionName = String(institutionName || '').trim().toLowerCase();
+  if (!normClassName) return null;
+
+  const byName = contexts
+    .filter(ctx => {
+      const ctxClass = String(ctx.className || ctx.label || '').trim().toLowerCase();
+      if (ctxClass !== normClassName) return false;
+      if (!normInstitutionName) return true;
+      const ctxSchool = String(ctx.schoolName || '').trim().toLowerCase();
+      return !ctxSchool || ctxSchool === normInstitutionName;
+    })
+    .sort((a, b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0));
+
+  return byName[0] || null;
+}
+
+function getInstitutionClassStudentCount(inst, cls) {
+  const linked = getLinkedClassContext(inst?.id, cls?.id, cls?.name, inst?.name);
+  if (linked) return countMeaningfulStudents(linked.students);
+  return countMeaningfulStudents(cls?.students || []);
 }
 
 function validateInstitutionName(name) {
@@ -12612,7 +13229,7 @@ function renderInstitutionsDashboard() {
       
       const classesHTML = classes.length > 0 
         ? classes.map(cls => {
-          const studentCount = cls.students?.length || 0;
+          const studentCount = getInstitutionClassStudentCount(inst, cls);
           return '<div class="class-item" tabindex="0" role="button" data-inst-id="' + esc(inst.id) + '" data-class-id="' + esc(cls.id) + '">' +
             '<div class="class-item-content">' +
               '<div class="class-item-name">' + esc(cls.name) + (cls.teacherName ? ' <span style="color: var(--ink-faint); font-weight: 400;">(' + esc(cls.teacherName) + ')</span>' : '') + '</div>' +
@@ -12727,6 +13344,7 @@ function showClassOptions(instId, classId) {
 
   const cls = inst.classes?.find(c => c.id === classId);
   if (!cls) return;
+  const studentCount = getInstitutionClassStudentCount(inst, cls);
 
   const modal = createModal('Class: ' + esc(cls.name));
   const form = modal.querySelector('form');
@@ -12741,7 +13359,7 @@ function showClassOptions(instId, classId) {
       '<p style="margin: 0; font-size: 14.5px; color: var(--ink); font-weight: 600;">' + esc(cls.name) + '</p>' +
     '</div>' +
     (cls.teacherName ? '<div style="margin-bottom: 14px;"><p style="margin: 0 0 4px; font-size: 12px; color: var(--ink-faint); text-transform: uppercase; font-weight: 700; letter-spacing: .03em;">Teacher</p><p style="margin: 0; font-size: 14.5px; color: var(--ink); font-weight: 600;">' + esc(cls.teacherName) + '</p></div>' : '') +
-    '<div><p style="margin: 0 0 4px; font-size: 12px; color: var(--ink-faint); text-transform: uppercase; font-weight: 700; letter-spacing: .03em;">Students</p><p style="margin: 0; font-size: 14.5px; color: var(--ink); font-weight: 600;">' + (cls.students?.length || 0) + '</p></div>' +
+    '<div><p style="margin: 0 0 4px; font-size: 12px; color: var(--ink-faint); text-transform: uppercase; font-weight: 700; letter-spacing: .03em;">Students</p><p style="margin: 0; font-size: 14.5px; color: var(--ink); font-weight: 600;">' + studentCount + '</p></div>' +
   '</div>';
 
   const footer = modal.querySelector('.modal-footer');
@@ -13577,6 +14195,7 @@ function persistPortfolioData() {
 
     try {
       localStorage.setItem(INSTITUTIONS_KEY, dataStr);
+      DurableStorage.scheduleSave('institutions');
     } catch (storageErr) {
       if (storageErr.name === 'QuotaExceededError') {
         toast('Storage quota exceeded. Please delete some classes or institutions.', 'err');
@@ -13591,6 +14210,7 @@ function persistPortfolioData() {
 }
 
 function loadInstitutionsFromStorage() {
+  if (Array.isArray(state.institutions) && state.institutions.length) return;
   try {
     const stored = localStorage.getItem(INSTITUTIONS_KEY) || localStorage.getItem(PORTFOLIO_KEY);
 
@@ -13618,6 +14238,7 @@ function loadInstitutionsFromStorage() {
 document.addEventListener('DOMContentLoaded', async ()=>{
   showEntryLoader('Loading EduStats workspace…', 2200);
   await yieldToUI(25);
+  await DurableStorage.restoreOrMigrate();
   state.userRole = getSavedUserRole();
   loadInstitutionsFromStorage();
   defaultPanelMarkup = {
@@ -13627,6 +14248,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   };
   initThemeToggle();
   initClassPortfolio();
+  await DurableStorage.migrateLegacyIfNeeded();
   renderInstitutionsDashboard();
   updateSetupHierarchySuggestions();
   initInstitutionActionDelegates();
@@ -13694,6 +14316,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
   updateMissingMarkModeUI();
   updateSaveStatus();
+
+  DurableStorage.scheduleSave('startup-sync');
 
   window.addEventListener('beforeunload', () => {
     syncActiveClassFromState();
