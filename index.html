@@ -5163,6 +5163,156 @@ body.compact-density .chart-card {
 .divider { height: 1px; background: var(--rule); margin: 20px 0; }
 .section-label { font-size: 12px; font-weight: 700; text-transform: none; letter-spacing: .01em; color: var(--ink-light); margin-bottom: 12px; }
 
+/* ── SETUP: THRESHOLDS + GRADE SCALE ── */
+.setup-config-shell { display: grid; gap: 18px; }
+.setup-config-section { display: grid; gap: 12px; }
+.setup-config-help { margin-bottom: 0; }
+
+.threshold-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.threshold-card {
+  border: 1px solid color-mix(in oklab, var(--rule) 82%, var(--primary-pale));
+  border-radius: var(--r);
+  background: color-mix(in oklab, var(--white) 90%, var(--primary-tint));
+  padding: 12px;
+}
+.threshold-card .field { margin: 0; }
+.threshold-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.grade-scale-list { display: grid; gap: 12px; }
+.grade-band-card {
+  border: 1px solid color-mix(in oklab, var(--rule) 82%, var(--primary-pale));
+  border-radius: var(--r);
+  background: color-mix(in oklab, var(--white) 90%, var(--primary-tint));
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition), opacity var(--transition);
+}
+.grade-band-card:hover {
+  border-color: color-mix(in oklab, var(--primary-light) 44%, var(--rule));
+}
+.grade-band-card.drag-target {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary-light) 22%, transparent);
+}
+.grade-band-card.is-dragging {
+  opacity: .62;
+  transform: scale(.995);
+}
+.grade-band-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.grade-band-head .grade-band-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.grade-band-head label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-light);
+}
+.grade-band-head span {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.grade-band-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+.grade-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.grade-input-wrap small {
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.grade-input-pill {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid color-mix(in oklab, var(--rule) 80%, var(--primary-pale));
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--ink);
+  padding: 11px 12px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  outline: none;
+}
+.grade-input-pill:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary-light) 22%, transparent);
+  background: color-mix(in oklab, var(--white) 94%, var(--primary-tint));
+}
+.grade-input-pill::placeholder {
+  color: var(--ink-faint);
+}
+.grade-band-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.grade-band-actions .btn {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 8px 10px;
+}
+.grade-band-actions .btn[data-grade-action="remove"] {
+  border-color: color-mix(in oklab, var(--red) 24%, var(--rule));
+  color: var(--red);
+}
+.grade-scale-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .grade-band-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .grade-band-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .threshold-grid {
+    grid-template-columns: 1fr;
+  }
+  .threshold-input-row {
+    grid-template-columns: 1fr;
+  }
+  .grade-band-grid {
+    grid-template-columns: 1fr;
+  }
+  .grade-band-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 /* ── EMPTY STATES ── */
 .empty-state {
   text-align: center;
@@ -6641,12 +6791,27 @@ html[data-theme='dark'] .review-rating-hint.negative {
       </div>
       <div class="chips" id="subject-chips"></div>
       <div class="divider"></div>
-      <div class="section-label">Subject Maximum and Fail Marks</div>
-      <div class="alert alert-info">
-        <img class="alert-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true">
-        <div><strong>Default max marks is 100 per subject</strong>. Fail mark defaults to <strong>40% of each subject's max mark</strong> and can be adjusted per subject.</div>
+      <div class="setup-config-shell">
+        <section class="setup-config-section" aria-labelledby="subject-thresholds-heading">
+          <div class="section-label" id="subject-thresholds-heading">Subject Maximum and Fail Marks</div>
+          <div class="alert alert-info setup-config-help">
+            <img class="alert-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true">
+            <div><strong>Default max marks is 100 per subject</strong>. Fail mark defaults to <strong>40% of each subject's max mark</strong> and can be adjusted per subject.</div>
+          </div>
+          <div id="max-marks-inputs" class="threshold-grid"></div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="setup-config-section" aria-labelledby="grade-scale-heading">
+          <div class="section-label" id="grade-scale-heading">Grade Scale</div>
+          <div class="alert alert-info setup-config-help">
+            <img class="alert-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true">
+            <div><strong>Default grades run from A+ to D</strong>. You can rename bands, change thresholds, drag bands to reorder them, and remove or add new bands.</div>
+          </div>
+          <div id="grade-scale-inputs" class="grade-scale-list"></div>
+        </section>
       </div>
-      <div id="max-marks-inputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px"></div>
       <div class="divider"></div>
       <details class="tools-drawer">
         <summary>Tools: quick subject presets</summary>
@@ -6975,6 +7140,7 @@ const state = {
   subjects: [],
   students: [],   // [{id, name, marks:{subject: value}}]
   missingMarkMode: 'exclude',
+  gradeScale: [],
   analysis: null,
   analysisDetailView: false,
   analysisRankSort: 'weighted-total',
@@ -6984,7 +7150,7 @@ const state = {
     distType: 'bar',
     cumfreqType: 'line'
   },
-  classContexts: [], // [{ id, label, schoolName, teacherName, className, termName, subjects, students, subjectMaxMarks, subjectFailMarks, analysis }]
+  classContexts: [], // [{ id, label, schoolName, teacherName, className, termName, subjects, students, gradeScale, subjectMaxMarks, subjectFailMarks, analysis }]
   activeClassId: null,
   institutions: [],
   selectedInstitutionId: '',
@@ -7001,6 +7167,13 @@ const ROLE_KEY = 'eduStats_userRole_v1';
 const BACKUP_VERSION = 1;
 const MISSING_MARK_MODE_EXCLUDE = 'exclude';
 const MISSING_MARK_MODE_ZERO = 'zero';
+const DEFAULT_GRADE_SCALE = Object.freeze([
+  { label: 'A+', minMark: 90 },
+  { label: 'A', minMark: 80 },
+  { label: 'B', minMark: 70 },
+  { label: 'C', minMark: 60 },
+  { label: 'D', minMark: 50 }
+]);
 const DURABLE_DB_NAME = 'eduStats_durable_v2';
 const DURABLE_DB_VERSION = 1;
 const DURABLE_META_ID = 'meta';
@@ -7740,6 +7913,7 @@ function createClassContext(partial = {}) {
     missingMarkMode: normalizeMissingMarkMode(partial.missingMarkMode ?? state.missingMarkMode),
     subjects: Array.isArray(partial.subjects) ? [...partial.subjects] : [],
     students: Array.isArray(partial.students) ? deepClone(partial.students) : [],
+    gradeScale: Array.isArray(partial.gradeScale) ? sanitizeGradeScale(partial.gradeScale) : getActiveGradeScale(),
     subjectMaxMarks: partial.subjectMaxMarks ? { ...partial.subjectMaxMarks } : {},
     subjectFailMarks: partial.subjectFailMarks ? { ...partial.subjectFailMarks } : {},
     analysis: partial.analysis ? deepClone(partial.analysis) : null,
@@ -7786,6 +7960,7 @@ function syncActiveClassFromState(persist = true) {
   active.missingMarkMode = normalizeMissingMarkMode(state.missingMarkMode);
   active.subjects = [...state.subjects];
   active.students = deepClone(state.students);
+  active.gradeScale = getActiveGradeScale();
   active.subjectMaxMarks = { ...state.subjectMaxMarks };
   active.subjectFailMarks = { ...state.subjectFailMarks };
   active.analysis = state.analysis ? deepClone(state.analysis) : null;
@@ -7800,6 +7975,7 @@ function applyClassContextToState(ctx) {
   state.subjects = [...(ctx.subjects || [])];
   state.students = deepClone(ctx.students || []);
   state.missingMarkMode = normalizeMissingMarkMode(ctx.missingMarkMode);
+  state.gradeScale = sanitizeGradeScale(ctx.gradeScale || state.gradeScale || DEFAULT_GRADE_SCALE);
   state.subjectMaxMarks = { ...(ctx.subjectMaxMarks || {}) };
   state.subjectFailMarks = { ...(ctx.subjectFailMarks || {}) };
   state.analysis = ctx.analysis ? deepClone(ctx.analysis) : null;
@@ -7814,6 +7990,7 @@ function applyClassContextToState(ctx) {
 
   ensureSubjectThresholds();
   renderSubjectChips();
+  renderGradeScaleInputs();
   rebuildMarksTable();
 
   if (state.analysis) {
@@ -8190,6 +8367,58 @@ function defaultFailMarkForMax(maxMark) {
   return Number((max * DEFAULT_FAIL_RATIO).toFixed(1));
 }
 
+function cloneDefaultGradeScale() {
+  return DEFAULT_GRADE_SCALE.map(item => ({ ...item }));
+}
+
+function sanitizeGradeScale(scaleLike) {
+  const source = Array.isArray(scaleLike) && scaleLike.length ? scaleLike : DEFAULT_GRADE_SCALE;
+  const seen = new Set();
+  const cleaned = [];
+
+  source.forEach((item, idx) => {
+    const rawLabel = typeof item?.label === 'string' ? item.label.trim() : '';
+    const label = (rawLabel || `GRADE ${idx + 1}`).toUpperCase().slice(0, 20);
+    if (seen.has(label)) return;
+    seen.add(label);
+    const parsed = Number(item?.minMark);
+    const minMark = Number.isFinite(parsed) ? Math.min(100, Math.max(0, parsed)) : Math.max(0, 100 - (idx * 10));
+    cleaned.push({ label, minMark: Number(minMark.toFixed(1)) });
+  });
+
+  if (!cleaned.length) return cloneDefaultGradeScale();
+  return cleaned.sort((a, b) => b.minMark - a.minMark);
+}
+
+function ensureGradeScale() {
+  if (!Array.isArray(state.gradeScale) || !state.gradeScale.length) {
+    state.gradeScale = cloneDefaultGradeScale();
+    return state.gradeScale;
+  }
+  state.gradeScale = sanitizeGradeScale(state.gradeScale);
+  return state.gradeScale;
+}
+
+function getActiveGradeScale() {
+  return sanitizeGradeScale(state.gradeScale);
+}
+
+function resolveGradeFromMean(meanValue, gradeScale = getActiveGradeScale()) {
+  const mean = Number(meanValue);
+  const bands = sanitizeGradeScale(gradeScale);
+  if (!Number.isFinite(mean) || !bands.length) return '—';
+  const hit = bands.find(item => mean >= item.minMark);
+  return hit ? hit.label : bands[bands.length - 1].label;
+}
+
+function gradeBandTone(label) {
+  const normalized = String(label || '').trim().toUpperCase();
+  if (normalized.startsWith('A')) return 'badge-green';
+  if (normalized.startsWith('B')) return 'badge-blue';
+  if (normalized.startsWith('C')) return 'badge-amber';
+  return 'badge-red';
+}
+
 function getSubjectMaxMark(subject) {
   const raw = Number(state.subjectMaxMarks?.[subject]);
   return Math.max(1, Number.isFinite(raw) ? raw : 100);
@@ -8211,6 +8440,128 @@ function ensureSubjectThresholds() {
     const max = getSubjectMaxMark(subject);
     state.subjectMaxMarks[subject] = max;
     state.subjectFailMarks[subject] = getSubjectFailMark(subject);
+  });
+}
+
+function renderGradeScaleInputs() {
+  const container = $('grade-scale-inputs');
+  if (!container) return;
+  const scale = ensureGradeScale();
+
+  if (!scale.length) {
+    container.innerHTML = '<span class="text-sm text-muted">Add grade bands to classify student means.</span>';
+    return;
+  }
+
+  container.innerHTML = scale.map((band, index) => `
+    <div class="grade-band-card" data-grade-row data-grade-index="${index}">
+      <div class="grade-band-head">
+        <label>Grade band ${index + 1}</label>
+        <div class="grade-band-meta">
+          <span class="badge ${gradeBandTone(band.label)}">${esc(band.label)}</span>
+          <span>${fmtOneDecimal(band.minMark)}+ minimum mark</span>
+        </div>
+      </div>
+      <div class="grade-band-grid">
+        <div class="grade-input-wrap">
+          <small>Grade label</small>
+          <input class="grade-input-pill" type="text" data-grade-field="label" value="${esc(band.label)}" maxlength="20" placeholder="Grade label">
+        </div>
+        <div class="grade-input-wrap">
+          <small>Minimum mark</small>
+          <input class="grade-input-pill" type="number" data-grade-field="minMark" min="0" max="100" step="0.1" value="${band.minMark}" placeholder="Minimum mark">
+        </div>
+        <div class="grade-band-actions">
+          <button type="button" class="btn btn-outline btn-xs" data-grade-action="remove" title="Remove band" aria-label="Remove grade band">×</button>
+        </div>
+      </div>
+    </div>
+  `).join('') + `
+    <div class="grade-scale-actions">
+      <button type="button" class="btn btn-primary btn-sm" data-grade-action="add">+ Add Grade Band</button>
+      <button type="button" class="btn btn-outline btn-sm" data-grade-action="reset">Reset Default Scale</button>
+    </div>
+  `;
+}
+
+function syncGradeScaleFromSetup() {
+  const container = $('grade-scale-inputs');
+  if (!container) return ensureGradeScale();
+
+  const rows = [...container.querySelectorAll('[data-grade-row]')];
+  const nextScale = rows.map(row => {
+    const label = row.querySelector('[data-grade-field="label"]')?.value ?? '';
+    const minMark = row.querySelector('[data-grade-field="minMark"]')?.value ?? '';
+    return { label, minMark };
+  });
+
+  state.gradeScale = sanitizeGradeScale(nextScale);
+  return state.gradeScale;
+}
+
+function addGradeBand() {
+  syncGradeScaleFromSetup();
+  const nextIndex = state.gradeScale.length + 1;
+  state.gradeScale.push({ label: `GRADE ${nextIndex}`, minMark: Math.max(0, 100 - (state.gradeScale.length * 10)) });
+  state.gradeScale = sanitizeGradeScale(state.gradeScale);
+  renderGradeScaleInputs();
+  scheduleAutoSave();
+  updateContextualCTAs();
+}
+
+function resetGradeScale() {
+  state.gradeScale = cloneDefaultGradeScale();
+  renderGradeScaleInputs();
+  scheduleAutoSave();
+  updateContextualCTAs();
+}
+
+function removeGradeBand(index) {
+  syncGradeScaleFromSetup();
+  if (index < 0 || index >= state.gradeScale.length) return;
+  state.gradeScale.splice(index, 1);
+  state.gradeScale = sanitizeGradeScale(state.gradeScale);
+  renderGradeScaleInputs();
+  scheduleAutoSave();
+  updateContextualCTAs();
+}
+
+function initGradeScaleDelegates() {
+  const container = $('grade-scale-inputs');
+  if (!container || container.dataset.delegateBound) return;
+  container.dataset.delegateBound = '1';
+
+  container.addEventListener('input', (evt) => {
+    const input = evt.target.closest('input[data-grade-field]');
+    if (!input) return;
+    syncGradeScaleFromSetup();
+    scheduleAutoSave();
+    updateContextualCTAs();
+  });
+
+  container.addEventListener('change', (evt) => {
+    const input = evt.target.closest('input[data-grade-field]');
+    if (!input) return;
+    syncGradeScaleFromSetup();
+    // Re-render after threshold edits so grade bands auto-sort by required mark.
+    if (input.dataset.gradeField === 'minMark') {
+      renderGradeScaleInputs();
+    }
+    scheduleAutoSave();
+    updateContextualCTAs();
+  });
+
+  container.addEventListener('click', (evt) => {
+    const button = evt.target.closest('button[data-grade-action]');
+    if (!button) return;
+    const row = button.closest('[data-grade-row]');
+    const index = Number(row?.dataset?.gradeIndex);
+    const action = button.dataset.gradeAction;
+
+    syncGradeScaleFromSetup();
+    if (action === 'add') addGradeBand();
+    else if (action === 'reset') resetGradeScale();
+    else if (action === 'remove') removeGradeBand(index);
   });
 }
 
@@ -8528,31 +8879,74 @@ function computeAnalysisInWorker() {
   return new Promise((resolve, reject) => {
     try {
       ensureSubjectThresholds();
+      ensureGradeScale();
       const worker = new Worker('analysis.worker.js');
+      let settled = false;
+
+      const finishResolve = (value) => {
+        if (settled) return;
+        settled = true;
+        resolve(value);
+      };
+
+      const finishReject = (error) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
+
+      const resolveWithFallback = (reason) => {
+        try {
+          const fallback = Stat.computeAll();
+          if (fallback) {
+            fallback.analysisSource = 'main-thread-fallback';
+            console.warn('Analysis worker unavailable, using main-thread fallback:', reason);
+            finishResolve(fallback);
+            return;
+          }
+          finishReject(new Error(reason || 'Analysis failed with no fallback result'));
+        } catch (err) {
+          finishReject(err);
+        }
+      };
+
       const payload = {
         students: state.students,
         subjects: state.subjects,
         subjectMaxMarks: state.subjectMaxMarks,
         subjectFailMarks: state.subjectFailMarks,
+        gradeScale: getActiveGradeScale(),
         missingMarkMode: normalizeMissingMarkMode(state.missingMarkMode)
       };
       const timeoutId = setTimeout(() => {
         worker.terminate();
-        reject(new Error('Analysis worker timed out'));
+        resolveWithFallback('Analysis worker timed out');
       }, 15000);
       worker.onmessage = (evt) => {
         clearTimeout(timeoutId);
         worker.terminate();
-        if (evt.data?.ok) resolve(evt.data.result);
-        else reject(new Error(evt.data?.error || 'Worker failed'));
+        if (evt.data?.ok) finishResolve(evt.data.result);
+        else resolveWithFallback(evt.data?.error || 'Worker failed');
       };
       worker.onerror = (err) => {
         clearTimeout(timeoutId);
         worker.terminate();
-        reject(err);
+        resolveWithFallback(err?.message || 'Worker runtime error');
       };
       worker.postMessage(payload);
     } catch (err) {
+      try {
+        const fallback = Stat.computeAll();
+        if (fallback) {
+          fallback.analysisSource = 'main-thread-fallback';
+          console.warn('Analysis worker initialization failed, using main-thread fallback:', err);
+          resolve(fallback);
+          return;
+        }
+      } catch (fallbackErr) {
+        reject(fallbackErr);
+        return;
+      }
       reject(err);
     }
   });
@@ -8785,6 +9179,14 @@ function fmtNum(n, d=1) {
   if(n == null || isNaN(n)) return '—';
   const rounded = Number(n).toFixed(d);
   return parseFloat(rounded).toString();
+}
+function fmtOneDecimal(n) {
+  if (n == null || isNaN(n)) return '—';
+  return Number(n).toFixed(1);
+}
+function fmtModeValues(values) {
+  if (!Array.isArray(values) || !values.length) return '—';
+  return values.map(v => fmtOneDecimal(v)).join(', ');
 }
 function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
@@ -9888,7 +10290,9 @@ const Stat = {
     const { students, subjects } = state;
     if(!students.length||!subjects.length) return null;
     ensureSubjectThresholds();
+    ensureGradeScale();
     const missingMarkMode = normalizeMissingMarkMode(state.missingMarkMode);
+    const activeGradeScale = getActiveGradeScale();
 
     // Per-student means
     const studentStats = students.map(s => {
@@ -9911,8 +10315,20 @@ const Stat = {
         validMarks: vals,
         normalizedMarks: normalizedVals,
         missingCount,
-        mean: normalizedVals.length ? Stat.mean(normalizedVals) : null
+        mean: normalizedVals.length ? Stat.mean(normalizedVals) : null,
+        grade: resolveGradeFromMean(normalizedVals.length ? Stat.mean(normalizedVals) : null, activeGradeScale)
       };
+    });
+
+    const gradeDistribution = activeGradeScale.map(band => ({
+      label: band.label,
+      minMark: band.minMark,
+      count: 0
+    }));
+
+    studentStats.forEach(student => {
+      const hit = gradeDistribution.find(item => item.label === student.grade);
+      if (hit) hit.count += 1;
     });
 
     // Per-subject stats
@@ -9982,6 +10398,8 @@ const Stat = {
     const totalMissingMarks = studentStats.reduce((sum, s) => sum + (s.missingCount || 0), 0);
 
     return { studentStats, subjectStats, classBox, sorted,
+         gradeScale: activeGradeScale,
+         gradeDistribution,
              lowerQ, topQ, botQ, meanOutliers,
              classMean: Stat.mean(means),
              classMedian: Stat.median(means),
@@ -10161,13 +10579,18 @@ function removeSubject(name) {
 }
 function renderSubjectChips() {
   const c = $('subject-chips');
-  if(!state.subjects.length) { c.innerHTML='<span class="text-sm text-muted">No subjects added yet.</span>'; return; }
+  if(!state.subjects.length) {
+    c.innerHTML='<span class="text-sm text-muted">No subjects added yet.</span>';
+    renderGradeScaleInputs();
+    return;
+  }
   c.innerHTML = state.subjects.map(s=>`
     <div class="chip">
       ${esc(s)}
       <button type="button" class="chip-del" data-subject="${esc(s)}" title="Remove" aria-label="Remove ${esc(s)}">×</button>
     </div>`).join('');
   renderMaxMarksInputs();
+  renderGradeScaleInputs();
 }
 
 function renderMaxMarksInputs() {
@@ -10181,11 +10604,13 @@ function renderMaxMarksInputs() {
   container.innerHTML = state.subjects.map(subj=>{
     const maxMark = getSubjectMaxMark(subj);
     const failMark = getSubjectFailMark(subj);
-    return `<div class="field">
+    return `<div class="threshold-card">
+      <div class="field threshold-field">
       <label>${esc(subj)} (max and fail mark)</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="threshold-input-row">
         <input type="number" min="1" max="1000" step="1" value="${maxMark}" title="Maximum Mark" data-subject="${esc(subj)}" data-threshold="max">
         <input type="number" min="0" max="${maxMark}" step="0.5" value="${failMark}" title="Fail Mark (below this is fail)" data-subject="${esc(subj)}" data-threshold="fail">
+      </div>
       </div>
     </div>`;
   }).join('');
@@ -10239,6 +10664,7 @@ function updateSubjectFailMark(subject, value) {
 }
 
 function proceedToEntry() {
+  syncGradeScaleFromSetup();
   syncHierarchyFromSetup();
   rebuildMarksTable();
   switchTab('entry');
@@ -10375,6 +10801,7 @@ function loadSampleData(selectedKey) {
   state.subjects = [...sample.subjects];
   state.subjectMaxMarks = { ...sample.subjectMaxMarks };
   state.subjectFailMarks = {};
+  state.gradeScale = cloneDefaultGradeScale();
   state.subjects.forEach(subj => {
     state.subjectFailMarks[subj] = defaultFailMarkForMax(getSubjectMaxMark(subj));
   });
@@ -10388,6 +10815,7 @@ function loadSampleData(selectedKey) {
   });
 
   renderSubjectChips();
+  renderGradeScaleInputs();
   updateBarInfo();
   rebuildMarksTable();
   updateContextualCTAs();
@@ -10864,6 +11292,7 @@ function handleBackupImport(event) {
 function exportCSV() {
   if(!state.students.length) { toast('No data to export','warn'); return; }
   ensureSubjectThresholds();
+  ensureGradeScale();
   const q = (v) => {
     let s = String(v ?? '');
     if (/^\s*[=+\-@]/.test(s) || /^[\t]/.test(s)) {
@@ -10873,6 +11302,9 @@ function exportCSV() {
   };
 
   let csv = '';
+  getActiveGradeScale().forEach(band => {
+    csv += ['__EDUSTATS_GRADE__', q(band.label), band.minMark].join(',') + '\n';
+  });
   state.subjects.forEach(subj => {
     csv += ['__EDUSTATS_THRESHOLD__', q(subj), getSubjectMaxMark(subj), getSubjectFailMark(subj)].join(',') + '\n';
   });
@@ -10901,13 +11333,28 @@ function handleCSVImport(event) {
     try {
       setLiveLoaderProgress(22, 'Scanning CSV structure…');
       const lines=e.target.result.split('\n').filter(l=>l.trim());
+      const importedGradeScale = [];
       const importedMaxMarks = {};
       const importedFailMarks = {};
       let headerIndex = 0;
 
       while (headerIndex < lines.length) {
         const metaCells = parseCsvLine(lines[headerIndex]);
-        if ((metaCells[0] || '').trim() !== '__EDUSTATS_THRESHOLD__') break;
+        const metaType = (metaCells[0] || '').trim();
+        if (metaType !== '__EDUSTATS_GRADE__' && metaType !== '__EDUSTATS_THRESHOLD__') break;
+
+        if (metaType === '__EDUSTATS_GRADE__') {
+          const label = (metaCells[1] || '').trim().replace(/"/g,'');
+          const minMark = parseFloat(metaCells[2]);
+          if (label) {
+            importedGradeScale.push({
+              label,
+              minMark: !isNaN(minMark) ? Math.min(100, Math.max(0, minMark)) : 100
+            });
+          }
+          headerIndex++;
+          continue;
+        }
 
         const subject = (metaCells[1] || '').trim().replace(/"/g,'');
         const max = parseFloat(metaCells[2]);
@@ -10927,6 +11374,11 @@ function handleCSVImport(event) {
       setLiveLoaderProgress(42, 'Reading subjects and thresholds…');
       const headers=parseCsvLine(lines[headerIndex]).map(h=>h.trim().replace(/"/g,''));
       const subjCols=headers.slice(2, headers.indexOf('Mean')>-1 ? headers.indexOf('Mean') : headers.length);
+      if (importedGradeScale.length) {
+        state.gradeScale = sanitizeGradeScale(importedGradeScale);
+      } else if (!Array.isArray(state.gradeScale) || !state.gradeScale.length) {
+        state.gradeScale = cloneDefaultGradeScale();
+      }
       // Merge subjects
       subjCols.forEach(s=>{
         if(!state.subjects.includes(s)) state.subjects.push(s);
@@ -10947,7 +11399,9 @@ function handleCSVImport(event) {
       }
       setLiveLoaderProgress(88, 'Normalizing thresholds and refreshing views…');
       ensureSubjectThresholds();
+      ensureGradeScale();
       renderSubjectChips();
+      renderGradeScaleInputs();
       rebuildMarksTable();
       updateContextualCTAs();
       scheduleAutoSave();
@@ -11004,9 +11458,11 @@ function parseCsvLine(line){
    ║              ANALYSIS                             ║
    ╚═══════════════════════════════════════════════════╝ */
 async function runAnalysis() {
+  syncGradeScaleFromSetup();
   syncHierarchyFromSetup();
   if (isTaskBusy('analysis')) return;
   ensureSubjectThresholds();
+  ensureGradeScale();
   const validationMsg = validateEntryForAnalysis();
   if(validationMsg) {
     setInlineValidation(validationMsg, 'err');
@@ -11061,12 +11517,20 @@ function renderAnalysisTab() {
   const scopeLabel = getHierarchyScopeLabel();
   const showDetailed = !!state.analysisDetailView;
   let tipCounter = 0;
-  const rankingTableMinWidth = Math.max(showDetailed ? 860 : 760, (showDetailed ? 350 : 260) + state.subjects.length * 84);
+  const rankingTableMinWidth = Math.max(showDetailed ? 940 : 820, (showDetailed ? 390 : 300) + state.subjects.length * 84);
   const nextTipId = () => `detail-tip-${++tipCounter}`;
   const n = A.studentStats.length;
   const missingStudents = Number(A.studentsWithMissingMarks ?? 0);
   const totalMissingMarks = Number(A.totalMissingMarks ?? 0);
   const analysisMode = getMissingMarkModeLabel(A.missingMarkMode || state.missingMarkMode);
+  const activeGradeScale = sanitizeGradeScale(A.gradeScale || state.gradeScale || DEFAULT_GRADE_SCALE);
+  const gradeDistribution = Array.isArray(A.gradeDistribution) && A.gradeDistribution.length
+    ? A.gradeDistribution
+    : activeGradeScale.map(band => ({
+        label: band.label,
+        minMark: band.minMark,
+        count: A.studentStats.filter(student => resolveGradeFromMean(student.mean, activeGradeScale) === band.label).length
+      }));
   const top = A.sorted[0], bot = A.sorted[A.sorted.length-1];
   const fmtOne = (v) => (v == null || isNaN(v)) ? '—' : Number(v).toFixed(1);
   const normalizeToPercent = (score, subject) => {
@@ -11128,26 +11592,41 @@ function renderAnalysisTab() {
       <div class="sub">blank entries in class data</div>
     </div>`;
 
-  if(A.classBox && showDetailed) html += `
-    <div class="stat-card">
-      <div class="lbl">Q1 (25th %ile)</div>
-      <div class="val">${fmtNum(A.classBox.q1)}</div>
-      <div class="sub">lower quartile</div>
-    </div>
-    <div class="stat-card">
-      <div class="lbl">Q3 (75th %ile)</div>
-      <div class="val">${fmtNum(A.classBox.q3)}</div>
-      <div class="sub">upper quartile</div>
-    </div>
-    <div class="stat-card">
-      <div class="lbl">IQR</div>
-      <div class="val">${fmtNum(A.classBox.iqr)}</div>
-      <div class="sub">Q3 − Q1</div>
-    </div>`;
-
-  if(top) html += `<div class="stat-card green-card"><div class="lbl">Top Score</div><div class="val">${fmtNum(top.mean)}</div><div class="sub">${esc(top.name)}</div></div>`;
-  if(bot) html += `<div class="stat-card red-card"><div class="lbl">Lowest Score</div><div class="val">${fmtNum(bot.mean)}</div><div class="sub">${esc(bot.name)}</div></div>`;
   html += `</div>`;
+
+  html += `<div class="card" style="margin-bottom:14px;">
+    <div class="card-head">
+      <div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/badge.svg" alt="" aria-hidden="true"></span> Grade Distribution</div>
+    </div>
+    <div class="chips">
+      ${gradeDistribution.map(band => `<div class="chip"><span class="badge ${gradeBandTone(band.label)}" style="margin-right:8px;">${esc(band.label)}</span> ${fmtNum(band.minMark, 1)}+ <span class="text-muted" style="margin-left:8px;">${band.count} student${band.count === 1 ? '' : 's'}</span></div>`).join('')}
+    </div>
+  </div>`;
+
+  const extraStatCards = [];
+  if (A.classBox && showDetailed) {
+    extraStatCards.push(`
+      <div class="stat-card">
+        <div class="lbl">Q1 (25th %ile)</div>
+        <div class="val">${fmtNum(A.classBox.q1)}</div>
+        <div class="sub">lower quartile</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Q3 (75th %ile)</div>
+        <div class="val">${fmtNum(A.classBox.q3)}</div>
+        <div class="sub">upper quartile</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">IQR</div>
+        <div class="val">${fmtNum(A.classBox.iqr)}</div>
+        <div class="sub">Q3 − Q1</div>
+      </div>`);
+  }
+  if(top) extraStatCards.push(`<div class="stat-card green-card"><div class="lbl">Top Score</div><div class="val">${fmtNum(top.mean)}</div><div class="sub">${esc(top.name)}</div></div>`);
+  if(bot) extraStatCards.push(`<div class="stat-card red-card"><div class="lbl">Lowest Score</div><div class="val">${fmtNum(bot.mean)}</div><div class="sub">${esc(bot.name)}</div></div>`);
+  if (extraStatCards.length) {
+    html += `<div class="stat-row">${extraStatCards.join('')}</div>`;
+  }
 
   // Per-subject stats table
   html += `<div class="card">
@@ -11213,6 +11692,7 @@ function renderAnalysisTab() {
   html += `</tbody></table></div></div>`;
 
   const rankingRows = A.studentStats.map((s) => {
+    const studentGrade = s.grade || resolveGradeFromMean(s.mean, activeGradeScale);
     const subjectScores = {};
     let passCount = 0;
     let failCount = 0;
@@ -11255,6 +11735,7 @@ function renderAnalysisTab() {
 
     return {
       ...s,
+      grade: studentGrade,
       subjectScores,
       passCount,
       failCount,
@@ -11348,7 +11829,7 @@ function renderAnalysisTab() {
     <th style="text-align:left">ID</th>
     <th style="text-align:left">Name</th>`;
   state.subjects.forEach(s=>{ html+=`<th class="subject-col">${esc(s)}</th>`; });
-  html+=`<th class="mean-col">Mean</th>${showDetailed ? '<th class="quartile-col">Quartile</th>' : ''}</tr></thead><tbody>`;
+  html+=`<th class="mean-col">Mean</th><th>Grade</th>${showDetailed ? '<th class="quartile-col">Quartile</th>' : ''}</tr></thead><tbody>`;
 
   displayRows.forEach((s,i)=>{
     const qLabel = A.classBox ? (
@@ -11376,17 +11857,18 @@ function renderAnalysisTab() {
       html+=`<td class="${cls} subject-col">${(!isNaN(num))?fmtOne(num):'—'}</td>`;
     });
         html+=`<td class="mean-col" style="font-weight:700;color:var(--primary);font-family:var(--font-mono)">${fmtOne(s.weightedTotal ?? s.mean)}</td>
+          <td><span class="badge ${gradeBandTone(s.grade)}">${esc(s.grade || '—')}</span></td>
           ${showDetailed ? `<td class="quartile-col">${qLabel}</td>` : ''}</tr>`;
   });
   if(!displayRows.length) {
-    html += `<tr><td colspan="${4 + state.subjects.length + (showDetailed ? 1 : 0)}" class="text-muted" style="text-align:center;padding:16px">No students match this filter.</td></tr>`;
+    html += `<tr><td colspan="${5 + state.subjects.length + (showDetailed ? 1 : 0)}" class="text-muted" style="text-align:center;padding:16px">No students match this filter.</td></tr>`;
   }
   html+=`</tbody></table></div>
   <div class="divider"></div>
   <div class="text-sm text-muted" style="line-height:1.8">
       Green cell = stronger relative score in that subject &nbsp;|&nbsp;
       Red cell = below target or lower relative score
-      ${showDetailed ? '&nbsp;|&nbsp; Yellow cell = unusual score pattern' : ''}
+      ${showDetailed ? '&nbsp;|&nbsp; Yellow cell = unusual score pattern' : ''} &nbsp;|&nbsp; Grade badges follow the setup scale.
   </div>
   </div>`;
 
@@ -12319,7 +12801,7 @@ function getClassPdfChartConfig(kind, A) {
     return {
       type: 'bar',
       data: {
-        labels: bins.map(b => `${fmtNum(b.from,0)}-${fmtNum(b.to,0)}`),
+        labels: bins.map(b => `${fmtOneDecimal(b.from)}-${fmtOneDecimal(b.to)}`),
         datasets: [{
           label: 'Students',
           data: bins.map(b => b.count),
@@ -12424,7 +12906,7 @@ function getClassPdfChartConfig(kind, A) {
   }];
   if (reg) {
     datasets.push({
-      label: `Trend (R²=${reg.r2.toFixed(2)})`,
+      label: `Trend (R²=${reg.r2.toFixed(1)})`,
       data: [{ x: 1, y: reg.predict(1) }, { x: pts.length, y: reg.predict(pts.length) }],
       type: 'line',
       borderColor: '#dc2626',
@@ -12524,19 +13006,23 @@ async function generateStudentPDF() {
 
     const rank = A.sorted.findIndex(s=>s.id===student.id)+1;
     const total = A.sorted.length;
+    const studentGrade = student.grade || resolveGradeFromMean(student.mean, A.gradeScale || state.gradeScale || DEFAULT_GRADE_SCALE);
     const qLabel = A.classBox?(student.mean>A.classBox.q3?'Top 25%':student.mean>=A.classBox.q2?'Upper Middle':student.mean>=A.classBox.q1?'Lower Middle':'Bottom 25%'):'—';
     const bannerInfo1 = `ID: ${student.id}   ·   Rank: ${rank}/${total}`;
-    const bannerInfo2 = `Quartile: ${qLabel}`;
+    const bannerInfo2 = `Quartile: ${qLabel}   ·   Grade: ${studentGrade}`;
     doc.text(bannerInfo1, 20, y+16);
     doc.text(bannerInfo2, 20, y+22);
 
     doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(30,75,143);
-    doc.text(`Mean: ${fmtNum(student.mean)}/100`, W-20, y+12, {align:'right'});
+    doc.text(`Mean: ${fmtOneDecimal(student.mean)}/100`, W-20, y+12, {align:'right'});
+    doc.setFontSize(10); doc.setTextColor(51,65,85);
+    doc.text(`Grade: ${studentGrade}`, W-20, y+18, {align:'right'});
     doc.setTextColor(0,0,0);
     y += 36;
 
     // Marks table with progress bars
     y = pdfSection(doc, y, '1. Mark Breakdown with Progress', W);
+    const reportGradeScale = sanitizeGradeScale(A.gradeScale || state.gradeScale || DEFAULT_GRADE_SCALE);
     const subjRows = state.subjects.map(subj=>{
       const v=student.marks[subj]; const num=parseFloat(v);
       const maxMark = getSubjectMaxMark(subj);
@@ -12545,34 +13031,38 @@ async function generateStudentPDF() {
       const diff=(!isNaN(num)&&cm)?num-cm:null;
       const status = isNaN(num) ? 'Missing' : (num < failMark ? 'Fail' : 'Pass');
       const pct = !isNaN(num) ? Math.min(100, (num/maxMark)*100) : 0;
+      const subjectGrade = !isNaN(num)
+        ? resolveGradeFromMean((num / maxMark) * 100, reportGradeScale)
+        : '—';
       return [
         subj,
-        !isNaN(num)?fmtNum(num):'—',
-        fmtNum(maxMark),
-        fmtNum(failMark),
-        cm?fmtNum(cm):'—',
-        diff!==null?(diff>=0?'+':'')+fmtNum(diff):'—',
+        !isNaN(num)?fmtOneDecimal(num):'—',
+        fmtOneDecimal(maxMark),
+        subjectGrade,
+        fmtOneDecimal(failMark),
+        cm?fmtOneDecimal(cm):'—',
+        diff!==null?(diff>=0?'+':'')+fmtOneDecimal(diff):'—',
         status,
         pct // Progress percentage
       ];
     });
     doc.autoTable({
-      head:[['Subject','Score/Max','Achievement']],
-      body:subjRows.map(row=>[row[0],`${row[1]}/${row[2]}`,'']),
+      head:[['Subject','Score/Max','Grade','Achievement']],
+      body:subjRows.map(row=>[row[0],`${row[1]}/${row[2]}`, row[3], '']),
       startY:y,
       tableWidth:W-28,
       styles:{fontSize:10,cellPadding:4.5,halign:'center',valign:'middle'},
       headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:11},
-      columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:64},1:{halign:'center',cellWidth:44},2:{halign:'center',cellWidth:74}},
+      columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:56},1:{halign:'center',cellWidth:36},2:{halign:'center',cellWidth:20,fontStyle:'bold'},3:{halign:'center',cellWidth:70}},
       margin:{top:2,right:14,bottom:2,left:14},
       didParseCell:data=>{
-        if(data.section==='body'&&data.column.index===2){
+        if(data.section==='body'&&data.column.index===3){
           data.cell.text='';
         }
       },
       didDrawCell:data=>{
-        if(data.section==='body'&&data.column.index===2){
-          const pct=parseFloat(subjRows[data.row.index][7]);
+        if(data.section==='body'&&data.column.index===3){
+          const pct=parseFloat(subjRows[data.row.index][8]);
           if(!isNaN(pct)&&pct>0){
             const cellPadding=4;
             const barX=data.cell.x+cellPadding;
@@ -12588,7 +13078,7 @@ async function generateStudentPDF() {
             doc.setFillColor(...barColor);
             doc.rect(barX,barY,fillW,barH,'F');
             doc.setFontSize(8.5);doc.setTextColor(30,30,30);doc.setFont('helvetica','bold');
-            doc.text(Math.round(pct)+'%',barX+barW+3,barY+5);
+            doc.text(fmtOneDecimal(pct)+'%',barX+barW+3,barY+5);
           }
         }
       }
@@ -12654,11 +13144,11 @@ async function generateStudentPDF() {
     });
     const performAdj = student.mean>=80?'excellent':student.mean>=65?'good':student.mean>=50?'satisfactory':student.mean>=40?'below average':'poor';
     const narrative = [
-      `${student.name||student.id} achieved an overall mean of ${fmtNum(student.mean)} (${performAdj}) and ranked ${rank} out of ${total} students.`,
+      `${student.name||student.id} achieved an overall mean of ${fmtOneDecimal(student.mean)} (${performAdj}) and grade ${studentGrade}, ranking ${rank} out of ${total} students.`,
       failedSubjects.length ? `Below fail mark in: ${failedSubjects.join(', ')}.` : 'No subject score fell below the fail mark.',
-      best?`Their strongest subject was ${best} (${fmtNum(parseFloat(student.marks[best]))}).`:'',
-      worst&&worst!==best?`Their weakest subject was ${worst} (${fmtNum(parseFloat(student.marks[worst]))}), which may benefit from additional support.`:'',
-      A.classBox?`The student is in the ${qLabel} of the class (Class Q1=${fmtNum(A.classBox.q1)}, Q3=${fmtNum(A.classBox.q3)}).`:''
+      best?`Their strongest subject was ${best} (${fmtOneDecimal(parseFloat(student.marks[best]))}).`:'',
+      worst&&worst!==best?`Their weakest subject was ${worst} (${fmtOneDecimal(parseFloat(student.marks[worst]))}), which may benefit from additional support.`:'',
+      A.classBox?`The student is in the ${qLabel} of the class (Class Q1=${fmtOneDecimal(A.classBox.q1)}, Q3=${fmtOneDecimal(A.classBox.q3)}).`:''
     ].filter(Boolean);
 
     const lineHeight = 7;
@@ -12708,7 +13198,7 @@ async function generateStudentPDF() {
         const guidance = pointsNeeded <= 5 ? 'Targeted practice in key topics' : 
                          pointsNeeded <= 15 ? 'Comprehensive review and tutoring' : 
                          'Intensive intervention program recommended';
-        const line = `${subj}: ${fmtNum(score)}/${fmtNum(maxMark)} — ${guidance} (+${fmtNum(pointsNeeded)} pts to pass)`;
+        const line = `${subj}: ${fmtOneDecimal(score)}/${fmtOneDecimal(maxMark)} — ${guidance} (+${fmtOneDecimal(pointsNeeded)} pts to pass)`;
         doc.text(line, 17, y);
         y += 5;
       });
@@ -12764,6 +13254,7 @@ async function generateClassPDF() {
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(51,65,85);
     const navItems = [
       '1. Class Overview — Summary statistics & performance cards',
+      '1b. Grade Distribution — Custom grade bands and counts',
       '2a. Summary Statistics — Pass/fail rates & central tendency',
       '2b. Distribution & Outliers — Quartiles, range, outlier identification',
       '3. Subject Comparison — Relative subject performance',
@@ -12782,13 +13273,13 @@ async function generateClassPDF() {
     y = pdfSection(doc, y, '1. Class Overview', W);
     const cards = [
       ['Students',String(A.studentStats.length)],
-      ['Class Mean',fmtNum(A.classMean)],
-      ['Median',fmtNum(A.classMedian)],
-      ['Lower Quartile',A.classBox?fmtNum(A.classBox.q1):'—'],
-      ['Upper Quartile',A.classBox?fmtNum(A.classBox.q3):'—'],
-      ['Spread (IQR)',A.classBox?fmtNum(A.classBox.iqr):'—'],
-      ['Highest',fmtNum(A.sorted[0]?.mean)],
-      ['Lowest',fmtNum(A.sorted[A.sorted.length-1]?.mean)]
+      ['Class Mean',fmtOneDecimal(A.classMean)],
+      ['Median',fmtOneDecimal(A.classMedian)],
+      ['Lower Quartile',A.classBox?fmtOneDecimal(A.classBox.q1):'—'],
+      ['Upper Quartile',A.classBox?fmtOneDecimal(A.classBox.q3):'—'],
+      ['Spread (IQR)',A.classBox?fmtOneDecimal(A.classBox.iqr):'—'],
+      ['Highest',fmtOneDecimal(A.sorted[0]?.mean)],
+      ['Lowest',fmtOneDecimal(A.sorted[A.sorted.length-1]?.mean)]
     ];
     const cardW=(W-28)/cards.length;
     cards.forEach(([lbl,val],i)=>{
@@ -12803,14 +13294,34 @@ async function generateClassPDF() {
     });
     y+=26;
 
+    const gradeRows = (Array.isArray(A.gradeDistribution) && A.gradeDistribution.length
+      ? A.gradeDistribution
+      : sanitizeGradeScale(A.gradeScale || state.gradeScale || DEFAULT_GRADE_SCALE).map(band => ({
+          label: band.label,
+          minMark: band.minMark,
+          count: A.studentStats.filter(student => resolveGradeFromMean(student.mean, A.gradeScale || state.gradeScale || DEFAULT_GRADE_SCALE) === band.label).length
+        })))
+      .map(band => [band.label, `${fmtOneDecimal(band.minMark)}+`, String(band.count ?? 0), A.studentStats.length ? fmtOneDecimal(((band.count || 0) * 100) / A.studentStats.length) + '%' : '—']);
+
+    y = pdfSection(doc, y, '1b. Grade Distribution', W);
+    doc.autoTable({
+      head:[['Grade','Min Mark','Students','Share']],
+      body:gradeRows,
+      startY:y,
+      styles:{fontSize:9,cellPadding:3,halign:'center',valign:'middle'},
+      headStyles:{fillColor:[30,75,143],textColor:255,fontStyle:'bold',fontSize:10},
+      columnStyles:{0:{fontStyle:'bold',halign:'left',cellWidth:45},1:{halign:'center',cellWidth:35},2:{halign:'center',cellWidth:28},3:{halign:'center',cellWidth:28}}
+    });
+    y=doc.lastAutoTable.finalY+10;
+
     // Per-subject stats - Split into two tables for readability
     y = pdfSection(doc, y, '2a. Per-Subject Summary Statistics', W);
     const subjSummaryHead=[['Subject','N','Max','Fail','Pass %','Fail %','Mean','Median','StdDev']];
     const subjSummaryBody = state.subjects.map(subj=>{
       const ss=A.subjectStats[subj];
-      return [subj,ss.count,fmtNum(getSubjectMaxMark(subj)),fmtNum(ss.failMark),
-              ss.passRate==null?'—':fmtNum(ss.passRate,1)+'%',ss.failRate==null?'—':fmtNum(ss.failRate,1)+'%',
-              fmtNum(ss.mean),fmtNum(ss.median),fmtNum(ss.stdDev)];
+            return [subj,ss.count,fmtOneDecimal(getSubjectMaxMark(subj)),fmtOneDecimal(ss.failMark),
+              ss.passRate==null?'—':fmtOneDecimal(ss.passRate)+'%',ss.failRate==null?'—':fmtOneDecimal(ss.failRate)+'%',
+              fmtOneDecimal(ss.mean),fmtOneDecimal(ss.median),fmtOneDecimal(ss.stdDev)];
     });
     doc.autoTable({
       head:subjSummaryHead, body:subjSummaryBody, startY:y,
@@ -12829,8 +13340,8 @@ async function generateClassPDF() {
     const subjDistribHead=[['Subject','Mode','Min','Q1','Med','Q3','Max','IQR','Out']];
     const subjDistribBody = state.subjects.map(subj=>{
       const ss=A.subjectStats[subj]; const b=ss.box;
-      return [subj,ss.mode?ss.mode.join(', '):'—',b?fmtNum(b.min):'—',b?fmtNum(b.q1):'—',b?fmtNum(b.q2):'—',
-              b?fmtNum(b.q3):'—',b?fmtNum(b.max):'—',b?fmtNum(b.iqr):'—',ss.outliers.length];
+            return [subj,fmtModeValues(ss.mode),b?fmtOneDecimal(b.min):'—',b?fmtOneDecimal(b.q1):'—',b?fmtOneDecimal(b.q2):'—',
+              b?fmtOneDecimal(b.q3):'—',b?fmtOneDecimal(b.max):'—',b?fmtOneDecimal(b.iqr):'—',ss.outliers.length];
     });
     doc.autoTable({
       head:subjDistribHead, body:subjDistribBody, startY:y,
@@ -12878,9 +13389,9 @@ async function generateClassPDF() {
       return y;
     };
 
-    y=flagTable('Top Scorers (Above Q3)',A.topQ,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Rank',s=>A.sorted.findIndex(x=>x.id===s.id)+1]]);
-    y=flagTable('Students Needing Support (Below Q1)',A.botQ,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Rank',s=>A.sorted.findIndex(x=>x.id===s.id)+1]]);
-    y=flagTable('Statistical Outliers (IQR Method)',A.meanOutliers,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtNum(s.mean)],['Type',s=>s.mean<(A.classBox?.fence_lo||0)?'Low Outlier':'High Outlier']]);
+    y=flagTable('Top Scorers (Above Q3)',A.topQ,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtOneDecimal(s.mean)],['Rank',s=>A.sorted.findIndex(x=>x.id===s.id)+1]]);
+    y=flagTable('Students Needing Support (Below Q1)',A.botQ,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtOneDecimal(s.mean)],['Rank',s=>A.sorted.findIndex(x=>x.id===s.id)+1]]);
+    y=flagTable('Statistical Outliers (IQR Method)',A.meanOutliers,[['ID',s=>s.id],['Name',s=>s.name],['Mean',s=>fmtOneDecimal(s.mean)],['Type',s=>s.mean<(A.classBox?.fence_lo||0)?'Low Outlier':'High Outlier']]);
 
     // Full class table - responsive chunks for many subjects
     const allSubjects = [...state.subjects];
@@ -12962,9 +13473,9 @@ async function generateClassPDF() {
           s.id,
           ...subjectSlice.map(subj=>{
             const v=s.marks[subj];
-            return !isNaN(parseFloat(v))?fmtNum(parseFloat(v)):'—';
+            return !isNaN(parseFloat(v))?fmtOneDecimal(parseFloat(v)):'—';
           }),
-          fmtNum(s.mean),
+          fmtOneDecimal(s.mean),
           qLabel
         ];
       });
@@ -14255,6 +14766,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   renderInstitutionSelect();
   applyRoleRoute();
   initSubjectControlDelegates();
+  initGradeScaleDelegates();
   initMarkCellDelegates();
   $('institution-select')?.addEventListener('change', (e) => {
     switchInstitution(e.target.value);
@@ -14285,6 +14797,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   initRefreshWarning();
   initDensityPreference();
   initAnalysisDetailPreference();
+  ensureGradeScale();
   switchTab('home');
   updateTabCompletion();
   enhanceTransitions();
