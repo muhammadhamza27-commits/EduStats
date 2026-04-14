@@ -73,6 +73,43 @@ function defaultFailMark(maxMark) {
   return Number((max * 0.4).toFixed(1));
 }
 
+const DEFAULT_GRADE_SCALE = Object.freeze([
+  { label: 'A+', minMark: 90 },
+  { label: 'A', minMark: 80 },
+  { label: 'B', minMark: 70 },
+  { label: 'C', minMark: 60 },
+  { label: 'D', minMark: 50 }
+]);
+
+function sanitizeGradeScale(scaleLike) {
+  const source = Array.isArray(scaleLike) && scaleLike.length ? scaleLike : DEFAULT_GRADE_SCALE;
+  const seen = new Set();
+  const cleaned = [];
+
+  source.forEach((item, idx) => {
+    const rawLabel = typeof item?.label === 'string' ? item.label.trim() : '';
+    const label = (rawLabel || `GRADE ${idx + 1}`).toUpperCase().slice(0, 20);
+    if (seen.has(label)) return;
+    seen.add(label);
+    const parsed = Number(item?.minMark);
+    const minMark = Number.isFinite(parsed) ? Math.min(100, Math.max(0, parsed)) : Math.max(0, 100 - (idx * 10));
+    cleaned.push({ label, minMark: Number(minMark.toFixed(1)) });
+  });
+
+  if (!cleaned.length) {
+    return DEFAULT_GRADE_SCALE.map(item => ({ ...item }));
+  }
+
+  return cleaned.sort((a, b) => b.minMark - a.minMark);
+}
+
+function resolveGradeFromMean(meanValue, gradeScale) {
+  const mean = Number(meanValue);
+  if (!Number.isFinite(mean)) return '—';
+  const hit = gradeScale.find(item => mean >= item.minMark);
+  return hit ? hit.label : gradeScale[gradeScale.length - 1].label;
+}
+
 function resolveSubjectMax(subjectMaxMarks, subject) {
   const maxRaw = Number(subjectMaxMarks?.[subject]);
   return Math.max(1, Number.isFinite(maxRaw) ? maxRaw : 100);
@@ -104,11 +141,12 @@ function resolveMarkValue(raw, subject, subjectMaxMarks, missingMarkMode) {
   return Math.min(max, Math.max(0, parsed));
 }
 
-function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks, missingMarkMode }) {
+function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks, gradeScale, missingMarkMode }) {
   if (!Array.isArray(students) || !Array.isArray(subjects) || !students.length || !subjects.length) {
     return null;
   }
   const activeMissingMode = normalizeMissingMarkMode(missingMarkMode);
+  const activeGradeScale = sanitizeGradeScale(gradeScale);
 
   const studentStats = students.map(student => {
     let missingCount = 0;
@@ -130,13 +168,26 @@ function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks
       })
       .filter(v => !Number.isNaN(v));
 
+    const meanValue = normalizedVals.length ? mean(normalizedVals) : null;
     return {
       ...student,
       validMarks: vals,
       normalizedMarks: normalizedVals,
       missingCount,
-      mean: normalizedVals.length ? mean(normalizedVals) : null
+      mean: meanValue,
+      grade: resolveGradeFromMean(meanValue, activeGradeScale)
     };
+  });
+
+  const gradeDistribution = activeGradeScale.map(band => ({
+    label: band.label,
+    minMark: band.minMark,
+    count: 0
+  }));
+
+  studentStats.forEach(student => {
+    const hit = gradeDistribution.find(item => item.label === student.grade);
+    if (hit) hit.count += 1;
   });
 
   const perSubject = {};
@@ -196,6 +247,7 @@ function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks
 
   const lowerQ = classBox ? studentStats.filter(s => s.mean !== null && s.mean < classBox.q1) : [];
   const topQ = classBox ? studentStats.filter(s => s.mean !== null && s.mean > classBox.q3) : [];
+  // Support cohort is the lower quartile (below Q1), not statistical outliers only.
   const botQ = classBox ? studentStats.filter(s => s.mean !== null && s.mean < classBox.q1) : [];
   const meanOutliers = classBox
     ? studentStats.filter(s => s.mean !== null && (s.mean < classBox.fence_lo || s.mean > classBox.fence_hi))
@@ -217,6 +269,8 @@ function computeAnalysis({ students, subjects, subjectMaxMarks, subjectFailMarks
   return {
     studentStats,
     subjectStats: perSubject,
+    gradeScale: activeGradeScale,
+    gradeDistribution,
     classBox,
     sorted,
     lowerQ,

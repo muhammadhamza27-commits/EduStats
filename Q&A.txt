@@ -1,0 +1,79 @@
+## **I. Architecture — The Skeleton of Your System**
+
+1. When a teacher enters student marks and clicks whatever triggers calculation—
+   **what exactly happens step-by-step inside your app?**
+   (From input → processing → output. Walk through the flow like a chain reaction.)
+Ans: First, calculations will be performed locally on users device and all the mean, median, UQ, LQ and IQ is calculated for each student and for the class holistically.
+Then, based on that calcuations, graphs are rendered. After that, reports for studnets individually is geenrated for the user to download them if needed.
+
+2. Where is your data *actually stored* right now?
+   And what are the limitations of that approach in real-world use?
+Ans: All the data is stored in a cahce locally on the computer similar to session cookies and now data is transfered to any server; hence, a privacy focused data storage architechture is developed.
+
+3. If you had to scale EduStats for an entire school (hundreds of students, multiple teachers),
+   **what would break first—and why?**
+Ans: Currently, I've been working on this project for the last month, and I think, although it is has adequuate features for individual teachers, however, I lacks the structuralised architechure and data storage facilities that will enable it to be used by whole school. To make this happen, I'll have turn this webiste into a potential downloadable app which I'm not currently technically capable of (but is educating myself to gather relevant technical knowloedge).
+---
+
+## **II. Logic & Computation — The Brain**
+
+4. How are you calculating statistics (average, etc.)?
+   Don’t just name them—**explain the logic your code follows.**
+Ans: Calculations are heavily inspired my the things that I've learned in Probability and Statistics Paper 1 syllabus of AS Level Math and I've implemented most of its concepts and understanding into this project like Using Median instead of Mean to compare student progress because it is not effected by outliers. Generating Histogram and Cumulative curves for stratigic purposes to represent relavent data for the teacher to understand their classes progress at a glance and more.
+
+5. If a teacher accidentally enters invalid data (like text instead of numbers),
+   **what does your system currently do—and what *should* it do?**
+Ans: I've implemented concepts of Validation and Verification that I've learned in O Level and AS Computer Science into this project that makes sure that any abnormal data or erreneous data cannot be entered as potential student marks and checks like type check, range check are used to ensure that validation.
+
+6. Suppose a student has missing marks for one subject—
+   how does your system handle that in calculations?
+Ans: It's a realistic situation and my site will treate the marks of that subject empty (i.e zero) like in real ife meaning student didn't give that specific subejct's exam hence his mark is 0.
+---
+
+## **III. Design Decisions — The Soul**
+
+7. Why did you choose this specific UI structure?
+   What problem were you trying to reduce for the teacher?
+Ans: I've tried to reduce the congitive load from teachers mind while analysing reports and data genertaed my my site. Using blue themed UI reduces stress and increase focus and far as I've known and moreover it also provides a professional feel to my site.
+
+8. What is one design choice you made that you are confident was *correct*—
+   and one that you now believe was *weak*?
+Ans: I'm confidnet about the choice of introducing Class hierarchy to my site by introducing Class section will make a difference as It will structure the Classes unser different institutions for an individual teacher which really makes navigating and reviewing the analysis of each class much easier. As far as my weakest UI choice is that when I was developing this site in the very early stages I've used emojies instead of logos, later I realised that this choice is making the look and feel of site very childish and not professional hence I completely shifted to minimalist logos and now I'm statisfied with the result.
+---
+
+## **IV. Ownership Test — The Line Between You and AI**
+
+9. Tell me one part of the project where:
+
+   * AI gave you something
+   * and you **rejected or modified it** because it wasn’t good enough
+Ans: I've mostly, aked AI for features that she would think will be benificial for teachers and I analyse and compare those list of features that she proposes and I reject those which I conclude would only make the useability of this site worse. Let me be clear, I personally guide AI, in fixing data entry bugs, making anaysis simplifes and comprehendable for real word teachers, and I've also given immense importance to the UI and UX of this site. Personally, I'm a very creative person and art lover and this, if you look at the little easter eggs of my siet like micro interactions and animations, will be able to appriciate.
+
+10. If I remove AI from your workflow today—
+    **which part of your project could you still confidently rebuild alone, and which part would struggle?**
+Ans: I could build the data calcutaion part and basic UI of the site easily but inorder to integrate more complex features like CSV import and creating structure hierachy I will need to upgrade my technical skill set, but In this I really used my instict, and peronality and observiant personality in buidling this site and spoting a real world probelem. I think i've used the skills that I currently possed and tried to create something that will realy make a difference rather than waiting for the perfect skill set and moment like most people.
+---
+
+## **V. Depth & Extension — Beyond What Exists**
+
+11. If I asked you to add **user accounts and saved data**,
+    how would you *approach* building it? (No need for exact code—give me the architecture.)
+Ans: Currently no, because I know nothing about data servers and account managmnet but I plan to implemnt it as soon as I learn such skills in my academic journey or in vacation learning personally.
+
+12. Imagine a teacher says:
+    *“This is useful, but I want to track student progress over months.”*
+    How would you extend your system to support that?
+Ans: I've also though about introducting this feature, however, as I've said this is a very initial totally workable version of this site and I plan to add such feature over time.
+---
+
+## **VI. The Final Blade — Understanding the “Why”**
+
+13. Strip everything away—features, UI, code.
+
+**What is the *core problem* EduStats solves in one precise sentence?**
+Ans: Finding gaps, disparity in classrooms or providing data-backed evidence to teahcers to confirm their suspusions that they thought previously was true but because of no explicit data or evidence to back it they are not able to truly identify that gap.
+
+14. And be honest—
+    right now, does your solution fully solve that problem… or only partially?
+Ans: For an individual teacher, not on a institusional level, my site works perfectly and can be used in daily life to track class progess.
+---

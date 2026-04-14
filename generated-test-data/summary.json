@@ -1,0 +1,183 @@
+{
+  "input_dir": "c:\\Users\\Lenovo\\Desktop\\Code\\RawTestData",
+  "output_dir": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data",
+  "workbooks": [
+    {
+      "workbook_file": "1.xlsx",
+      "workbook_bucket": "1",
+      "class_label": "One",
+      "class_slug": "one",
+      "student_count": 24,
+      "subjects": [
+        "ISLAMIAT",
+        "ENGLISH",
+        "ENGLISH GRAMMAR",
+        "MATHEMATICS",
+        "G.K (S.ST/SCIENCE)",
+        "SINDHI",
+        "URDU",
+        "COMPUTER",
+        "ORAL"
+      ],
+      "output_folder": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data\\1__one"
+    },
+    {
+      "workbook_file": "2.xlsx",
+      "workbook_bucket": "2",
+      "class_label": "Two",
+      "class_slug": "two",
+      "student_count": 25,
+      "subjects": [
+        "ISLAMIAT",
+        "ENGLISH",
+        "ENGLISH GRAMMAR",
+        "MATHEMATICS",
+        "G.K (S.ST/SCIENCE)",
+        "SINDHI",
+        "URDU",
+        "COMPUTER",
+        "ORAL",
+        "IKHILAQIYAT"
+      ],
+      "output_folder": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data\\2__two"
+    },
+    {
+      "workbook_file": "3 (2).xlsx",
+      "workbook_bucket": "3 (2)",
+      "class_label": "THREE",
+      "class_slug": "three",
+      "student_count": 31,
+      "subjects": [
+        "ISLAMIAT",
+        "ENGLISH",
+        "ENGLISH GRAMMAR",
+        "MATHEMATICS",
+        "G.K (S.ST/SCIENCE)",
+        "SINDHI",
+        "URDU",
+        "COMPUTER",
+        "ORAL"
+      ],
+      "output_folder": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data\\3-2__three"
+    },
+    {
+      "workbook_file": "4.xlsx",
+      "workbook_bucket": "4",
+      "class_label": "FOUR",
+      "class_slug": "four",
+      "student_count": 24,
+      "subjects": [
+        "ISLAMIAT",
+        "ENGLISH",
+        "ENGLISH GRAMMAR",
+        "MATHEMATICS",
+        "SCIENCE",
+        "SOCIAL STUDIES",
+        "SINDHI",
+        "URDU",
+        "COMPUTER",
+        "G.KNOWLEDGE/ORAL"
+      ],
+      "output_folder": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data\\4__four"
+    },
+    {
+      "workbook_file": "5.xlsx",
+      "workbook_bucket": "5",
+      "class_label": "FIVE",
+      "class_slug": "five",
+      "student_count": 24,
+      "subjects": [
+        "ISLAMIAT",
+        "ENGLISH",
+        "ENGLISH GRAMMAR",
+        "MATHEMATICS",
+        "SCIENCE",
+        "SOCIAL STUDIES",
+        "SINDHI",
+        "URDU",
+        "COMPUTER",
+        "G.KNOWLEDGE/ORAL"
+      ],
+      "output_folder": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data\\5__five"
+    },
+    {
+      "workbook_file": "6.xlsx",
+      "workbook_bucket": "6",
+      "class_label": "Six",
+      "class_slug": "six",
+      "student_count": 21,
+      "subjects": [
+        "ISLAMIAT",
+        "ENGLISH",
+        "ENGLISH GRAMMAR",
+        "MATHEMATICS",
+        "SCIENCE",
+        "SOCIAL STUDIES",
+        "SINDHI",
+        "URDU",
+        "COMPUTER",
+        "G.KNOWLEDGE/ORAL"
+      ],
+      "output_folder": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data\\6__six"
+    },
+    {
+      "workbook_file": "7.xlsx",
+      "workbook_bucket": "7",
+      "class_label": "Seven",
+      "class_slug": "seven",
+      "student_count": 25,
+      "subjects": [
+        "ISLAMIAT",
+        "ENGLISH",
+        "ENGLISH GRAMMAR",
+        "MATHEMATICS",
+        "SCIENCE",
+        "SOCIAL STUDIES",
+        "SINDHI",
+        "URDU",
+        "COMPUTER",
+        "G.KNOWLEDGE/ORAL"
+      ],
+      "output_folder": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data\\7__seven"
+    },
+    {
+      "workbook_file": "8.xlsx",
+      "workbook_bucket": "8",
+      "class_label": "Eight",
+      "class_slug": "eight",
+      "student_count": 26,
+      "subjects": [
+        "ISLAMIAT",
+        "ENGLISH",
+        "ENGLISH GRAMMAR",
+        "MATHEMATICS",
+        "CHEMISTRY",
+        "PHYSICS",
+        "SINDHI",
+        "URDU",
+        "BIOLOGY",
+        "ORAL"
+      ],
+      "output_folder": "c:\\Users\\Lenovo\\Desktop\\Code\\Projects\\generated-test-data\\8__eight"
+    }
+  ],
+  "total_students": 200,
+  "all_subjects": [
+    "ISLAMIAT",
+    "ENGLISH",
+    "ENGLISH GRAMMAR",
+    "MATHEMATICS",
+    "G.K (S.ST/SCIENCE)",
+    "SINDHI",
+    "URDU",
+    "COMPUTER",
+    "ORAL",
+    "IKHILAQIYAT",
+    "SCIENCE",
+    "SOCIAL STUDIES",
+    "G.KNOWLEDGE/ORAL",
+    "CHEMISTRY",
+    "PHYSICS",
+    "BIOLOGY"
+  ]
+}

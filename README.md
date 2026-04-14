@@ -129,6 +129,26 @@ G9B002,Brian Otieno,67,58,
 
 Blank marks are allowed and treated as missing (not counted in averages).
 
+## Excel Test Data Extraction
+
+The repository now includes a workbook extractor for the sample Excel files in `RawTestData/`.
+
+- Script: `tools/extract_raw_test_data.py`
+- Input: `c:\Users\Lenovo\Desktop\Code\RawTestData`
+- Output: `generated-test-data/`
+
+For each workbook, the script creates:
+
+- `edustats-import.csv` for direct import into EduStats
+- `students-raw.csv` with the full extracted student record
+- `manifest.csv` and `summary.json` for review
+
+Run it with:
+
+```powershell
+& .\.venv\Scripts\python.exe .\Projects\tools\extract_raw_test_data.py
+```
+
 ## Data and Privacy Notes
 
 EduStats is frontend-only and stores working data in browser local storage (history, theme, view preferences).
