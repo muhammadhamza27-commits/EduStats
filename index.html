@@ -3,9 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://mohamza.goatcounter.com https://gc.zgo.at; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self' https://forms.gle https://docs.google.com https://mail.google.com; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>EduStats — Student Performance Tracker</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script>
 (() => {
   try {
@@ -17,9 +21,8 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="js/core/stats.js"></script>
+<script src="js/core/csv-utils.js"></script>
 <style>
 :root {
   /* Type */
@@ -6885,6 +6888,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
       <details class="tools-drawer" style="margin-top:14px">
         <summary>Tools: import/export and saved entries</summary>
         <div class="tools-content">
+          <div id="backup-freshness-warning" class="alert alert-warn" style="margin-bottom:12px; display:none;"></div>
           <div class="gap-row" style="margin-bottom:12px">
             <button id="btn-import-csv" class="btn btn-outline btn-sm" onclick="importCSV()" title="Import a CSV file"><img class="ui-icon" src="icons/edu-outline/import.svg" alt="" aria-hidden="true"> Import CSV</button>
             <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Save your data as CSV"><img class="ui-icon" src="icons/edu-outline/export.svg" alt="" aria-hidden="true"> Export CSV</button>
@@ -6892,6 +6896,10 @@ html[data-theme='dark'] .review-rating-hint.negative {
             <button class="btn btn-outline btn-sm" onclick="importWorkspaceBackup()" title="Restore a full local backup"><img class="ui-icon" src="icons/edu-outline/import.svg" alt="" aria-hidden="true"> Restore Backup</button>
             <button class="btn btn-outline btn-sm" onclick="toggleTableDensity()" id="btn-density-toggle" data-density-toggle="true">Compact View</button>
           </div>
+          <label class="text-sm text-muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <input id="analytics-opt-in" type="checkbox">
+            Enable anonymous usage analytics (GoatCounter)
+          </label>
           <div id="history-panel" style="min-height: 40px;"></div>
         </div>
       </details>
@@ -7142,6 +7150,8 @@ const state = {
   missingMarkMode: 'exclude',
   gradeScale: [],
   analysis: null,
+  analysisSnapshotKey: null,
+  analysisIsStale: false,
   analysisDetailView: false,
   analysisRankSort: 'weighted-total',
   analysisRankFilter: 'all',
@@ -7161,10 +7171,14 @@ const state = {
 
 const DEFAULT_FAIL_RATIO = 0.4;
 const PORTFOLIO_KEY = 'eduStats_portfolio_v1';
-const PORTFOLIO_VERSION = 1;
+const PORTFOLIO_VERSION = 2;
+const PORTFOLIO_SCHEMA_VERSION = 2;
 const INSTITUTIONS_KEY = 'eduStats_institutions_v1';
 const ROLE_KEY = 'eduStats_userRole_v1';
 const BACKUP_VERSION = 1;
+const BACKUP_LAST_EXPORTED_AT_KEY = 'eduStats_backup_last_exported_at';
+const BACKUP_STALE_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
+const ANALYTICS_OPT_IN_KEY = 'eduStats_analytics_opt_in';
 const MISSING_MARK_MODE_EXCLUDE = 'exclude';
 const MISSING_MARK_MODE_ZERO = 'zero';
 const DEFAULT_GRADE_SCALE = Object.freeze([
@@ -7180,14 +7194,241 @@ const DURABLE_META_ID = 'meta';
 const DURABLE_SNAPSHOT_INTERVAL = 20;
 const AUTO_SAVE_DEBOUNCE_MS = 450;
 const AUTO_SAVE_BACKUP_MS = 12000;
+const BACKUP_MAX_BYTES = 10 * 1024 * 1024;
+const STORAGE_WARN_RATIO = 0.85;
 let portfolioAutoSaveTimer = null;
 let autoSaveDebounceTimer = null;
 let saveStatusPulseTimer = null;
 let lastSavedAt = 0;
 let defaultPanelMarkup = null;
+let analysisRunSequence = 0;
+let lastStorageWarningAt = 0;
+const LAZY_SCRIPT_TIMEOUT_MS = 15000;
+const runtimeScriptPromises = Object.create(null);
+const LAZY_SCRIPT_PATHS = Object.freeze({
+  chart: 'lib/chart.umd.min.js',
+  jspdf: 'lib/jspdf.umd.min.js',
+  autotable: 'lib/jspdf.plugin.autotable.min.js',
+  papaparse: 'lib/papaparse.min.js'
+});
+const runtimeResourcesState = {
+  chartReady: false,
+  pdfReady: false,
+  papaReady: false,
+  prefetchScheduled: false
+};
+
+function runWhenIdle(task, timeoutMs = 2500) {
+  if (typeof window.requestIdleCallback === 'function') {
+    return window.requestIdleCallback(() => {
+      try {
+        task();
+      } catch (err) {
+        console.warn('Idle task failed.', err);
+      }
+    }, { timeout: timeoutMs });
+  }
+  return setTimeout(() => {
+    try {
+      task();
+    } catch (err) {
+      console.warn('Deferred task failed.', err);
+    }
+  }, Math.min(timeoutMs, 1200));
+}
+
+function loadScriptOnce(src, options = {}) {
+  if (!src) return Promise.reject(new Error('Script source is required.'));
+  if (runtimeScriptPromises[src]) return runtimeScriptPromises[src];
+
+  const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : LAZY_SCRIPT_TIMEOUT_MS;
+  const scriptId = typeof options.id === 'string' ? options.id : '';
+  const existing = scriptId ? document.getElementById(scriptId) : document.querySelector(`script[src="${src}"]`);
+
+  runtimeScriptPromises[src] = new Promise((resolve, reject) => {
+    const complete = (ok, err) => {
+      if (ok) {
+        if (existing) existing.dataset.loaded = '1';
+        resolve(true);
+        return;
+      }
+      delete runtimeScriptPromises[src];
+      reject(err || new Error(`Failed to load script: ${src}`));
+    };
+
+    if (existing) {
+      if (existing.dataset.loaded === '1') {
+        resolve(true);
+        return;
+      }
+      const timer = setTimeout(() => complete(false, new Error(`Timed out loading ${src}`)), timeoutMs);
+      existing.addEventListener('load', () => {
+        clearTimeout(timer);
+        existing.dataset.loaded = '1';
+        complete(true);
+      }, { once: true });
+      existing.addEventListener('error', () => {
+        clearTimeout(timer);
+        complete(false, new Error(`Failed to load script: ${src}`));
+      }, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = false;
+    script.defer = false;
+    if (scriptId) script.id = scriptId;
+
+    const timer = setTimeout(() => complete(false, new Error(`Timed out loading ${src}`)), timeoutMs);
+    script.addEventListener('load', () => {
+      clearTimeout(timer);
+      script.dataset.loaded = '1';
+      complete(true);
+    }, { once: true });
+    script.addEventListener('error', () => {
+      clearTimeout(timer);
+      complete(false, new Error(`Failed to load script: ${src}`));
+    }, { once: true });
+    document.head.appendChild(script);
+  });
+
+  return runtimeScriptPromises[src];
+}
+
+async function ensureChartLibraryLoaded() {
+  if (window.Chart) {
+    runtimeResourcesState.chartReady = true;
+    return true;
+  }
+  await loadScriptOnce(LAZY_SCRIPT_PATHS.chart, { id: 'lazy-chart-lib' });
+  if (!window.Chart) throw new Error('Chart library did not initialize.');
+  runtimeResourcesState.chartReady = true;
+  return true;
+}
+
+async function ensurePdfLibrariesLoaded() {
+  const hasJsPdf = !!window.jspdf?.jsPDF;
+  const hasAutoTable = !!window.jspdf?.jsPDF?.API?.autoTable;
+
+  if (hasJsPdf && hasAutoTable) {
+    runtimeResourcesState.pdfReady = true;
+    return true;
+  }
+
+  if (!hasJsPdf) {
+    await loadScriptOnce(LAZY_SCRIPT_PATHS.jspdf, { id: 'lazy-jspdf-lib' });
+  }
+  if (!window.jspdf?.jsPDF?.API?.autoTable) {
+    await loadScriptOnce(LAZY_SCRIPT_PATHS.autotable, { id: 'lazy-autotable-lib' });
+  }
+
+  if (!window.jspdf?.jsPDF) throw new Error('PDF library did not initialize.');
+  if (!window.jspdf?.jsPDF?.API?.autoTable) throw new Error('PDF table plugin did not initialize.');
+
+  runtimeResourcesState.pdfReady = true;
+  return true;
+}
+
+async function ensurePapaParseLoaded(options = {}) {
+  if (window.Papa?.parse) {
+    runtimeResourcesState.papaReady = true;
+    return true;
+  }
+  try {
+    await loadScriptOnce(LAZY_SCRIPT_PATHS.papaparse, { id: 'lazy-papaparse-lib' });
+    runtimeResourcesState.papaReady = !!window.Papa?.parse;
+    return runtimeResourcesState.papaReady;
+  } catch (err) {
+    if (!options.silent) throw err;
+    console.warn('Papa Parse unavailable; using fallback CSV parser.', err);
+    return false;
+  }
+}
+
+function scheduleNonCriticalPrefetch() {
+  if (runtimeResourcesState.prefetchScheduled) return;
+  runtimeResourcesState.prefetchScheduled = true;
+  runWhenIdle(() => {
+    if (state.analysis) {
+      void ensureChartLibraryLoaded().catch(err => console.warn('Chart prefetch skipped.', err));
+      void ensurePdfLibrariesLoaded().catch(err => console.warn('PDF prefetch skipped.', err));
+    }
+  }, 3200);
+}
 
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function getAnalysisInputPayload() {
+  return {
+    students: state.students,
+    subjects: state.subjects,
+    subjectMaxMarks: state.subjectMaxMarks,
+    subjectFailMarks: state.subjectFailMarks,
+    gradeScale: getActiveGradeScale(),
+    missingMarkMode: normalizeMissingMarkMode(state.missingMarkMode)
+  };
+}
+
+function buildAnalysisSnapshotKey() {
+  return JSON.stringify(getAnalysisInputPayload());
+}
+
+function stableStringify(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(item => stableStringify(item)).join(',')}]`;
+  const keys = Object.keys(value).sort();
+  return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+}
+
+function computeFnv1aHash(input) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return (`00000000${(hash >>> 0).toString(16)}`).slice(-8);
+}
+
+function addBackupIntegrity(payload) {
+  const canonical = stableStringify(payload);
+  return {
+    ...payload,
+    integrity: {
+      algorithm: 'fnv1a32',
+      hash: computeFnv1aHash(canonical)
+    }
+  };
+}
+
+function verifyBackupIntegrity(rawPayload) {
+  if (!rawPayload || typeof rawPayload !== 'object') return false;
+  const expected = rawPayload.integrity;
+  if (!expected || expected.algorithm !== 'fnv1a32' || typeof expected.hash !== 'string') return false;
+  const { integrity, ...payload } = rawPayload;
+  const canonical = stableStringify(payload);
+  return computeFnv1aHash(canonical) === expected.hash;
+}
+
+async function warnIfStorageNearLimit() {
+  if (!navigator?.storage?.estimate) return;
+  try {
+    const estimate = await navigator.storage.estimate();
+    const quota = Number(estimate?.quota || 0);
+    const usage = Number(estimate?.usage || 0);
+    if (!quota || !usage) return;
+    const ratio = usage / quota;
+    const now = Date.now();
+    if (ratio >= STORAGE_WARN_RATIO && (now - lastStorageWarningAt) > 120000) {
+      lastStorageWarningAt = now;
+      toast('Browser storage is almost full. Export a backup soon to avoid data loss.', 'warn');
+      console.warn(`Storage usage is high: ${(ratio * 100).toFixed(1)}%`);
+    }
+  } catch (err) {
+    console.warn('Storage estimate unavailable.', err);
+  }
 }
 
 const DurableStorage = {
@@ -7198,6 +7439,25 @@ const DurableStorage = {
   hasRestored: false,
   channel: null,
   opfsFileName: 'edustats-journal.v1.jsonl',
+
+  computeWorkspaceHash(ctx) {
+    return btoa(unescape(encodeURIComponent(JSON.stringify({
+      subjects: ctx?.subjects || [],
+      students: ctx?.students || [],
+      analysis: ctx?.analysis || null,
+      termName: ctx?.termName || ''
+    })))).slice(0, 120);
+  },
+
+  isWorkspaceRowHealthy(row) {
+    if (!row || typeof row !== 'object' || !row.id) return false;
+    if (!row.contentHash) return true;
+    try {
+      return row.contentHash === this.computeWorkspaceHash(row);
+    } catch {
+      return false;
+    }
+  },
 
   initChannel() {
     if (this.channel || typeof BroadcastChannel === 'undefined') return;
@@ -7486,12 +7746,7 @@ const DurableStorage = {
           id: ctx.id,
           updatedAt: Date.now(),
           version: Number(ctx.version || 0) + 1,
-          contentHash: btoa(unescape(encodeURIComponent(JSON.stringify({
-            subjects: ctx.subjects || [],
-            students: ctx.students || [],
-            analysis: ctx.analysis || null,
-            termName: ctx.termName || ''
-          })))).slice(0, 120)
+          contentHash: this.computeWorkspaceHash(ctx)
         });
       });
 
@@ -7590,12 +7845,18 @@ const DurableStorage = {
         });
       });
 
+      const healthyWorkspaces = workspacesRows.filter(row => this.isWorkspaceRowHealthy(row));
+      if (healthyWorkspaces.length !== workspacesRows.length) {
+        console.warn('Skipped corrupted workspace rows during durable restore.');
+      }
+      if (!healthyWorkspaces.length) return false;
+
       const payload = {
         activeClassId: meta.activeClassId,
         activeInstitutionId: meta.activeInstitutionId,
         userRole: meta.userRole,
         institutions: Array.from(institutionsMap.values()),
-        workspaces: workspacesRows,
+        workspaces: healthyWorkspaces,
         history: Array.isArray(historyRow?.value) ? historyRow.value : [],
         preferences: prefsRow?.value || {}
       };
@@ -7739,6 +8000,7 @@ function updateSaveStatus(message = '') {
 }
 
 function scheduleAutoSave() {
+  markAnalysisStale('Analysis is stale after edits. Run analysis again before exporting reports.');
   updateSaveStatus('Saving locally...');
   if (autoSaveDebounceTimer) clearTimeout(autoSaveDebounceTimer);
   autoSaveDebounceTimer = setTimeout(() => {
@@ -7917,6 +8179,8 @@ function createClassContext(partial = {}) {
     subjectMaxMarks: partial.subjectMaxMarks ? { ...partial.subjectMaxMarks } : {},
     subjectFailMarks: partial.subjectFailMarks ? { ...partial.subjectFailMarks } : {},
     analysis: partial.analysis ? deepClone(partial.analysis) : null,
+    analysisSnapshotKey: typeof partial.analysisSnapshotKey === 'string' ? partial.analysisSnapshotKey : null,
+    analysisIsStale: !!partial.analysisIsStale,
     updatedAt: partial.updatedAt || Date.now()
   };
 }
@@ -7925,15 +8189,40 @@ function getActiveClassContext() {
   return state.classContexts.find(ctx => ctx.id === state.activeClassId) || null;
 }
 
+function migratePortfolioPayload(rawPayload) {
+  const parsed = rawPayload && typeof rawPayload === 'object' ? rawPayload : {};
+  const legacyClasses = Array.isArray(parsed.classes) ? parsed.classes : [];
+  const schemaVersion = Number(parsed.schemaVersion || parsed.version || 1);
+  const migrated = {
+    version: PORTFOLIO_VERSION,
+    schemaVersion: PORTFOLIO_SCHEMA_VERSION,
+    activeClassId: parsed.activeClassId || null,
+    classes: legacyClasses
+  };
+
+  if (schemaVersion < 2) {
+    migrated.classes = legacyClasses.map((ctx) => ({
+      ...ctx,
+      analysisSnapshotKey: typeof ctx?.analysisSnapshotKey === 'string' ? ctx.analysisSnapshotKey : null,
+      analysisIsStale: !!ctx?.analysisIsStale,
+      missingMarkMode: normalizeMissingMarkMode(ctx?.missingMarkMode)
+    }));
+  }
+
+  return migrated;
+}
+
 function persistPortfolio() {
   const payload = {
     version: PORTFOLIO_VERSION,
+    schemaVersion: PORTFOLIO_SCHEMA_VERSION,
     activeClassId: state.activeClassId,
     classes: state.classContexts
   };
   try {
     localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(payload));
     DurableStorage.scheduleSave('portfolio');
+    void warnIfStorageNearLimit();
     lastSavedAt = Date.now();
     updateSaveStatus();
   } catch (err) {
@@ -7964,6 +8253,8 @@ function syncActiveClassFromState(persist = true) {
   active.subjectMaxMarks = { ...state.subjectMaxMarks };
   active.subjectFailMarks = { ...state.subjectFailMarks };
   active.analysis = state.analysis ? deepClone(state.analysis) : null;
+  active.analysisSnapshotKey = state.analysisSnapshotKey || null;
+  active.analysisIsStale = !!state.analysisIsStale;
   active.role = state.userRole || active.role || null;
   active.label = getClassContextLabel(active, state.classContexts.indexOf(active) + 1);
   active.updatedAt = Date.now();
@@ -7979,6 +8270,8 @@ function applyClassContextToState(ctx) {
   state.subjectMaxMarks = { ...(ctx.subjectMaxMarks || {}) };
   state.subjectFailMarks = { ...(ctx.subjectFailMarks || {}) };
   state.analysis = ctx.analysis ? deepClone(ctx.analysis) : null;
+  state.analysisSnapshotKey = typeof ctx.analysisSnapshotKey === 'string' ? ctx.analysisSnapshotKey : null;
+  state.analysisIsStale = !!ctx.analysisIsStale;
   state.userRole = ctx.role || state.userRole || null;
   state.currentCacheId = null;
 
@@ -7993,10 +8286,14 @@ function applyClassContextToState(ctx) {
   renderGradeScaleInputs();
   rebuildMarksTable();
 
+  const activePanelId = document.querySelector('.panel.active')?.id || '';
+
   if (state.analysis) {
     renderAnalysisTab();
-    renderGraphsTab();
     renderReportsTab();
+    if (activePanelId === 'panel-graphs') {
+      void renderGraphsTab();
+    }
   } else {
     restoreEmptyDataPanels();
   }
@@ -8153,7 +8450,7 @@ function initClassPortfolio() {
   try {
     const raw = localStorage.getItem(PORTFOLIO_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
+      const parsed = migratePortfolioPayload(JSON.parse(raw));
       const classes = Array.isArray(parsed?.classes) ? parsed.classes : [];
       if (classes.length) {
         state.classContexts = classes.map((ctx, i) => createClassContext({ ...ctx, label: getClassContextLabel(ctx, i + 1) }));
@@ -8161,6 +8458,7 @@ function initClassPortfolio() {
           ? parsed.activeClassId
           : state.classContexts[0].id;
         restored = true;
+        localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(parsed));
       }
     }
   } catch (err) {
@@ -8612,6 +8910,31 @@ function isTaskBusy(taskKey) {
   return taskLocks.has(taskKey);
 }
 
+function isAnyTaskBusy(taskKeys) {
+  return taskKeys.some(key => isTaskBusy(key));
+}
+
+function guardTasksIdle(taskKeys, warningMessage) {
+  if (!isAnyTaskBusy(taskKeys)) return true;
+  toast(warningMessage, 'warn');
+  return false;
+}
+
+function canExportReports() {
+  if (state.analysisIsStale || !state.analysisSnapshotKey) {
+    toast('Analysis is stale. Run analysis again before exporting reports.', 'warn');
+    switchTab('analysis');
+    return false;
+  }
+  return true;
+}
+
+function markAnalysisStale(reason = '') {
+  if (!state.analysis) return;
+  state.analysisIsStale = true;
+  if (reason) updateSaveStatus(reason);
+}
+
 function setInlineValidation(message='', type='') {
   const box = $('entry-inline-validation');
   if (!box) return;
@@ -8639,6 +8962,7 @@ function updateContextualCTAs() {
   const studentCount = state.students.length;
   const valid = state.students.filter(s=>s.name&&Object.values(s.marks).some(v=>v!==''&&v!==null&&!isNaN(parseFloat(v)))).length;
   const isSubjectTeacher = state.userRole === 'subject-teacher';
+  const hasFreshAnalysis = !!state.analysis && !state.analysisIsStale;
 
   renderEntryReadiness(subjectCount, studentCount, valid);
   updateAnalyzeButtonState(subjectCount, valid);
@@ -8659,13 +8983,15 @@ function updateContextualCTAs() {
     }
   }
   if (analysisCta) {
-    analysisCta.textContent = state.analysis
+    analysisCta.textContent = hasFreshAnalysis
       ? (isSubjectTeacher
         ? 'Analysis ready: continue to Graphs for trends or Reports to export class-level PDFs.'
         : 'Analysis ready: continue to Graphs for visuals or Reports to export student/class PDFs.')
-      : (isSubjectTeacher
+      : (state.analysisIsStale
+        ? 'Analysis is stale after recent edits. Re-run analysis before exporting reports.'
+        : (isSubjectTeacher
         ? 'Run analysis after adding marks to see how this class compares within your subject portfolio.'
-        : 'Run analysis from Enter Marks to unlock this section.');
+        : 'Run analysis from Enter Marks to unlock this section.'));
   }
   updateTabCompletion();
 }
@@ -8897,7 +9223,10 @@ function computeAnalysisInWorker() {
 
       const resolveWithFallback = (reason) => {
         try {
-          const fallback = Stat.computeAll();
+          const payload = getAnalysisInputPayload();
+          const fallback = (window.EduStatsStats?.computeAnalysis
+            ? window.EduStatsStats.computeAnalysis(payload)
+            : Stat.computeAll());
           if (fallback) {
             fallback.analysisSource = 'main-thread-fallback';
             console.warn('Analysis worker unavailable, using main-thread fallback:', reason);
@@ -8910,14 +9239,7 @@ function computeAnalysisInWorker() {
         }
       };
 
-      const payload = {
-        students: state.students,
-        subjects: state.subjects,
-        subjectMaxMarks: state.subjectMaxMarks,
-        subjectFailMarks: state.subjectFailMarks,
-        gradeScale: getActiveGradeScale(),
-        missingMarkMode: normalizeMissingMarkMode(state.missingMarkMode)
-      };
+      const payload = getAnalysisInputPayload();
       const timeoutId = setTimeout(() => {
         worker.terminate();
         resolveWithFallback('Analysis worker timed out');
@@ -8936,7 +9258,10 @@ function computeAnalysisInWorker() {
       worker.postMessage(payload);
     } catch (err) {
       try {
-        const fallback = Stat.computeAll();
+        const payload = getAnalysisInputPayload();
+        const fallback = (window.EduStatsStats?.computeAnalysis
+          ? window.EduStatsStats.computeAnalysis(payload)
+          : Stat.computeAll());
         if (fallback) {
           fallback.analysisSource = 'main-thread-fallback';
           console.warn('Analysis worker initialization failed, using main-thread fallback:', err);
@@ -11215,6 +11540,101 @@ function updateEntryCount() {
   updateEntryMobileMetaSummary();
 }
 
+function setBackupExportTimestamp(timestamp) {
+  try {
+    localStorage.setItem(BACKUP_LAST_EXPORTED_AT_KEY, String(timestamp));
+  } catch {
+    // Best-effort metadata; ignore storage write failures.
+  }
+}
+
+function getBackupExportTimestamp() {
+  try {
+    const raw = localStorage.getItem(BACKUP_LAST_EXPORTED_AT_KEY);
+    const numeric = Number(raw);
+    return Number.isFinite(numeric) ? numeric : null;
+  } catch {
+    return null;
+  }
+}
+
+function updateBackupFreshnessWarning() {
+  const warningEl = $('backup-freshness-warning');
+  if (!warningEl) return;
+
+  const lastExportAt = getBackupExportTimestamp();
+  if (!lastExportAt) {
+    warningEl.style.display = 'flex';
+    warningEl.innerHTML = '<img class="alert-icon" src="icons/edu-outline/info.svg" alt="" aria-hidden="true"><div><strong>No backup exported yet.</strong> Export one now to protect your local data.</div>';
+    return;
+  }
+
+  const elapsed = Date.now() - lastExportAt;
+  if (elapsed <= BACKUP_STALE_AFTER_MS) {
+    warningEl.style.display = 'none';
+    warningEl.textContent = '';
+    return;
+  }
+
+  const days = Math.floor(elapsed / (24 * 60 * 60 * 1000));
+  warningEl.style.display = 'flex';
+  warningEl.innerHTML = `<img class="alert-icon" src="icons/edu-outline/warn.svg" alt="" aria-hidden="true"><div><strong>Backup is ${days} day${days === 1 ? '' : 's'} old.</strong> Export a fresh backup before continuing major edits.</div>`;
+}
+
+function hasAnalyticsOptIn() {
+  try {
+    return localStorage.getItem(ANALYTICS_OPT_IN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function loadAnalyticsScript() {
+  if (document.getElementById('goatcounter-script')) return;
+  const script = document.createElement('script');
+  script.id = 'goatcounter-script';
+  script.async = true;
+  script.dataset.goatcounter = 'https://mohamza.goatcounter.com/count';
+  script.src = 'https://gc.zgo.at/count.js';
+  script.crossOrigin = 'anonymous';
+  script.referrerPolicy = 'strict-origin-when-cross-origin';
+  document.body.appendChild(script);
+}
+
+function applyAnalyticsConsent(enabled) {
+  const consent = !!enabled;
+  try {
+    localStorage.setItem(ANALYTICS_OPT_IN_KEY, consent ? '1' : '0');
+  } catch {
+    // Consent toggle should not block app interactions.
+  }
+
+  const existing = document.getElementById('goatcounter-script');
+  if (consent) {
+    loadAnalyticsScript();
+    return;
+  }
+
+  if (existing) existing.remove();
+  if (window.goatcounter && typeof window.goatcounter === 'object') {
+    delete window.goatcounter;
+  }
+}
+
+function initAnalyticsOptIn() {
+  const checkbox = $('analytics-opt-in');
+  if (!checkbox) return;
+  checkbox.checked = hasAnalyticsOptIn();
+  checkbox.addEventListener('change', (event) => {
+    const enabled = !!event?.target?.checked;
+    applyAnalyticsConsent(enabled);
+    toast(enabled ? 'Anonymous analytics enabled.' : 'Anonymous analytics disabled.', 'ok');
+  });
+  if (checkbox.checked) {
+    loadAnalyticsScript();
+  }
+}
+
 function exportWorkspaceBackup() {
   try {
     syncActiveClassFromState(false);
@@ -11226,13 +11646,17 @@ function exportWorkspaceBackup() {
       userRole: state.userRole || null,
       institutions: deepClone(state.institutions || [])
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const securedPayload = addBackupIntegrity(payload);
+    const backupString = JSON.stringify(securedPayload, null, 2);
+    const blob = new Blob([backupString], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     const classLabel = ($('class-name')?.value || 'workspace').replace(/\s+/g, '_');
     a.download = `EduStats_Backup_${classLabel}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
+    setBackupExportTimestamp(Date.now());
+    updateBackupFreshnessWarning();
     toast('Backup exported successfully.', 'ok');
   } catch (err) {
     toast('Backup export failed. Please try again.', 'err');
@@ -11246,11 +11670,22 @@ function importWorkspaceBackup() {
 function handleBackupImport(event) {
   const file = event?.target?.files?.[0];
   if (!file) return;
+  if (file.size > BACKUP_MAX_BYTES) {
+    toast('Backup file is too large. Please choose a valid EduStats backup.', 'err');
+    event.target.value = '';
+    return;
+  }
 
   const reader = new FileReader();
   reader.onload = (evt) => {
     try {
       const parsed = JSON.parse(String(evt?.target?.result || '{}'));
+      if (parsed?.integrity && !verifyBackupIntegrity(parsed)) {
+        throw new Error('Backup integrity check failed. File may be corrupted or tampered.');
+      }
+      if (!parsed?.integrity) {
+        toast('Legacy backup detected. Integrity metadata not available.', 'warn');
+      }
       if (!Array.isArray(parsed?.classes) || !parsed.classes.length) {
         throw new Error('Backup file has no class data.');
       }
@@ -11293,28 +11728,26 @@ function exportCSV() {
   if(!state.students.length) { toast('No data to export','warn'); return; }
   ensureSubjectThresholds();
   ensureGradeScale();
-  const q = (v) => {
-    let s = String(v ?? '');
-    if (/^\s*[=+\-@]/.test(s) || /^[\t]/.test(s)) {
-      s = `'${s}`;
-    }
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
+  const csvBuilder = window.EduStatsCSV?.buildEduStatsCsv;
+  const csv = typeof csvBuilder === 'function'
+    ? csvBuilder({
+      gradeScale: getActiveGradeScale(),
+      subjects: state.subjects,
+      students: state.students,
+      subjectMaxMarks: state.subjectMaxMarks,
+      subjectFailMarks: state.subjectFailMarks,
+      computeStudentMean: (student) => {
+        const mean = computeStudentMean(student);
+        return mean === null ? null : fmtNum(mean);
+      }
+    })
+    : '';
 
-  let csv = '';
-  getActiveGradeScale().forEach(band => {
-    csv += ['__EDUSTATS_GRADE__', q(band.label), band.minMark].join(',') + '\n';
-  });
-  state.subjects.forEach(subj => {
-    csv += ['__EDUSTATS_THRESHOLD__', q(subj), getSubjectMaxMark(subj), getSubjectFailMark(subj)].join(',') + '\n';
-  });
+  if (!csv) {
+    toast('CSV export failed. CSV utility is unavailable.', 'err');
+    return;
+  }
 
-  csv += ['Student ID','Full Name',...state.subjects,'Mean'].join(',') + '\n';
-  state.students.forEach(s=>{
-    const mean = computeStudentMean(s);
-    const row = [q(s.id), q(s.name), ...state.subjects.map(subj=>s.marks[subj]!==undefined?s.marks[subj]:''), mean!==null?fmtNum(mean):''];
-    csv += row.join(',') + '\n';
-  });
   const blob = new Blob([csv], {type:'text/csv'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`EduStats_${($('class-name').value||'class').replace(/\s+/g,'_')}.csv`;
@@ -11329,74 +11762,36 @@ function handleCSVImport(event) {
   setButtonBusy('btn-import-csv', true, 'Importing...');
   showLiveLoader('Importing CSV data…', 800);
   const reader=new FileReader();
-  reader.onload=e=>{
+  reader.onload = async (e) => {
     try {
       setLiveLoaderProgress(22, 'Scanning CSV structure…');
-      const lines=e.target.result.split('\n').filter(l=>l.trim());
-      const importedGradeScale = [];
-      const importedMaxMarks = {};
-      const importedFailMarks = {};
-      let headerIndex = 0;
+      const csvText = String(e.target.result || '');
+      await ensurePapaParseLoaded({ silent: true });
+      const parsed = window.EduStatsCSV?.parseEduStatsCsvText
+        ? window.EduStatsCSV.parseEduStatsCsvText(csvText, { preferPapa: true })
+        : null;
 
-      while (headerIndex < lines.length) {
-        const metaCells = parseCsvLine(lines[headerIndex]);
-        const metaType = (metaCells[0] || '').trim();
-        if (metaType !== '__EDUSTATS_GRADE__' && metaType !== '__EDUSTATS_THRESHOLD__') break;
-
-        if (metaType === '__EDUSTATS_GRADE__') {
-          const label = (metaCells[1] || '').trim().replace(/"/g,'');
-          const minMark = parseFloat(metaCells[2]);
-          if (label) {
-            importedGradeScale.push({
-              label,
-              minMark: !isNaN(minMark) ? Math.min(100, Math.max(0, minMark)) : 100
-            });
-          }
-          headerIndex++;
-          continue;
-        }
-
-        const subject = (metaCells[1] || '').trim().replace(/"/g,'');
-        const max = parseFloat(metaCells[2]);
-        const fail = parseFloat(metaCells[3]);
-        if (subject) {
-          importedMaxMarks[subject] = !isNaN(max) ? Math.max(1, max) : 100;
-          const fallbackFail = defaultFailMarkForMax(importedMaxMarks[subject]);
-          importedFailMarks[subject] = !isNaN(fail)
-            ? Math.min(importedMaxMarks[subject], Math.max(0, fail))
-            : fallbackFail;
-        }
-        headerIndex++;
-      }
-
-      if (headerIndex >= lines.length) throw new Error('CSV has no student header row');
+      if (!parsed) throw new Error('CSV parser is unavailable');
 
       setLiveLoaderProgress(42, 'Reading subjects and thresholds…');
-      const headers=parseCsvLine(lines[headerIndex]).map(h=>h.trim().replace(/"/g,''));
-      const subjCols=headers.slice(2, headers.indexOf('Mean')>-1 ? headers.indexOf('Mean') : headers.length);
-      if (importedGradeScale.length) {
-        state.gradeScale = sanitizeGradeScale(importedGradeScale);
+      if (parsed.gradeScale.length) {
+        state.gradeScale = sanitizeGradeScale(parsed.gradeScale);
       } else if (!Array.isArray(state.gradeScale) || !state.gradeScale.length) {
         state.gradeScale = cloneDefaultGradeScale();
       }
+
       // Merge subjects
-      subjCols.forEach(s=>{
+      parsed.subjects.forEach(s=>{
         if(!state.subjects.includes(s)) state.subjects.push(s);
-        if(importedMaxMarks[s] !== undefined) state.subjectMaxMarks[s] = importedMaxMarks[s];
+        if(parsed.subjectMaxMarks[s] !== undefined) state.subjectMaxMarks[s] = parsed.subjectMaxMarks[s];
         else if(!state.subjectMaxMarks[s]) state.subjectMaxMarks[s] = 100;
 
-        if(importedFailMarks[s] !== undefined) state.subjectFailMarks[s] = importedFailMarks[s];
+        if(parsed.subjectFailMarks[s] !== undefined) state.subjectFailMarks[s] = parsed.subjectFailMarks[s];
         else if(!state.subjectFailMarks[s]) state.subjectFailMarks[s] = defaultFailMarkForMax(state.subjectMaxMarks[s]);
       });
       state.students=[];
       setLiveLoaderProgress(66, 'Parsing student rows…');
-      for(let i=headerIndex+1;i<lines.length;i++){
-        const cells=parseCsvLine(lines[i]);
-        if(cells.length<2||!cells[0]) continue;
-        const marks={};
-        subjCols.forEach((subj,j)=>{ marks[subj]=cells[j+2]!==undefined&&cells[j+2]!==''?parseFloat(cells[j+2]):''; });
-        state.students.push({id:cells[0].trim(),name:(cells[1]||'').replace(/"/g,'').trim(),marks});
-      }
+      state.students = parsed.students;
       setLiveLoaderProgress(88, 'Normalizing thresholds and refreshing views…');
       ensureSubjectThresholds();
       ensureGradeScale();
@@ -11423,35 +11818,10 @@ function handleCSVImport(event) {
   reader.readAsText(file);
 }
 function parseCsvLine(line){
-  const result = [];
-  let cur = '';
-  let inQ = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-
-    if (c === '"') {
-      if (inQ && line[i + 1] === '"') {
-        // Escaped quote inside quoted field: "" -> "
-        cur += '"';
-        i++;
-      } else {
-        inQ = !inQ;
-      }
-      continue;
-    }
-
-    if (c === ',' && !inQ) {
-      result.push(cur);
-      cur = '';
-      continue;
-    }
-
-    cur += c;
+  if (window.EduStatsCSV?.parseCsvLine) {
+    return window.EduStatsCSV.parseCsvLine(line);
   }
-
-  result.push(cur);
-  return result;
+  return String(line || '').split(',');
 }
 
 /* ╔═══════════════════════════════════════════════════╗
@@ -11461,6 +11831,9 @@ async function runAnalysis() {
   syncGradeScaleFromSetup();
   syncHierarchyFromSetup();
   if (isTaskBusy('analysis')) return;
+  if (!guardTasksIdle(['csv-import', 'student-pdf', 'class-pdf'], 'Please wait for the current import/export task to finish.')) {
+    return;
+  }
   ensureSubjectThresholds();
   ensureGradeScale();
   const validationMsg = validateEntryForAnalysis();
@@ -11473,6 +11846,8 @@ async function runAnalysis() {
   setInlineValidation('Validation passed. Running analysis...', 'ok');
   setTaskBusy('analysis', true);
   setButtonBusy('btn-run-analysis', true, 'Analyzing...');
+  const runId = ++analysisRunSequence;
+  const snapshotKey = buildAnalysisSnapshotKey();
 
   showLiveLoader('Analyzing class performance…', 900);
   await yieldToUI(30);
@@ -11481,15 +11856,31 @@ async function runAnalysis() {
     setLiveLoaderProgress(24, 'Validating marks and thresholds…');
     await yieldToUI(15);
     try {
-      state.analysis = await computeAnalysisInWorker();
+      const analysisResult = await computeAnalysisInWorker();
+      if (runId !== analysisRunSequence) return;
+      if (snapshotKey !== buildAnalysisSnapshotKey()) {
+        state.analysis = analysisResult;
+        state.analysisSnapshotKey = snapshotKey;
+        state.analysisIsStale = true;
+        setInlineValidation('Data changed while analysis was running. Re-run analysis before exporting reports.', 'err');
+        toast('Analysis completed on older data. Please run analysis again.', 'warn');
+        return;
+      }
+      state.analysis = analysisResult;
+      state.analysisSnapshotKey = snapshotKey;
+      state.analysisIsStale = false;
     } catch {
       state.analysis = Stat.computeAll();
+      state.analysisSnapshotKey = snapshotKey;
+      state.analysisIsStale = false;
     }
     setLiveLoaderProgress(62, 'Computing class statistics…');
     await yieldToUI(10);
     renderAnalysisTab();
-    renderGraphsTab();
     renderReportsTab();
+    if (document.querySelector('.panel.active')?.id === 'panel-graphs') {
+      await renderGraphsTab();
+    }
     setLiveLoaderProgress(88, 'Rendering report views…');
 
     // Save to cache
@@ -11968,9 +12359,23 @@ function destroyChart(id) {
   if(state.chartInstances[id]) { state.chartInstances[id].destroy(); delete state.chartInstances[id]; }
 }
 
-function renderGraphsTab() {
+async function renderGraphsTab() {
   const A = state.analysis;
   if(!A) return;
+
+  const graphsContent = $('graphs-content');
+  if (!graphsContent) return;
+
+  if (!window.Chart) {
+    graphsContent.innerHTML = `<div class="card"><div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/line-chart.svg" alt="" aria-hidden="true"></span> Loading graph engine</div><div class="text-sm" style="color:var(--ink-light);line-height:1.7;margin-top:8px;">Preparing chart libraries for this section...</div></div>`;
+    try {
+      await ensureChartLibraryLoaded();
+    } catch (err) {
+      console.error('Failed to load chart library.', err);
+      graphsContent.innerHTML = `<div class="card"><div class="card-title"><span class="icon"><img class="ui-icon" src="icons/edu-outline/warning.svg" alt="" aria-hidden="true"></span> Graphs unavailable</div><div class="text-sm" style="color:var(--danger-ink);line-height:1.7;margin-top:8px;">Could not load chart libraries. Check your connection and try again.</div><button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="renderGraphsTab()">Retry loading graphs</button></div>`;
+      return;
+    }
+  }
 
   const classMeans = Stat.clean(Array.isArray(A.classMeans) ? A.classMeans : []);
   const classAvg = classMeans.length ? Stat.mean(classMeans) : null;
@@ -12267,6 +12672,7 @@ function reBuildAllCharts() {
 
 
 function buildDistChart(A, canvasId='chart-dist') {
+  if (!window.Chart) return;
   const chartKey = canvasId === 'chart-dist' ? 'dist' : canvasId;
   destroyChart(chartKey);
   const classMeans = Array.isArray(A.classMeans) ? A.classMeans : [];
@@ -12309,6 +12715,7 @@ function buildDistChart(A, canvasId='chart-dist') {
 
 
 function buildCumFreqChart(A, canvasId='chart-cumfreq') {
+  if (!window.Chart) return;
   const chartKey = canvasId === 'chart-cumfreq' ? 'cumfreq' : canvasId;
   destroyChart(chartKey);
   const classMeans = Array.isArray(A.classMeans) ? A.classMeans : [];
@@ -12348,6 +12755,7 @@ function buildCumFreqChart(A, canvasId='chart-cumfreq') {
 }
 
 function buildSubjectsChart(A, canvasId='chart-subjects') {
+  if (!window.Chart) return;
   const chartKey = canvasId === 'chart-subjects' ? 'subjects' : canvasId;
   destroyChart(chartKey);
   const subjs = Array.isArray(state.subjects) ? state.subjects : [];
@@ -12399,6 +12807,7 @@ function buildSubjectsChart(A, canvasId='chart-subjects') {
 }
 
 function buildBestFitChart(A, canvasId='chart-bestfit') {
+  if (!window.Chart) return;
   const chartKey = canvasId === 'chart-bestfit' ? 'bestfit' : canvasId;
   destroyChart(chartKey);
   const sorted = Array.isArray(A.sorted) ? [...A.sorted] : [];
@@ -12455,6 +12864,7 @@ function buildBestFitChart(A, canvasId='chart-bestfit') {
 }
 
 function buildRadarChart(A, canvasId='chart-radar') {
+  if (!window.Chart) return;
   const chartKey = canvasId === 'chart-radar' ? 'radar' : canvasId;
   destroyChart(chartKey);
   const subjs = Array.isArray(state.subjects) ? state.subjects : [];
@@ -12558,6 +12968,10 @@ function renderReportsTab() {
   const A = state.analysis;
   if(!A) return;
   const scopeLabel = getHierarchyScopeLabel();
+  const reportsLocked = !!state.analysisIsStale;
+  const reportsLockMessage = reportsLocked
+    ? 'Reports are locked because marks/thresholds changed after analysis. Re-run analysis to generate accurate exports.'
+    : '';
 
   const studentOptions = A.sorted.map(s=>`<option value="${esc(s.id)}">${esc(s.name||s.id)}</option>`).join('');
 
@@ -12580,9 +12994,10 @@ function renderReportsTab() {
           ${studentOptions}
         </select>
       </div>
-      <button id="btn-student-report" class="btn btn-primary btn-block" onclick="generateStudentPDF()">
+      <button id="btn-student-report" class="btn btn-primary btn-block" onclick="generateStudentPDF()" ${reportsLocked ? 'disabled aria-disabled="true"' : ''}>
         Download Student Report
       </button>
+      ${reportsLocked ? `<div class="text-sm" style="margin-top:10px;color:var(--danger-ink)">${esc(reportsLockMessage)}</div>` : ''}
     </div>
 
     <div class="rpt-card">
@@ -12598,9 +13013,10 @@ function renderReportsTab() {
         <li>Outlier analysis</li>
       </ul>
       <div style="margin-bottom:36px"></div>
-      <button id="btn-class-report" class="btn btn-success btn-block" onclick="generateClassPDF()">
+      <button id="btn-class-report" class="btn btn-success btn-block" onclick="generateClassPDF()" ${reportsLocked ? 'disabled aria-disabled="true"' : ''}>
         Download Class Report
       </button>
+      ${reportsLocked ? `<div class="text-sm" style="margin-top:10px;color:var(--danger-ink)">${esc(reportsLockMessage)}</div>` : ''}
     </div>
   </div>
 
@@ -12976,7 +13392,11 @@ async function buildClassPdfChartImages(A) {
 /* ── INDIVIDUAL STUDENT PDF ── */
 async function generateStudentPDF() {
   if (isTaskBusy('student-pdf')) return;
+  if (!guardTasksIdle(['analysis', 'csv-import', 'class-pdf'], 'Please wait for the current analysis/import/export task to finish.')) {
+    return;
+  }
   const A = state.analysis; if(!A) return;
+  if (!canExportReports()) return;
   const selId = $('student-select')?.value;
   const student = A.studentStats.find(s=>s.id===selId) || A.sorted[0];
   if(!student) { toast('Select a student first','warn'); return; }
@@ -12987,6 +13407,8 @@ async function generateStudentPDF() {
   await new Promise(r=>setTimeout(r,60));
 
   try {
+    await ensurePdfLibrariesLoaded();
+    await ensureChartLibraryLoaded();
     setLoaderPhase(1, 'Building student report…', 'Collecting student metrics and thresholds…', 24);
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'p', unit:'mm', format:'a4', compress:true, putOnlyUsedFonts:true, precision:2 });
@@ -13225,13 +13647,19 @@ async function generateStudentPDF() {
 /* ── CLASS REPORT PDF ── */
 async function generateClassPDF() {
   if (isTaskBusy('class-pdf')) return;
+  if (!guardTasksIdle(['analysis', 'csv-import', 'student-pdf'], 'Please wait for the current analysis/import/export task to finish.')) {
+    return;
+  }
   const A = state.analysis; if(!A) return;
+  if (!canExportReports()) return;
   setTaskBusy('class-pdf', true);
   setButtonBusy('btn-class-report', true, 'Building...');
   showLoader('Building class report…', 700, true);
   await new Promise(r=>setTimeout(r,60));
 
   try {
+    await ensurePdfLibrariesLoaded();
+    await ensureChartLibraryLoaded();
     setLoaderPhase(1, 'Building class report…', 'Preparing analysis data…', 26);
     await new Promise(r=>setTimeout(r,120));
     setLoaderPhase(2, 'Building class report…', 'Rendering the comparison chart…', 68);
@@ -13633,6 +14061,17 @@ function switchTab(name) {
   panel.classList.add('active');
   tabBtn.classList.add('active');
   tabBtn.setAttribute('aria-current', 'page');
+
+  if (tabName === 'analysis' && state.analysis) {
+    renderAnalysisTab();
+  }
+  if (tabName === 'graphs' && state.analysis) {
+    void renderGraphsTab();
+  }
+  if (tabName === 'reports' && state.analysis) {
+    renderReportsTab();
+  }
+
   updateTabProgress(tabName);
   updateTabCompletion();
   renderScopeStrip();
@@ -14707,6 +15146,7 @@ function persistPortfolioData() {
     try {
       localStorage.setItem(INSTITUTIONS_KEY, dataStr);
       DurableStorage.scheduleSave('institutions');
+      void warnIfStorageNearLimit();
     } catch (storageErr) {
       if (storageErr.name === 'QuotaExceededError') {
         toast('Storage quota exceeded. Please delete some classes or institutions.', 'err');
@@ -14750,6 +15190,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   showEntryLoader('Loading EduStats workspace…', 2200);
   await yieldToUI(25);
   await DurableStorage.restoreOrMigrate();
+  void warnIfStorageNearLimit();
   state.userRole = getSavedUserRole();
   loadInstitutionsFromStorage();
   defaultPanelMarkup = {
@@ -14797,8 +15238,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   initRefreshWarning();
   initDensityPreference();
   initAnalysisDetailPreference();
+  initAnalyticsOptIn();
+  updateBackupFreshnessWarning();
   ensureGradeScale();
   switchTab('home');
+  scheduleNonCriticalPrefetch();
   updateTabCompletion();
   enhanceTransitions();
   syncQuickRatingChips();
@@ -14840,7 +15284,5 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 });
 
 </script>
-<script data-goatcounter="https://mohamza.goatcounter.com/count"
-  async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

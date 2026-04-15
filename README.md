@@ -38,19 +38,23 @@ All inside a single static web app.
 
 - HTML/CSS/JavaScript (vanilla)
 - Web Worker for non-blocking analysis: `analysis.worker.js`
-- Charting: Chart.js (CDN)
-- PDF generation: jsPDF + jsPDF AutoTable (CDN)
+- Shared core modules: `js/core/stats.js`, `js/core/csv-utils.js`
+- Charting: Chart.js (self-hosted in `lib/`)
+- PDF generation: jsPDF + jsPDF AutoTable (self-hosted in `lib/`)
+- CSV parsing: Papa Parse (self-hosted in `lib/`)
 - Local persistence: `localStorage`
 
 ## Project Structure
 
 ```text
 .
-├── EduStats.html         # Primary source page for development
-├── index.html            # Published/served page (synced from EduStats.html)
+├── index.html            # Primary source page for development + release
 ├── analysis.worker.js    # Worker-based analysis engine
-├── release.ps1           # Release script: sync + commit + push
+├── js/core/              # Shared analysis + CSV modules
+├── tests/                # Unit tests
+├── release.ps1           # Release script: stage + commit + push
 ├── icons/edu-outline/    # UI icon set
+├── lib/                  # Self-hosted third-party libs
 ├── favicon.ico
 └── favicon.svg
 ```
@@ -75,12 +79,6 @@ python -m http.server 8080
 ```
 
 Then open:
-
-```text
-http://localhost:8080/EduStats.html
-```
-
-If you are previewing the production page, open:
 
 ```text
 http://localhost:8080/index.html
@@ -156,19 +154,14 @@ EduStats is frontend-only and stores working data in browser local storage (hist
 External services/resources used by the app:
 
 - Google Fonts
-- Chart.js CDN
-- jsPDF CDN
-- jsPDF AutoTable CDN
-- GoatCounter analytics script
+- GoatCounter analytics script (disabled by default, user opt-in from app settings)
 - Review links (Google Form and Gmail compose)
 
-If you need stricter offline/privacy behavior, self-host or remove external scripts and links.
+Charting/PDF/CSV dependencies are self-hosted in `lib/` for reliability and offline-friendly operation.
 
 ## Development and Release Workflow
 
-`EduStats.html` is the editable source file.
-
-`index.html` is the release/publish page and should stay in sync with `EduStats.html`.
+`index.html` is the only source page and release target.
 
 Use the provided PowerShell script:
 
@@ -179,8 +172,7 @@ Use the provided PowerShell script:
 What it does:
 
 - verifies required files exist
-- copies `EduStats.html` -> `index.html`
-- stages and commits `index.html`
+- stages app/runtime/test/workflow updates
 - pushes to `origin/main`
 
 Optional flags:
@@ -189,6 +181,18 @@ Optional flags:
 ./release.ps1 -Message "Release: improve analysis tables"
 ./release.ps1 -NoPush
 ```
+
+## Testing
+
+Run automated checks from `Projects/`:
+
+```bash
+npm install
+npm test
+npm run smoke
+```
+
+CI runs these commands in GitHub Actions via `.github/workflows/ci.yml`.
 
 ## Contributing
 
