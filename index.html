@@ -3235,10 +3235,22 @@ body.motion-enhanced .landing-motion.is-visible {
   min-width: min(100%, 540px);
   width: 100%;
   max-width: 760px;
+  margin-inline: auto;
 }
 
 .sample-loader-btn {
   min-height: 44px;
+  justify-self: center;
+}
+
+.sample-data-alert {
+  justify-content: center;
+}
+
+.sample-data-alert-copy {
+  flex: 1 1 300px;
+  min-width: 220px;
+  max-width: 680px;
 }
 
 @media (max-width: 768px) {
@@ -3292,10 +3304,11 @@ body.motion-enhanced .landing-motion.is-visible {
   .sample-loader-grid {
     grid-template-columns: 1fr;
     align-items: stretch;
+    justify-items: center;
   }
 
   .sample-loader-btn {
-    width: 100%;
+    width: auto;
     justify-content: center;
   }
 
@@ -5365,6 +5378,17 @@ body.entry-loading .main {
   pointer-events: none;
 }
 
+/* Keep only the entry loader animating during startup to avoid first-frame jank. */
+body.entry-loading * {
+  animation-play-state: paused !important;
+}
+
+body.entry-loading #entry-loader,
+body.entry-loading #entry-loader::before,
+body.entry-loading #entry-loader * {
+  animation-play-state: running !important;
+}
+
 body.entry-revealing .app-bar,
 body.entry-revealing .tab-bar,
 body.entry-revealing .scope-strip,
@@ -5374,6 +5398,14 @@ body.entry-revealing .main {
   clip-path: circle(10% at 50% 46%);
   animation: site-iris-in .56s cubic-bezier(.22, 1, .36, 1) both;
   pointer-events: none;
+}
+
+body.entry-reveal-lite.entry-revealing .app-bar,
+body.entry-reveal-lite.entry-revealing .tab-bar,
+body.entry-reveal-lite.entry-revealing .scope-strip,
+body.entry-reveal-lite.entry-revealing .main {
+  clip-path: none;
+  animation: site-entry-soft .34s cubic-bezier(.22, 1, .36, 1) both;
 }
 
 body.entry-ready .app-bar,
@@ -5725,6 +5757,11 @@ body.entry-ready .main {
 @keyframes site-iris-in {
   from { clip-path: circle(10% at 50% 46%); opacity: .52; }
   to { clip-path: circle(140% at 50% 46%); opacity: 1; }
+}
+
+@keyframes site-entry-soft {
+  from { opacity: .2; transform: translate3d(0, 7px, 0) scale(.998); }
+  to { opacity: 1; transform: none; }
 }
 
 @media (max-width: 640px) {
@@ -6404,7 +6441,7 @@ html[data-theme='dark'] .review-rating-hint.negative {
     <section class="onboarding-shell">
       <div class="onboarding-grid">
         <div>
-          <span class="onboarding-kicker"><span class="role-pill">AI-assisted academic analytics</span> Landing experience</span>
+          <span class="onboarding-kicker">Student performance tracker</span>
           <h1 class="onboarding-title" id="onboarding-title">Turn raw marks into intervention-ready insight in minutes</h1>
           <p class="onboarding-copy" id="onboarding-copy">
             EduStats helps teachers move from spreadsheet cleanup to student support. Capture marks, run class-wide analytics,
@@ -6867,9 +6904,9 @@ html[data-theme='dark'] .review-rating-hint.negative {
       <div class="entry-grid-help">Tip: scroll sideways on small screens to view all subjects. Values save while you type. <span id="save-status" class="text-muted">Local autosave is on.</span></div>
       <div class="entry-mobile-meta" id="entry-mobile-meta" aria-live="polite">Tap a mark cell to start guided entry.</div>
 
-      <div class="alert alert-info" style="margin-top:14px; margin-bottom:14px; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div class="alert alert-info sample-data-alert" style="margin-top:14px; margin-bottom:14px; align-items:center; gap:12px; flex-wrap:wrap;">
         <img class="alert-icon" src="icons/edu-outline/folder.svg" alt="" aria-hidden="true">
-        <div style="flex:1; min-width:220px;">
+        <div class="sample-data-alert-copy">
           <strong>Load realistic test data:</strong> Pick a dataset below to populate marks, subjects, and student lists for full software testing.
         </div>
         <div class="sample-loader-grid">
@@ -9688,6 +9725,136 @@ function toast(msg, type='') {
 
 function yieldToUI(ms=20) {
   return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, ms)));
+}
+
+function deferNonCriticalStartup(task, timeoutMs=900) {
+  if (typeof task !== 'function') return;
+
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      try { task(); } catch (err) { console.error('Deferred startup task failed:', err); }
+    }, { timeout: timeoutMs });
+    return;
+  }
+
+  setTimeout(() => {
+    try { task(); } catch (err) { console.error('Deferred startup task failed:', err); }
+  }, 140);
+}
+
+function runAfterEntryLoader(task) {
+  if (typeof task !== 'function') return;
+
+  const elapsed = Date.now() - (loaderRuntime.entryShownAt || 0);
+  const remainingLoaderMs = Math.max(0, (loaderRuntime.entryMinMs || 0) - elapsed);
+  const revealBufferMs = 620;
+
+  setTimeout(() => {
+    deferNonCriticalStartup(task, 1200);
+  }, remainingLoaderMs + revealBufferMs);
+}
+
+function shouldUseLiteEntryReveal() {
+  const prefersReduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (prefersReduced) return true;
+
+  const saveData = !!(navigator.connection && navigator.connection.saveData);
+  const cores = Number(navigator.hardwareConcurrency || 0);
+  const memory = Number(navigator.deviceMemory || 0);
+
+  if (saveData) return true;
+  if (cores > 0 && cores <= 4) return true;
+  if (memory > 0 && memory <= 4) return true;
+
+  return false;
+}
+
+async function loadApplicationContent() {
+  // Heavy content loading phase - runs while loader is visible
+  await DurableStorage.restoreOrMigrate();
+  await yieldToUI(12);
+  void warnIfStorageNearLimit();
+  state.userRole = getSavedUserRole();
+  loadInstitutionsFromStorage();
+  defaultPanelMarkup = {
+    analysis: $('analysis-content').innerHTML,
+    graphs: $('graphs-content').innerHTML,
+    reports: $('reports-content').innerHTML
+  };
+  initThemeToggle();
+  initClassPortfolio();
+  await yieldToUI(10);
+  await DurableStorage.migrateLegacyIfNeeded();
+  renderInstitutionsDashboard();
+  updateSetupHierarchySuggestions();
+  initInstitutionActionDelegates();
+  renderInstitutionSelect();
+  applyRoleRoute();
+  initSubjectControlDelegates();
+  initGradeScaleDelegates();
+  initMarkCellDelegates();
+  await yieldToUI(10);
+  $('institution-select')?.addEventListener('change', (e) => {
+    switchInstitution(e.target.value);
+  });
+  $('class-switcher-select')?.addEventListener('change', (e) => {
+    switchActiveClassContext(e.target.value);
+  });
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-pressed', card.dataset.role === state.userRole ? 'true' : 'false');
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        chooseUserRole(card.dataset.role);
+      }
+    });
+  });
+  initTableScrollHints();
+  initTabBarScroll();
+  initTabKeyboardNav();
+  initSectionDropdown();
+  ensureGradeScale();
+  switchTab('home');
+  $('review-message')?.addEventListener('input', updateReviewCharCount);
+  $('review-consent')?.addEventListener('change', updateReviewFormState);
+  $('review-google-link')?.addEventListener('click', () => {
+    setActiveReviewChannel('google');
+    setReviewStatus('Google Form opened in a new tab.', 'ok');
+  });
+  setReviewStatus('');
+  $('subj-input').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addSubject(); } });
+
+  if (portfolioAutoSaveTimer) clearInterval(portfolioAutoSaveTimer);
+  portfolioAutoSaveTimer = setInterval(() => {
+    syncActiveClassFromState();
+  }, AUTO_SAVE_BACKUP_MS);
+
+  if (saveStatusPulseTimer) clearInterval(saveStatusPulseTimer);
+  saveStatusPulseTimer = setInterval(() => {
+    updateSaveStatus();
+  }, 10000);
+
+  updateMissingMarkModeUI();
+  updateSaveStatus();
+
+  DurableStorage.scheduleSave('startup-sync');
+
+  window.addEventListener('beforeunload', () => {
+    syncActiveClassFromState();
+  });
+}
+
+function nextFrame() {
+  return new Promise(resolve => requestAnimationFrame(resolve));
+}
+
+async function letLoaderBreathe() {
+  // Let the loader paint and animate before heavy startup work begins.
+  await nextFrame();
+  await nextFrame();
+  await yieldToUI(18);
 }
 
 function setAnimatedStatusText(el, text) {
@@ -15187,100 +15354,40 @@ function loadInstitutionsFromStorage() {
    ║                  INIT                             ║
    ╚═══════════════════════════════════════════════════╝ */
 document.addEventListener('DOMContentLoaded', async ()=>{
+  document.body.classList.toggle('entry-reveal-lite', shouldUseLiteEntryReveal());
   showEntryLoader('Loading EduStats workspace…', 2200);
-  await yieldToUI(25);
-  await DurableStorage.restoreOrMigrate();
-  void warnIfStorageNearLimit();
-  state.userRole = getSavedUserRole();
-  loadInstitutionsFromStorage();
-  defaultPanelMarkup = {
-    analysis: $('analysis-content').innerHTML,
-    graphs: $('graphs-content').innerHTML,
-    reports: $('reports-content').innerHTML
-  };
-  initThemeToggle();
-  initClassPortfolio();
-  await DurableStorage.migrateLegacyIfNeeded();
-  renderInstitutionsDashboard();
-  updateSetupHierarchySuggestions();
-  initInstitutionActionDelegates();
-  renderInstitutionSelect();
-  applyRoleRoute();
-  initSubjectControlDelegates();
-  initGradeScaleDelegates();
-  initMarkCellDelegates();
-  $('institution-select')?.addEventListener('change', (e) => {
-    switchInstitution(e.target.value);
-  });
-  $('class-switcher-select')?.addEventListener('change', (e) => {
-    switchActiveClassContext(e.target.value);
-  });
-  // btn-new-class button removed - classes can only be created in Classes section
-  document.querySelectorAll('.role-card').forEach(card => {
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('role', 'button');
-    card.setAttribute('aria-pressed', card.dataset.role === state.userRole ? 'true' : 'false');
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        chooseUserRole(card.dataset.role);
-      }
-    });
-  });
-  initTableScrollHints();
-  initTabBarScroll();
-  initTabKeyboardNav();
-  initSectionDropdown();
-  initLandingMotion();
-  initHeroMicroInteractions();
-  initFloatingTips();
-  initEntryKeyboardFlow();
-  initRefreshWarning();
-  initDensityPreference();
-  initAnalysisDetailPreference();
-  initAnalyticsOptIn();
-  updateBackupFreshnessWarning();
-  ensureGradeScale();
-  switchTab('home');
-  scheduleNonCriticalPrefetch();
-  updateTabCompletion();
-  enhanceTransitions();
-  syncQuickRatingChips();
-  initReviewRatingKeyboardNav();
-  updateReviewCharCount();
-  setActiveReviewChannel('google');
-  $('review-message')?.addEventListener('input', updateReviewCharCount);
-  $('review-consent')?.addEventListener('change', updateReviewFormState);
-  $('review-google-link')?.addEventListener('click', () => {
+  await letLoaderBreathe();
+
+  // Schedule content loading to begin after loader has animated for its minimum duration
+  // This ensures the loader plays smoothly before heavy rendering begins
+  const loaderDisplayDurationMs = loaderRuntime.entryMinMs || 2200;
+  const contentLoadScheduleMs = loaderDisplayDurationMs + 200; // Small buffer after loader starts exiting
+
+  setTimeout(async () => {
+    await loadApplicationContent();
+    hideEntryLoader();
+  }, contentLoadScheduleMs);
+
+  runAfterEntryLoader(() => {
+    initLandingMotion();
+    initHeroMicroInteractions();
+    initFloatingTips();
+    initEntryKeyboardFlow();
+    initRefreshWarning();
+    initDensityPreference();
+    initAnalysisDetailPreference();
+    initAnalyticsOptIn();
+    updateBackupFreshnessWarning();
+    scheduleNonCriticalPrefetch();
+    updateTabCompletion();
+    enhanceTransitions();
+    syncQuickRatingChips();
+    initReviewRatingKeyboardNav();
+    updateReviewCharCount();
     setActiveReviewChannel('google');
-    setReviewStatus('Google Form opened in a new tab.', 'ok');
+    updateReviewFormState();
+    updateHistoryDisplay();
   });
-  setReviewStatus('');
-  updateReviewFormState();
-  updateHistoryDisplay(); // Initialize history panel
-  // Keyboard shortcut: Enter in subject input
-  $('subj-input').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addSubject(); } });
-
-  if (portfolioAutoSaveTimer) clearInterval(portfolioAutoSaveTimer);
-  portfolioAutoSaveTimer = setInterval(() => {
-    syncActiveClassFromState();
-  }, AUTO_SAVE_BACKUP_MS);
-
-  if (saveStatusPulseTimer) clearInterval(saveStatusPulseTimer);
-  saveStatusPulseTimer = setInterval(() => {
-    updateSaveStatus();
-  }, 10000);
-
-  updateMissingMarkModeUI();
-  updateSaveStatus();
-
-  DurableStorage.scheduleSave('startup-sync');
-
-  window.addEventListener('beforeunload', () => {
-    syncActiveClassFromState();
-  });
-
-  hideEntryLoader();
 });
 
 </script>
