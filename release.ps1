@@ -15,7 +15,10 @@ if (-not (Test-Path (Join-Path $repoRoot 'index.html'))) {
 
 git rev-parse --is-inside-work-tree | Out-Null
 
-git add index.html analysis.worker.js js/core README.md release.ps1 .github/workflows/ci.yml package.json tools/domain-smoke-test.mjs tests
+git add index.html analysis.worker.js js/core README.md release.ps1 .github/workflows/ci.yml package.json tools tests generated-test-data
+if (Test-Path (Join-Path $repoRoot 'models')) {
+  git add models
+}
 
 git diff --cached --quiet
 if ($LASTEXITCODE -eq 0) {

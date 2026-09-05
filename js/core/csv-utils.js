@@ -74,15 +74,62 @@
       return (parsed.data || []).map(row => row.map(cell => String(cell ?? '')));
     }
 
-    return String(text || '')
-      .split(/\r?\n/)
-      .map(line => line.trimEnd())
-      .filter(line => line.trim().length > 0)
-      .map(parseCsvLine);
+    const source = String(text || '');
+    if (!source.trim()) return [];
+
+    const rows = [];
+    let row = [];
+    let cell = '';
+    let inQuotes = false;
+
+    for (let index = 0; index < source.length; index += 1) {
+      const character = source[index];
+      if (character === '"') {
+        if (inQuotes && source[index + 1] === '"') {
+          cell += '"';
+          index += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+
+      if (character === ',' && !inQuotes) {
+        row.push(cell);
+        cell = '';
+        continue;
+      }
+
+      if ((character === '\n' || character === '\r') && !inQuotes) {
+        if (character === '\r' && source[index + 1] === '\n') index += 1;
+        row.push(cell.trimEnd());
+        if (row.some(value => value.trim().length > 0)) rows.push(row);
+        row = [];
+        cell = '';
+        continue;
+      }
+
+      cell += character;
+    }
+
+    if (cell.length || row.length) {
+      row.push(cell.trimEnd());
+      if (row.some(value => value.trim().length > 0)) rows.push(row);
+    }
+    return rows;
   }
 
   function parseEduStatsRows(rows) {
     const parsedRows = Array.isArray(rows) ? rows : [];
+    if (!parsedRows.length) {
+      return {
+        gradeScale: [],
+        subjectMaxMarks: {},
+        subjectFailMarks: {},
+        subjects: [],
+        students: []
+      };
+    }
     const importedGradeScale = [];
     const importedMaxMarks = {};
     const importedFailMarks = {};

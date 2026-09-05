@@ -21,7 +21,8 @@ All inside a single static web app.
 - Subject management with per-subject maximum marks and fail thresholds
 - Default fail mark logic based on 40% of each subject max mark
 - CSV import/export for marks and thresholds
-- Saved entry history (up to 5 snapshots) in local storage
+- Long-term term snapshots in IndexedDB with localStorage fallback
+- Predictive grade forecasts and at-risk intervention signals computed locally in a Web Worker
 - Class analysis with:
   - normalized means (supports different subject max marks)
   - median, mode, standard deviation
@@ -37,12 +38,13 @@ All inside a single static web app.
 ## Tech Stack
 
 - HTML/CSS/JavaScript (vanilla)
-- Web Worker for non-blocking analysis: `analysis.worker.js`
-- Shared core modules: `js/core/stats.js`, `js/core/csv-utils.js`
+- Web Workers for non-blocking statistics and predictive inference: `analysis.worker.js`, `js/core/ml.worker.js`
+- Shared core modules: `js/core/stats.js`, `js/core/csv-utils.js`, `js/core/features.js`, `js/core/db.js`
 - Charting: Chart.js (self-hosted in `lib/`)
 - PDF generation: jsPDF + jsPDF AutoTable (self-hosted in `lib/`)
 - CSV parsing: Papa Parse (self-hosted in `lib/`)
-- Local persistence: `localStorage`
+- Local persistence: IndexedDB with a localStorage fallback
+- Predictive model pipeline: offline Python training via `tools/train_predictive_model.py`; ONNX inference is optional and falls back to a transparent local heuristic when the model/runtime asset is unavailable
 
 ## Project Structure
 
@@ -147,6 +149,16 @@ Run it with:
 & .\.venv\Scripts\python.exe .\Projects\tools\extract_raw_test_data.py
 ```
 
+## Predictive model training
+
+Install `pandas`, `numpy`, `scikit-learn`, `skl2onnx`, and `onnxruntime`, then run:
+
+```powershell
+npm run train:model -- --data-dir generated-test-data --output models/edustats_v2.onnx
+```
+
+The script performs stratified five-fold evaluation, prints precision/recall/F1, and writes the ONNX classifier locally. The browser remains functional without this optional asset.
+
 ## Data and Privacy Notes
 
 EduStats is frontend-only and stores working data in browser local storage (history, theme, view preferences).
@@ -190,7 +202,10 @@ Run automated checks from `Projects/`:
 npm install
 npm test
 npm run smoke
+npm run test:stress
 ```
+
+`npm run test:stress` exercises large cohorts, malformed records, missing and non-finite marks, extreme thresholds, hostile quoted CSV cells, multiline CSV fields, empty imports, prediction bounds, and roundtrip scaling.
 
 CI runs these commands in GitHub Actions via `.github/workflows/ci.yml`.
 
